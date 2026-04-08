@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import { Search, XCircle } from 'lucide-react'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import FichaTramitabilidad from '../components/Clientes/FichaTramitabilidad'
 
@@ -19,13 +18,13 @@ function esEstadoBloqueado(estado) {
 }
 
 export default function Buscar() {
-  const { esAdmin } = useAuth()
+  const { esAdmin, usuario } = useAuth()
   const [query, setQuery] = useState('')
   const [resultados, setResultados] = useState([])
   const [seleccionado, setSeleccionado] = useState(null)
   const [buscando, setBuscando] = useState(false)
   const [buscado, setBuscado] = useState(false)
-  const [alerta, setAlerta] = useState(null) // { tipo, mensaje }
+  const [alerta, setAlerta] = useState(null)
 
   const buscar = useCallback(async (q) => {
     if (!q || q.length < 2) {
@@ -41,35 +40,25 @@ export default function Buscar() {
     setSeleccionado(null)
 
     try {
-      const trimmed = q.trim()
+      const res = await fetch('/.netlify/functions/search-clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q.trim(), rol: usuario?.rol }),
+      })
+      const result = await res.json()
+
+      if (!res.ok) throw new Error(result.error || 'Error en la búsqueda')
+
+      const data = result.data || []
 
       if (esAdmin) {
-        // Admin: search broadly, no restrictions
-        const termino = `%${trimmed}%`
-        const { data, error } = await supabase
-          .from('clientes')
-          .select('*')
-          .or(`cups.ilike.${termino},dni.ilike.${termino},nombre.ilike.${termino}`)
-          .limit(20)
-
-        if (error) throw error
-        setResultados(data || [])
-        if (data?.length === 1) setSeleccionado(data[0])
+        setResultados(data)
+        if (data.length === 1) setSeleccionado(data[0])
       } else {
-        // Sub-users: flexible match on CUPS or DNI with ILIKE
-        const termino = `%${trimmed}%`
-        const { data, error } = await supabase
-          .from('clientes')
-          .select('*')
-          .or(`cups.ilike.${termino},dni.ilike.${termino}`)
-
-        if (error) throw error
-
-        if (!data || data.length === 0) {
+        if (data.length === 0) {
           setResultados([])
           setSeleccionado(null)
         } else if (data.length > 1) {
-          // Duplicate records
           setResultados([])
           setSeleccionado(null)
           setAlerta({
@@ -77,7 +66,6 @@ export default function Buscar() {
             mensaje: 'CLIENTE NO TRAMITABLE — Registro duplicado en el sistema. Contacta al administrador.',
           })
         } else {
-          // Single result — check estado
           const cliente = data[0]
           if (esEstadoBloqueado(cliente.estado)) {
             setResultados(data)
@@ -97,7 +85,7 @@ export default function Buscar() {
     } finally {
       setBuscando(false)
     }
-  }, [esAdmin])
+  }, [esAdmin, usuario])
 
   let debounceTimer
   function handleChange(e) {
@@ -111,14 +99,13 @@ export default function Buscar() {
     <div className="max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Buscador de Clientes</h2>
 
-      {/* Barra de búsqueda */}
       <div className="relative mb-6">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={22} />
         <input
           type="text"
           value={query}
           onChange={handleChange}
-          placeholder={esAdmin ? 'Buscar por CUPS, DNI o Nombre...' : 'Buscar por CUPS o DNI exacto...'}
+          placeholder="Buscar por CUPS, DNI o Nombre..."
           className="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"
           autoFocus
         />
@@ -127,11 +114,6 @@ export default function Buscar() {
         )}
       </div>
 
-      {!esAdmin && (
-        <p className="text-xs text-gray-400 -mt-4 mb-4">Introduce el CUPS o DNI completo del cliente para verificar su tramitabilidad.</p>
-      )}
-
-      {/* Alerta de bloqueo (solo sub-usuarios) */}
       {alerta && (
         <div className="mb-6 rounded-xl border-2 border-red-400 bg-red-50 p-6">
           <div className="flex items-center gap-3 mb-2">
@@ -142,7 +124,6 @@ export default function Buscar() {
         </div>
       )}
 
-      {/* Sin resultados */}
       {buscado && !buscando && resultados.length === 0 && !alerta && (
         <div className="text-center py-12 text-gray-500">
           <Search size={48} className="mx-auto mb-3 text-gray-300" />
@@ -150,7 +131,6 @@ export default function Buscar() {
         </div>
       )}
 
-      {/* Admin: show list of results if multiple */}
       {esAdmin && resultados.length > 1 && !seleccionado && (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
           <div className="p-3 bg-gray-50 border-b border-gray-200">
