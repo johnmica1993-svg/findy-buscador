@@ -247,10 +247,16 @@ export default function CargaMasiva() {
         return colIdx !== undefined ? row[colIdx] : null
       }
 
-      const cups = String(getVal('cups') || '').trim()
-      if (!cups) { errs.push({ fila: idx + 2, error: 'CUPS vacío' }); return }
-      if (cupsVistos.has(cups)) { errs.push({ fila: idx + 2, error: `CUPS duplicado: ${cups}` }); return }
-      cupsVistos.add(cups)
+      const cups = String(getVal('cups') || '').trim() || null
+      const dniVal = limpiarDni(getVal('dni'))
+
+      // Only skip if both cups AND dni are identical to a previous row in this file
+      const dupeKey = (cups && dniVal) ? `${cups}||${dniVal}` : null
+      if (dupeKey && cupsVistos.has(dupeKey)) {
+        errs.push({ fila: idx + 2, error: `Duplicado en archivo: ${cups} / ${dniVal}` })
+        return
+      }
+      if (dupeKey) cupsVistos.add(dupeKey)
 
       let datos_extra = null
       if (extraFields.length > 0) {
@@ -268,7 +274,7 @@ export default function CargaMasiva() {
 
       clientes.push({
         cups,
-        dni: limpiarDni(getVal('dni')),
+        dni: dniVal,
         nombre: String(getVal('nombre') || '').trim() || null,
         direccion: String(getVal('direccion') || '').trim() || null,
         campana: String(getVal('campana') || '').trim().toUpperCase().replace('Ñ', 'N') || null,
@@ -333,14 +339,22 @@ export default function CargaMasiva() {
         const batch = clientes.slice(j, j + BATCH_SIZE)
         const { data, error } = await supabase
           .from('clientes')
-          .upsert(batch, { onConflict: 'cups', ignoreDuplicates: true })
+          .insert(batch)
           .select()
 
         if (error) {
-          erroresCarga += batch.length
+          // If it's a unique constraint violation, try inserting one by one
+          if (error.code === '23505') {
+            for (const record of batch) {
+              const { data: d, error: e } = await supabase.from('clientes').insert(record).select()
+              if (e) { duplicados++ } else { cargados += d?.length || 0 }
+            }
+          } else {
+            erroresCarga += batch.length
+            console.error('Batch error:', error.message)
+          }
         } else {
           cargados += data?.length || 0
-          duplicados += batch.length - (data?.length || 0)
         }
       }
 
