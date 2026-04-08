@@ -50,28 +50,67 @@ export async function handler(event) {
       auth: { autoRefreshToken: false, persistSession: false },
     })
 
-    // Step 1: Create auth user with admin API
+    // Step 1: Try to create auth user
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
     })
 
+    let userId
+
     if (authError) {
-      console.error('[create-user] Auth error:', authError.message)
-      const msg = authError.message.includes('already been registered')
-        ? 'Ya existe un usuario con ese email'
-        : authError.message
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: msg }),
+      // If user already exists in auth, check if also exists in usuarios table
+      if (authError.message.includes('already been registered')) {
+        // Find the existing auth user
+        const { data: { users } } = await supabase.auth.admin.listUsers()
+        const existingUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
+
+        if (!existingUser) {
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'Error inesperado al buscar el usuario existente' }),
+          }
+        }
+
+        // Check if exists in usuarios table
+        const { data: existingProfile } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('id', existingUser.id)
+          .single()
+
+        if (existingProfile) {
+          // Exists in both auth AND usuarios → real duplicate
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'Ya existe un usuario con ese email en el sistema' }),
+          }
+        }
+
+        // Exists in auth but NOT in usuarios → insert profile only
+        console.log(`[create-user] User ${email} exists in auth but not in usuarios, inserting profile`)
+        userId = existingUser.id
+
+        // Update password since we can't create a new auth user
+        await supabase.auth.admin.updateUserById(userId, { password })
+      } else {
+        console.error('[create-user] Auth error:', authError.message)
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: authError.message }),
+        }
       }
+    } else {
+      userId = authData.user.id
     }
 
-    // Step 2: Insert into usuarios table with the same UUID
+    // Step 2: Insert into usuarios table
     const { error: insertError } = await supabase.from('usuarios').insert({
-      id: authData.user.id,
+      id: userId,
       nombre,
       email,
       rol,
@@ -80,8 +119,10 @@ export async function handler(event) {
 
     if (insertError) {
       console.error('[create-user] Insert error:', insertError.message)
-      // Rollback: delete the auth user
-      await supabase.auth.admin.deleteUser(authData.user.id)
+      // Only rollback auth user if we just created it (not if it already existed)
+      if (authData?.user) {
+        await supabase.auth.admin.deleteUser(userId)
+      }
       return {
         statusCode: 500,
         headers,
@@ -94,7 +135,7 @@ export async function handler(event) {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ message: 'Usuario creado correctamente', userId: authData.user.id }),
+      body: JSON.stringify({ message: 'Usuario creado correctamente', userId }),
     }
 
   } catch (err) {

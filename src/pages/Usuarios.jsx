@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, UserCheck, UserX, AlertTriangle } from 'lucide-react'
+import { Plus, UserCheck, UserX, Trash2, AlertTriangle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Card from '../components/UI/Card'
 import Badge from '../components/UI/Badge'
@@ -73,6 +73,25 @@ export default function Usuarios() {
     cargar()
   }
 
+  async function eliminarUsuario(user) {
+    if (!confirm(`¿Estás seguro de eliminar al usuario "${user.nombre}" (${user.email})?\n\nEsta acción eliminará su cuenta por completo y no se puede deshacer.`)) {
+      return
+    }
+
+    try {
+      const res = await fetch('/.netlify/functions/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      cargar()
+    } catch (err) {
+      alert('Error al eliminar: ' + err.message)
+    }
+  }
+
   async function cambiarOficina(userId, oficinaId) {
     await supabase.from('usuarios').update({ oficina_id: oficinaId || null }).eq('id', userId)
     cargar()
@@ -126,9 +145,18 @@ export default function Usuarios() {
                     <Badge color={u.activo ? 'green' : 'red'}>{u.activo ? 'Activo' : 'Inactivo'}</Badge>
                   </td>
                   <td className="px-4 py-3">
-                    <Button variant="ghost" className="text-xs" onClick={() => toggleActivo(u)}>
-                      {u.activo ? <><UserX size={14} /> Desactivar</> : <><UserCheck size={14} /> Activar</>}
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" className="text-xs" onClick={() => toggleActivo(u)}>
+                        {u.activo ? <><UserX size={14} /> Bloquear</> : <><UserCheck size={14} /> Activar</>}
+                      </Button>
+                      <button
+                        onClick={() => eliminarUsuario(u)}
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"
+                        title="Eliminar usuario"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -174,7 +202,6 @@ export default function Usuarios() {
                     { value: '', label: '— Seleccionar oficina —' },
                     ...oficinas.map(o => ({ value: o.id, label: o.nombre })),
                   ]}
-                  error={requiereOficina && !form.oficina_id ? '' : undefined}
                 />
               )}
             </>

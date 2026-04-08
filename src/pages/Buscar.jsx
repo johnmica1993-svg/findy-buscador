@@ -1,9 +1,11 @@
 import { useState, useCallback } from 'react'
 import { Search } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import FichaTramitabilidad from '../components/Clientes/FichaTramitabilidad'
 
 export default function Buscar() {
+  const { esAdmin } = useAuth()
   const [query, setQuery] = useState('')
   const [resultados, setResultados] = useState([])
   const [seleccionado, setSeleccionado] = useState(null)
@@ -14,28 +16,45 @@ export default function Buscar() {
     if (!q || q.length < 2) {
       setResultados([])
       setBuscado(false)
+      setSeleccionado(null)
       return
     }
     setBuscando(true)
     setBuscado(true)
     try {
       const termino = `%${q}%`
-      const { data, error } = await supabase
-        .from('clientes')
-        .select('*')
-        .or(`cups.ilike.${termino},dni.ilike.${termino},nombre.ilike.${termino}`)
-        .limit(20)
 
-      if (error) throw error
-      setResultados(data || [])
-      if (data?.length === 1) setSeleccionado(data[0])
-      else setSeleccionado(null)
+      if (esAdmin) {
+        // Admin: search broadly, show multiple results
+        const { data, error } = await supabase
+          .from('clientes')
+          .select('*')
+          .or(`cups.ilike.${termino},dni.ilike.${termino},nombre.ilike.${termino}`)
+          .limit(20)
+
+        if (error) throw error
+        setResultados(data || [])
+        if (data?.length === 1) setSeleccionado(data[0])
+        else setSeleccionado(null)
+      } else {
+        // Sub-users: exact match only on CUPS or DNI, one result at a time
+        const trimmed = q.trim()
+        const { data, error } = await supabase
+          .from('clientes')
+          .select('*')
+          .or(`cups.eq.${trimmed},dni.eq.${trimmed}`)
+          .limit(1)
+
+        if (error) throw error
+        setResultados(data || [])
+        setSeleccionado(data?.[0] || null)
+      }
     } catch (err) {
       console.error('Error buscando:', err)
     } finally {
       setBuscando(false)
     }
-  }, [])
+  }, [esAdmin])
 
   let debounceTimer
   function handleChange(e) {
@@ -56,7 +75,7 @@ export default function Buscar() {
           type="text"
           value={query}
           onChange={handleChange}
-          placeholder="Buscar por CUPS, DNI o Nombre..."
+          placeholder={esAdmin ? 'Buscar por CUPS, DNI o Nombre...' : 'Buscar por CUPS o DNI exacto...'}
           className="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"
           autoFocus
         />
@@ -64,6 +83,10 @@ export default function Buscar() {
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">Buscando...</div>
         )}
       </div>
+
+      {!esAdmin && (
+        <p className="text-xs text-gray-400 -mt-4 mb-4">Introduce el CUPS o DNI completo del cliente para verificar su tramitabilidad.</p>
+      )}
 
       {/* Resultados */}
       {buscado && !buscando && resultados.length === 0 && (
@@ -73,7 +96,8 @@ export default function Buscar() {
         </div>
       )}
 
-      {resultados.length > 1 && !seleccionado && (
+      {/* Admin: show list of results if multiple */}
+      {esAdmin && resultados.length > 1 && !seleccionado && (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
           <div className="p-3 bg-gray-50 border-b border-gray-200">
             <span className="text-sm text-gray-600">{resultados.length} resultados encontrados</span>
@@ -98,7 +122,7 @@ export default function Buscar() {
 
       {seleccionado && (
         <div>
-          {resultados.length > 1 && (
+          {esAdmin && resultados.length > 1 && (
             <button
               onClick={() => setSeleccionado(null)}
               className="text-sm text-blue-700 hover:underline mb-3 inline-block"
