@@ -1,7 +1,7 @@
 import { calcularTramitabilidad } from '../../lib/tramitabilidad'
 import Badge from '../UI/Badge'
 import Card from '../UI/Card'
-import { Calendar, MapPin, FileText, Zap, Hash, User } from 'lucide-react'
+import { Calendar, MapPin, FileText, Zap, Hash, User, Phone, Mail, Building, CreditCard, Globe, Package } from 'lucide-react'
 
 function formatFecha(f) {
   if (!f) return '—'
@@ -24,12 +24,17 @@ const ESTADO_COLORS = {
 
 export default function FichaTramitabilidad({ cliente }) {
   const tram = calcularTramitabilidad(cliente)
+  const extras = cliente.datos_extra || {}
+  const tieneExtras = Object.keys(extras).length > 0
 
   const bannerColors = {
     green: 'bg-green-50 border-green-400 text-green-800',
     red: 'bg-red-50 border-red-400 text-red-800',
     yellow: 'bg-yellow-50 border-yellow-400 text-yellow-800',
   }
+
+  // Helper to get value from main fields or datos_extra
+  const get = (field) => cliente[field] || extras[field] || null
 
   return (
     <div className="space-y-4">
@@ -50,19 +55,41 @@ export default function FichaTramitabilidad({ cliente }) {
         )}
       </div>
 
-      {/* Datos del cliente */}
+      {/* Datos principales */}
       <Card className="p-5">
         <h4 className="text-sm font-semibold text-gray-700 mb-4">Datos del Cliente</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Dato icon={Hash} label="CUPS" value={cliente.cups} />
-          <Dato icon={FileText} label="DNI" value={cliente.dni} />
-          <Dato icon={User} label="Nombre" value={cliente.nombre} />
-          <Dato icon={MapPin} label="Dirección" value={cliente.direccion} />
+          <Dato icon={FileText} label="DNI / NIF" value={cliente.dni} />
+          <Dato icon={User} label="Nombre completo" value={cliente.nombre} />
+          <Dato icon={MapPin} label="Dirección" value={cliente.direccion} className="sm:col-span-2 lg:col-span-3" />
+          <Dato icon={Building} label="Ciudad" value={get('ciudad')} />
+          <Dato icon={MapPin} label="Código postal" value={get('codigo_postal') || get('cp')} />
+        </div>
+      </Card>
+
+      {/* Contacto */}
+      <Card className="p-5">
+        <h4 className="text-sm font-semibold text-gray-700 mb-4">Contacto</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Dato icon={Phone} label="Teléfono 1" value={get('telefono') || get('telefono_1') || get('telefono1') || get('tlf') || get('movil')} />
+          <Dato icon={Phone} label="Teléfono 2" value={get('telefono_2') || get('telefono2') || get('tlf2')} />
+          <Dato icon={Mail} label="Correo electrónico" value={get('email') || get('correo') || get('correo_electronico')} />
+          <Dato icon={CreditCard} label="IBAN" value={get('iban') || get('cuenta_bancaria')} />
+        </div>
+      </Card>
+
+      {/* Campaña y Estado */}
+      <Card className="p-5">
+        <h4 className="text-sm font-semibold text-gray-700 mb-4">Campaña y Estado</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Dato icon={Zap} label="Campaña" value={CAMPANA_LABELS[cliente.campana] || cliente.campana} />
           <div>
-            <span className="text-xs text-gray-500">Estado</span>
+            <span className="flex items-center gap-1 text-xs text-gray-500">
+              <Globe size={12} /> Estado
+            </span>
             <div className="mt-1">
-              <Badge color={ESTADO_COLORS[cliente.estado]}>{cliente.estado}</Badge>
+              <Badge color={ESTADO_COLORS[cliente.estado] || 'gray'}>{cliente.estado || '—'}</Badge>
             </div>
           </div>
         </div>
@@ -78,17 +105,31 @@ export default function FichaTramitabilidad({ cliente }) {
           <Dato icon={Calendar} label="Fecha Baja" value={formatFecha(cliente.fecha_baja)} />
         </div>
       </Card>
+
+      {/* Datos extra del Excel */}
+      {tieneExtras && (
+        <Card className="p-5">
+          <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+            <Package size={14} /> Datos adicionales
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(extras).map(([key, value]) => (
+              <Dato key={key} label={key} value={value} />
+            ))}
+          </div>
+        </Card>
+      )}
     </div>
   )
 }
 
-function Dato({ icon: Icon, label, value }) {
+function Dato({ icon: Icon, label, value, className = '' }) {
   return (
-    <div>
+    <div className={className}>
       <span className="flex items-center gap-1 text-xs text-gray-500">
         {Icon && <Icon size={12} />} {label}
       </span>
-      <p className="text-sm font-medium text-gray-900 mt-0.5">{value || '—'}</p>
+      <p className="text-sm font-medium text-gray-900 mt-0.5 break-all">{value || '—'}</p>
     </div>
   )
 }
