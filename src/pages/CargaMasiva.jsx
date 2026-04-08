@@ -322,9 +322,15 @@ export default function CargaMasiva() {
 
       const { clientes, errores } = buildClientes(archivo.rows, archivo.headers, fileMapeo)
 
+      console.log(`[CargaMasiva] Archivo: ${archivo.name}`)
+      console.log(`[CargaMasiva] Filas raw: ${archivo.rows.length}, Clientes válidos: ${clientes.length}, Errores validación: ${errores.length}`)
+      console.log(`[CargaMasiva] Mapeo usado:`, fileMapeo)
+      if (clientes.length > 0) console.log(`[CargaMasiva] Primer registro:`, JSON.stringify(clientes[0]))
+      if (errores.length > 0) console.log(`[CargaMasiva] Primeros errores:`, errores.slice(0, 5))
+
       let cargados = 0, duplicados = 0, erroresCarga = errores.length
-      let primerError = null
-      const BATCH_SIZE = 200
+      let primerError = errores.length > 0 ? `Validación: ${errores.length} errores (ej: ${errores[0]?.error})` : null
+      const BATCH_SIZE = 50
 
       for (let j = 0; j < clientes.length; j += BATCH_SIZE) {
         if (cancelRef.current) break
@@ -339,16 +345,24 @@ export default function CargaMasiva() {
         const batch = clientes.slice(j, j + BATCH_SIZE)
 
         try {
+          const bodyStr = JSON.stringify({ clientes: batch })
+          console.log(`[CargaMasiva] Enviando batch ${j}-${j + batch.length} (${(bodyStr.length / 1024).toFixed(1)}KB)`)
+
           const res = await fetch('/.netlify/functions/bulk-insert', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ clientes: batch }),
+            body: bodyStr,
           })
-          const result = await res.json()
+
+          const text = await res.text()
+          let result
+          try { result = JSON.parse(text) } catch { result = { error: text.slice(0, 200) } }
+
+          console.log(`[CargaMasiva] Respuesta batch ${j}:`, res.status, result)
 
           if (!res.ok) {
             erroresCarga += batch.length
-            if (!primerError) primerError = result.error || `HTTP ${res.status}`
+            if (!primerError) primerError = result.error || `HTTP ${res.status}: ${text.slice(0, 200)}`
           } else {
             cargados += result.cargados || 0
             duplicados += result.duplicados || 0
@@ -356,6 +370,7 @@ export default function CargaMasiva() {
             if (result.primerError && !primerError) primerError = result.primerError
           }
         } catch (err) {
+          console.error(`[CargaMasiva] Fetch error batch ${j}:`, err)
           erroresCarga += batch.length
           if (!primerError) primerError = `Network: ${err.message}`
         }
