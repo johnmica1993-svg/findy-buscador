@@ -51,34 +51,19 @@ export default function Buscar() {
 
       const data = result.data || []
 
-      if (esAdmin) {
-        setResultados(data)
-        if (data.length === 1) setSeleccionado(data[0])
-      } else {
-        if (data.length === 0) {
-          setResultados([])
-          setSeleccionado(null)
-        } else if (data.length > 1) {
-          setResultados([])
-          setSeleccionado(null)
-          setAlerta({
-            tipo: 'duplicado',
-            mensaje: 'CLIENTE NO TRAMITABLE — Registro duplicado en el sistema. Contacta al administrador.',
-          })
-        } else {
-          const cliente = data[0]
-          if (esEstadoBloqueado(cliente.estado)) {
-            setResultados(data)
-            setSeleccionado(null)
-            setAlerta({
-              tipo: 'proceso_activo',
-              mensaje: 'CLIENTE NO TRAMITABLE — Este cliente ya tiene un proceso activo.',
-            })
-          } else {
-            setResultados(data)
-            setSeleccionado(cliente)
-          }
-        }
+      setResultados(data)
+
+      if (data.length === 0) {
+        setSeleccionado(null)
+      } else if (!esAdmin && data.some(c => esEstadoBloqueado(c.estado))) {
+        // Sub-users: block if ANY result has an active process
+        setSeleccionado(null)
+        setAlerta({
+          tipo: 'proceso_activo',
+          mensaje: 'CLIENTE NO TRAMITABLE — Este cliente ya tiene un proceso activo.',
+        })
+      } else if (data.length === 1) {
+        setSeleccionado(data[0])
       }
     } catch (err) {
       console.error('Error buscando:', err)
@@ -131,7 +116,7 @@ export default function Buscar() {
         </div>
       )}
 
-      {esAdmin && resultados.length > 1 && !seleccionado && (
+      {resultados.length > 1 && !seleccionado && !alerta && (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
           <div className="p-3 bg-gray-50 border-b border-gray-200">
             <span className="text-sm text-gray-600">{resultados.length} resultados encontrados</span>
@@ -156,7 +141,7 @@ export default function Buscar() {
 
       {seleccionado && (
         <div>
-          {esAdmin && resultados.length > 1 && (
+          {resultados.length > 1 && (
             <button
               onClick={() => setSeleccionado(null)}
               className="text-sm text-blue-700 hover:underline mb-3 inline-block"
