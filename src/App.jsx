@@ -28,9 +28,18 @@ function ProtectedRoute({ children, roles }) {
 
   if (!usuario) return <Navigate to="/login" replace />
   if (ipBloqueada) return <IpBloqueada />
-  if (roles && !roles.includes(usuario.rol)) return <Navigate to="/" replace />
+  if (roles && !roles.includes(usuario.rol)) return <Navigate to="/buscar" replace />
 
   return children
+}
+
+function DefaultRedirect() {
+  const { usuario } = useAuth()
+  // Sub-users go to search, admin goes to dashboard
+  if (usuario?.rol === 'OFICINA' || usuario?.rol === 'COMERCIAL') {
+    return <Navigate to="/buscar" replace />
+  }
+  return <Dashboard />
 }
 
 function AppRoutes() {
@@ -49,11 +58,13 @@ function AppRoutes() {
       <Route path="/login" element={usuario ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-        <Route index element={<Dashboard />} />
+        <Route index element={<DefaultRedirect />} />
         <Route path="buscar" element={<Buscar />} />
-        <Route path="clientes" element={<Clientes />} />
+        <Route path="clientes" element={
+          <ProtectedRoute roles={['ADMIN']}><Clientes /></ProtectedRoute>
+        } />
         <Route path="carga" element={
-          <ProtectedRoute roles={['ADMIN', 'OFICINA']}><CargaMasiva /></ProtectedRoute>
+          <ProtectedRoute roles={['ADMIN']}><CargaMasiva /></ProtectedRoute>
         } />
         <Route path="oficinas" element={
           <ProtectedRoute roles={['ADMIN']}><Oficinas /></ProtectedRoute>

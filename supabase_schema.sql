@@ -9,6 +9,7 @@ CREATE TABLE oficinas (
   codigo TEXT UNIQUE NOT NULL,
   activa BOOLEAN DEFAULT true,
   ip_permitidas TEXT[] DEFAULT '{}',
+  ip_autorizada TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

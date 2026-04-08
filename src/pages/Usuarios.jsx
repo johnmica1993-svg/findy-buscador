@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, UserCheck, UserX } from 'lucide-react'
+import { Plus, UserCheck, UserX, AlertTriangle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Card from '../components/UI/Card'
 import Badge from '../components/UI/Badge'
@@ -30,28 +30,33 @@ export default function Usuarios() {
     setLoading(false)
   }
 
+  const requiereOficina = form.rol === 'OFICINA' || form.rol === 'COMERCIAL'
+
   async function crearUsuario(e) {
     e.preventDefault()
     setError('')
+
+    if (requiereOficina && !form.oficina_id) {
+      setError('Debes seleccionar una oficina para el rol ' + form.rol)
+      return
+    }
+
     setSaving(true)
 
     try {
-      // Create auth user via Supabase (requires service role in production)
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
+      const res = await fetch('/.netlify/functions/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: form.nombre,
+          email: form.email,
+          password: form.password,
+          rol: form.rol,
+          oficina_id: form.oficina_id || null,
+        }),
       })
-      if (authError) throw authError
-
-      // Insert into usuarios table
-      const { error: insertError } = await supabase.from('usuarios').insert({
-        id: authData.user.id,
-        nombre: form.nombre,
-        email: form.email,
-        rol: form.rol,
-        oficina_id: form.oficina_id || null,
-      })
-      if (insertError) throw insertError
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error al crear el usuario')
 
       setModalCrear(false)
       setForm({ nombre: '', email: '', password: '', rol: 'COMERCIAL', oficina_id: '' })
@@ -79,7 +84,7 @@ export default function Usuarios() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Usuarios</h2>
-        <Button onClick={() => setModalCrear(true)}>
+        <Button onClick={() => { setError(''); setModalCrear(true) }}>
           <Plus size={16} /> Nuevo Usuario
         </Button>
       </div>
@@ -143,26 +148,58 @@ export default function Usuarios() {
           <Select
             label="Rol"
             value={form.rol}
-            onChange={e => setForm(f => ({ ...f, rol: e.target.value }))}
+            onChange={e => setForm(f => ({ ...f, rol: e.target.value, oficina_id: '' }))}
             options={[
               { value: 'COMERCIAL', label: 'Comercial' },
               { value: 'OFICINA', label: 'Oficina' },
               { value: 'ADMIN', label: 'Admin' },
             ]}
           />
-          <Select
-            label="Oficina"
-            value={form.oficina_id}
-            onChange={e => setForm(f => ({ ...f, oficina_id: e.target.value }))}
-            options={[
-              { value: '', label: 'Sin oficina' },
-              ...oficinas.map(o => ({ value: o.id, label: o.nombre })),
-            ]}
-          />
+
+          {requiereOficina && (
+            <>
+              {oficinas.length === 0 ? (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+                  <AlertTriangle size={16} className="text-yellow-600 shrink-0 mt-0.5" />
+                  <p className="text-sm text-yellow-700">
+                    No hay oficinas creadas. Debes crear una oficina antes de asignar usuarios con rol {form.rol}.
+                  </p>
+                </div>
+              ) : (
+                <Select
+                  label="Oficina *"
+                  value={form.oficina_id}
+                  onChange={e => setForm(f => ({ ...f, oficina_id: e.target.value }))}
+                  options={[
+                    { value: '', label: '— Seleccionar oficina —' },
+                    ...oficinas.map(o => ({ value: o.id, label: o.nombre })),
+                  ]}
+                  error={requiereOficina && !form.oficina_id ? '' : undefined}
+                />
+              )}
+            </>
+          )}
+
+          {form.rol === 'ADMIN' && (
+            <Select
+              label="Oficina (opcional)"
+              value={form.oficina_id}
+              onChange={e => setForm(f => ({ ...f, oficina_id: e.target.value }))}
+              options={[
+                { value: '', label: 'Sin oficina' },
+                ...oficinas.map(o => ({ value: o.id, label: o.nombre })),
+              ]}
+            />
+          )}
 
           <div className="flex justify-end gap-3">
             <Button variant="secondary" type="button" onClick={() => setModalCrear(false)}>Cancelar</Button>
-            <Button type="submit" disabled={saving}>{saving ? 'Creando...' : 'Crear Usuario'}</Button>
+            <Button
+              type="submit"
+              disabled={saving || (requiereOficina && oficinas.length === 0)}
+            >
+              {saving ? 'Creando...' : 'Crear Usuario'}
+            </Button>
           </div>
         </form>
       </Modal>

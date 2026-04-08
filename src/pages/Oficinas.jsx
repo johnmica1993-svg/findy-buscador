@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Building2, Wifi, WifiOff, Trash2, Shield } from 'lucide-react'
+import { Plus, Building2, Wifi, WifiOff, Globe, Pencil } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Card from '../components/UI/Card'
 import Badge from '../components/UI/Badge'
@@ -18,9 +18,9 @@ export default function Oficinas() {
   const [oficinas, setOficinas] = useState([])
   const [loading, setLoading] = useState(true)
   const [modalCrear, setModalCrear] = useState(false)
-  const [modalIPs, setModalIPs] = useState(null)
+  const [modalIP, setModalIP] = useState(null)
   const [form, setForm] = useState({ nombre: '', codigo: '' })
-  const [nuevaIp, setNuevaIp] = useState('')
+  const [ipForm, setIpForm] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => { cargar() }, [])
@@ -53,20 +53,10 @@ export default function Oficinas() {
     cargar()
   }
 
-  async function agregarIP() {
-    if (!nuevaIp.trim() || !modalIPs) return
-    const ips = [...(modalIPs.ip_permitidas || []), nuevaIp.trim()]
-    await supabase.from('oficinas').update({ ip_permitidas: ips }).eq('id', modalIPs.id)
-    setModalIPs({ ...modalIPs, ip_permitidas: ips })
-    setNuevaIp('')
-    cargar()
-  }
-
-  async function eliminarIP(ip) {
-    if (!modalIPs) return
-    const ips = (modalIPs.ip_permitidas || []).filter(i => i !== ip)
-    await supabase.from('oficinas').update({ ip_permitidas: ips }).eq('id', modalIPs.id)
-    setModalIPs({ ...modalIPs, ip_permitidas: ips })
+  async function guardarIP() {
+    if (!modalIP) return
+    await supabase.from('oficinas').update({ ip_autorizada: ipForm.trim() || null }).eq('id', modalIP.id)
+    setModalIP(null)
     cargar()
   }
 
@@ -99,8 +89,13 @@ export default function Oficinas() {
                   <span className="text-xs text-gray-400">Subcódigo</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Shield size={14} />
-                  <span>{(o.ip_permitidas || []).length} IPs bloqueadas</span>
+                  <Globe size={14} />
+                  <span>
+                    IP autorizada: {o.ip_autorizada
+                      ? <span className="font-mono text-xs bg-green-50 text-green-700 px-1.5 py-0.5 rounded">{o.ip_autorizada}</span>
+                      : <span className="text-xs text-gray-400">Sin restricción</span>
+                    }
+                  </span>
                 </div>
               </div>
 
@@ -108,8 +103,8 @@ export default function Oficinas() {
                 <Button variant="secondary" className="flex-1 text-xs" onClick={() => toggleActiva(o)}>
                   {o.activa ? <><WifiOff size={14} /> Desactivar</> : <><Wifi size={14} /> Activar</>}
                 </Button>
-                <Button variant="secondary" className="flex-1 text-xs" onClick={() => { setModalIPs(o); setNuevaIp('') }}>
-                  <Shield size={14} /> IPs
+                <Button variant="secondary" className="flex-1 text-xs" onClick={() => { setModalIP(o); setIpForm(o.ip_autorizada || '') }}>
+                  <Pencil size={14} /> IP
                 </Button>
               </div>
             </Card>
@@ -129,33 +124,23 @@ export default function Oficinas() {
         </form>
       </Modal>
 
-      {/* Modal IPs */}
-      <Modal open={!!modalIPs} onClose={() => setModalIPs(null)} title={`IPs Bloqueadas — ${modalIPs?.nombre || ''}`}>
+      {/* Modal IP Autorizada */}
+      <Modal open={!!modalIP} onClose={() => setModalIP(null)} title={`IP Autorizada — ${modalIP?.nombre || ''}`}>
         <div className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Ej: 192.168.1.100"
-              value={nuevaIp}
-              onChange={e => setNuevaIp(e.target.value)}
-              className="flex-1"
-            />
-            <Button onClick={agregarIP} disabled={!nuevaIp.trim()}>Agregar</Button>
+          <p className="text-sm text-gray-500">
+            Ingresa la IP fija desde la cual los usuarios de esta oficina pueden acceder.
+            Si se deja vacío, no se aplica restricción de IP.
+          </p>
+          <Input
+            label="IP autorizada"
+            placeholder="Ej: 85.123.45.67"
+            value={ipForm}
+            onChange={e => setIpForm(e.target.value)}
+          />
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={() => setModalIP(null)}>Cancelar</Button>
+            <Button onClick={guardarIP}>Guardar</Button>
           </div>
-
-          {(modalIPs?.ip_permitidas || []).length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">No hay IPs bloqueadas</p>
-          ) : (
-            <ul className="space-y-2">
-              {(modalIPs?.ip_permitidas || []).map(ip => (
-                <li key={ip} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
-                  <span className="font-mono text-sm">{ip}</span>
-                  <button onClick={() => eliminarIP(ip)} className="text-red-500 hover:text-red-700">
-                    <Trash2 size={14} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
       </Modal>
     </div>

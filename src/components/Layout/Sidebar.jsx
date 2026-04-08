@@ -5,10 +5,10 @@ import {
 import { useAuth } from '../../context/AuthContext'
 
 const menuItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Tablero', roles: ['ADMIN', 'OFICINA', 'COMERCIAL'] },
+  { to: '/', icon: LayoutDashboard, label: 'Tablero', roles: ['ADMIN'] },
   { to: '/buscar', icon: Search, label: 'Buscador', roles: ['ADMIN', 'OFICINA', 'COMERCIAL'] },
-  { to: '/clientes', icon: Users, label: 'Clientes', roles: ['ADMIN', 'OFICINA', 'COMERCIAL'] },
-  { to: '/carga', icon: Upload, label: 'Carga Masiva', roles: ['ADMIN', 'OFICINA'] },
+  { to: '/clientes', icon: Users, label: 'Clientes', roles: ['ADMIN'] },
+  { to: '/carga', icon: Upload, label: 'Carga Masiva', roles: ['ADMIN'] },
   { to: '/oficinas', icon: Building2, label: 'Oficinas', roles: ['ADMIN'] },
   { to: '/usuarios', icon: UserCog, label: 'Usuarios', roles: ['ADMIN'] },
   { to: '/configuracion', icon: Settings, label: 'Configuración', roles: ['ADMIN'] },

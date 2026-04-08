@@ -44,9 +44,10 @@ export function AuthProvider({ children }) {
         return
       }
 
-      if (data.rol === 'OFICINA' && data.oficina) {
-        const ipOk = await verificarIP(data.oficina.ip_permitidas || [])
-        if (!ipOk) {
+      // Verify IP for OFICINA and COMERCIAL roles via Netlify Function
+      if ((data.rol === 'OFICINA' || data.rol === 'COMERCIAL') && data.oficina) {
+        const ipAllowed = await verificarIP(userId)
+        if (!ipAllowed) {
           setIpBloqueada(true)
           setUsuario(data)
           setLoading(false)
@@ -62,13 +63,17 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function verificarIP(ipsBloqueadas) {
-    if (!ipsBloqueadas || ipsBloqueadas.length === 0) return true
+  async function verificarIP(userId) {
     try {
-      const res = await fetch('https://api.ipify.org?format=json')
-      const { ip } = await res.json()
-      return !ipsBloqueadas.includes(ip)
+      const res = await fetch('/.netlify/functions/verify-ip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId }),
+      })
+      const data = await res.json()
+      return data.allowed
     } catch {
+      // If function is not available (local dev without netlify), allow access
       return true
     }
   }
