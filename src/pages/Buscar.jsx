@@ -58,6 +58,18 @@ export default function Buscar() {
       } else if (data.length === 1) {
         setSeleccionado(data[0])
       }
+      // Log search
+      fetch('/.netlify/functions/log-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario_id: usuario?.id,
+          usuario_nombre: usuario?.nombre,
+          termino_busqueda: q,
+          resultado_encontrado: data.length > 0,
+        }),
+      }).catch(() => {})
+
     } catch (err) {
       console.error('Error buscando:', err)
     } finally {

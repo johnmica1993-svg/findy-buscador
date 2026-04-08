@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Users, Upload, Building2, UserCog, Settings, Search, X
+  LayoutDashboard, Users, Upload, Building2, UserCog, Settings, Search, X, BarChart3
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
@@ -11,6 +11,7 @@ const menuItems = [
   { to: '/carga', icon: Upload, label: 'Carga Masiva', roles: ['ADMIN'] },
   { to: '/oficinas', icon: Building2, label: 'Oficinas', roles: ['ADMIN'] },
   { to: '/usuarios', icon: UserCog, label: 'Usuarios', roles: ['ADMIN'] },
+  { to: '/estadisticas', icon: BarChart3, label: 'Estadísticas', roles: ['ADMIN'] },
   { to: '/configuracion', icon: Settings, label: 'Configuración', roles: ['ADMIN'] },
 ]
 

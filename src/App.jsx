@@ -11,6 +11,7 @@ import Oficinas from './pages/Oficinas'
 import Usuarios from './pages/Usuarios'
 import Configuracion from './pages/Configuracion'
 import ResetPassword from './pages/ResetPassword'
+import Estadisticas from './pages/Estadisticas'
 
 function ProtectedRoute({ children, roles }) {
   const { usuario, loading, ipBloqueada } = useAuth()
@@ -71,6 +72,9 @@ function AppRoutes() {
         } />
         <Route path="usuarios" element={
           <ProtectedRoute roles={['ADMIN']}><Usuarios /></ProtectedRoute>
+        } />
+        <Route path="estadisticas" element={
+          <ProtectedRoute roles={['ADMIN']}><Estadisticas /></ProtectedRoute>
         } />
         <Route path="configuracion" element={
           <ProtectedRoute roles={['ADMIN']}><Configuracion /></ProtectedRoute>
