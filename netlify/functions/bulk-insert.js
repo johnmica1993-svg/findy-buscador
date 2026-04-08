@@ -49,12 +49,11 @@ export async function handler(event) {
     let actualizados = 0
     let duplicados = 0
     const fallidos = []
+    const duplicadosDetalle = [] // {cups, existente_campos, nuevo_campos, accion}
 
-    // Process one by one for smart dedup logic
     for (const record of clientes) {
       const cups = record.cups?.trim()
 
-      // No CUPS → always insert
       if (!cups) {
         const { error: e } = await supabase.from('clientes').insert(record)
         if (e) {
@@ -65,7 +64,6 @@ export async function handler(event) {
         continue
       }
 
-      // Check if CUPS already exists
       const { data: existing } = await supabase
         .from('clientes')
         .select('*')
@@ -74,7 +72,6 @@ export async function handler(event) {
         .single()
 
       if (!existing) {
-        // CUPS doesn't exist → insert
         const { error: e } = await supabase.from('clientes').insert(record)
         if (e) {
           fallidos.push({ record, error: `${e.code}: ${e.message}` })
@@ -82,12 +79,10 @@ export async function handler(event) {
           cargados++
         }
       } else {
-        // CUPS exists → compare field count
         const newCount = countFields(record)
         const existingCount = countFields(existing)
 
         if (newCount > existingCount) {
-          // New record has more data → update
           const { error: e } = await supabase
             .from('clientes')
             .update(record)
@@ -96,10 +91,27 @@ export async function handler(event) {
             fallidos.push({ record, error: `update: ${e.code}: ${e.message}` })
           } else {
             actualizados++
+            duplicadosDetalle.push({
+              cups,
+              accion: 'ACTUALIZADO',
+              razon: `Nuevo tiene ${newCount} campos vs ${existingCount} del existente`,
+              existente_dni: existing.dni,
+              existente_nombre: existing.nombre,
+              nuevo_dni: record.dni,
+              nuevo_nombre: record.nombre,
+            })
           }
         } else {
-          // Existing has equal or more data → skip
           duplicados++
+          duplicadosDetalle.push({
+            cups,
+            accion: 'SALTADO',
+            razon: `Existente tiene ${existingCount} campos vs ${newCount} del nuevo`,
+            existente_dni: existing.dni,
+            existente_nombre: existing.nombre,
+            nuevo_dni: record.dni,
+            nuevo_nombre: record.nombre,
+          })
         }
       }
     }
@@ -114,6 +126,7 @@ export async function handler(event) {
         errores: fallidos.length,
         primerError: fallidos[0]?.error || null,
         fallidos: fallidos.slice(0, 500),
+        duplicadosDetalle: duplicadosDetalle.slice(0, 500),
       }),
     }
 

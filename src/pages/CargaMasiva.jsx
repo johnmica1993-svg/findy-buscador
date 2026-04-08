@@ -161,7 +161,8 @@ export default function CargaMasiva() {
   // Progress
   const [progreso, setProgreso] = useState({ archivoIdx: 0, filaActual: 0, filasTotal: 0, archivoNombre: '' })
   const [resultadoGlobal, setResultadoGlobal] = useState({ cargados: 0, duplicados: 0, errores: 0 })
-  const [registrosFallidos, setRegistrosFallidos] = useState([]) // [{record, error}]
+  const [registrosFallidos, setRegistrosFallidos] = useState([])
+  const [duplicadosDetalle, setDuplicadosDetalle] = useState([]) // [{cups, accion, razon, ...}]
 
   // Collect files from input or drop
   async function agregarArchivos(fileList) {
@@ -364,8 +365,10 @@ export default function CargaMasiva() {
     cancelRef.current = false
     setStep(3)
     setRegistrosFallidos([])
+    setDuplicadosDetalle([])
     let totalCargados = 0, totalActualizados = 0, totalDuplicados = 0, totalErrores = 0
     const allFallidos = []
+    const allDuplicados = []
 
     // Keep-alive: refresh Supabase session every 4 minutes
     const keepAlive = setInterval(async () => {
@@ -435,6 +438,7 @@ export default function CargaMasiva() {
               erroresCarga += result.errores || 0
               if (result.primerError && !primerError) primerError = result.primerError
               if (result.fallidos?.length > 0) fileFallidos.push(...result.fallidos)
+              if (result.duplicadosDetalle?.length > 0) allDuplicados.push(...result.duplicadosDetalle)
             }
           }
         }
@@ -458,6 +462,7 @@ export default function CargaMasiva() {
     }
 
     setRegistrosFallidos(allFallidos)
+    setDuplicadosDetalle(allDuplicados)
     setResultadoGlobal({ cargados: totalCargados, actualizados: totalActualizados, duplicados: totalDuplicados, errores: totalErrores })
     setStep(4)
   }
@@ -477,6 +482,7 @@ export default function CargaMasiva() {
     setResultadoGlobal({ cargados: 0, duplicados: 0, errores: 0 })
     setProgreso({ archivoIdx: 0, filaActual: 0, filasTotal: 0, archivoNombre: '' })
     setRegistrosFallidos([])
+    setDuplicadosDetalle([])
     cancelRef.current = false
   }
 
@@ -487,6 +493,14 @@ export default function CargaMasiva() {
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Fallidos')
     XLSX.writeFile(wb, `fallidos_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  }
+
+  function descargarDuplicadosXLSX() {
+    if (duplicadosDetalle.length === 0) return
+    const ws = XLSX.utils.json_to_sheet(duplicadosDetalle)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Duplicados')
+    XLSX.writeFile(wb, `duplicados_${new Date().toISOString().slice(0, 10)}.xlsx`)
   }
 
   async function reintentarFallidos() {
@@ -820,6 +834,53 @@ export default function CargaMasiva() {
                   <Button onClick={reintentarFallidos} className="text-xs">
                     <RotateCcw size={14} /> Reintentar ({registrosFallidos.length})
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Duplicates detail */}
+            {duplicadosDetalle.length > 0 && (
+              <div className="text-left max-w-2xl mx-auto mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-yellow-800">
+                    {duplicadosDetalle.length} duplicados detectados
+                  </h4>
+                  <Button variant="secondary" onClick={descargarDuplicadosXLSX} className="text-xs">
+                    <Download size={14} /> Descargar reporte
+                  </Button>
+                </div>
+                <div className="overflow-x-auto max-h-48 overflow-y-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-yellow-300">
+                        <th className="text-left px-2 py-1 text-yellow-700">CUPS</th>
+                        <th className="text-left px-2 py-1 text-yellow-700">Existente</th>
+                        <th className="text-left px-2 py-1 text-yellow-700">Nuevo</th>
+                        <th className="text-left px-2 py-1 text-yellow-700">Acción</th>
+                        <th className="text-left px-2 py-1 text-yellow-700">Razón</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {duplicadosDetalle.slice(0, 50).map((d, i) => (
+                        <tr key={i} className="border-b border-yellow-100">
+                          <td className="px-2 py-1 font-mono">{d.cups?.slice(-10)}</td>
+                          <td className="px-2 py-1 text-gray-600">{d.existente_nombre || d.existente_dni || '—'}</td>
+                          <td className="px-2 py-1 text-gray-600">{d.nuevo_nombre || d.nuevo_dni || '—'}</td>
+                          <td className="px-2 py-1">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${d.accion === 'ACTUALIZADO' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                              {d.accion}
+                            </span>
+                          </td>
+                          <td className="px-2 py-1 text-gray-500">{d.razon}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {duplicadosDetalle.length > 50 && (
+                    <p className="text-xs text-yellow-600 mt-2 text-center">
+                      Mostrando 50 de {duplicadosDetalle.length} — descarga el Excel para ver todos
+                    </p>
+                  )}
                 </div>
               </div>
             )}
