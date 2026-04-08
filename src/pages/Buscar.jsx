@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Search, XCircle } from 'lucide-react'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Button from '../components/UI/Button'
 import FichaTramitabilidad from '../components/Clientes/FichaTramitabilidad'
@@ -37,31 +36,32 @@ export default function Buscar() {
     setResultados([])
 
     try {
-      // Quitar prefijo +34 o 34 para búsqueda de teléfonos
-      const sinPrefijo = termino.replace(/^\+34/, '').replace(/^34/, '').trim()
-
-      const { data, error } = await supabase.rpc('buscar_clientes', {
-        termino: sinPrefijo,
+      const res = await fetch('/.netlify/functions/search-clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ termino }),
       })
 
-      if (error) {
-        console.error('Error RPC:', error)
+      const data = await res.json()
+
+      if (!res.ok) {
+        console.error('Error búsqueda:', data.error)
         return
       }
 
-      const resultados = data || []
-      setResultados(resultados)
+      const lista = Array.isArray(data) ? data : data.data || []
+      setResultados(lista)
 
-      if (resultados.length === 0) {
+      if (lista.length === 0) {
         setSeleccionado(null)
-      } else if (!esAdmin && resultados.some(c => esEstadoBloqueado(c.estado))) {
+      } else if (!esAdmin && lista.some(c => esEstadoBloqueado(c.estado))) {
         setSeleccionado(null)
         setAlerta({
           tipo: 'proceso_activo',
           mensaje: 'CLIENTE NO TRAMITABLE — Este cliente ya tiene un proceso activo.',
         })
-      } else if (resultados.length === 1) {
-        setSeleccionado(resultados[0])
+      } else if (lista.length === 1) {
+        setSeleccionado(lista[0])
       }
 
       // Log search
@@ -74,7 +74,7 @@ export default function Buscar() {
           usuario_email: usuario?.email,
           oficina: usuario?.oficina?.nombre || null,
           termino_busqueda: termino,
-          resultado_encontrado: resultados.length > 0,
+          resultado_encontrado: lista.length > 0,
         }),
       }).catch(() => {})
 

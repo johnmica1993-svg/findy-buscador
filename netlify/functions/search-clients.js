@@ -12,62 +12,60 @@ export async function handler(event) {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: '{}' }
 
   try {
-    const { query, rol } = JSON.parse(event.body || '{}')
+    const { termino } = JSON.parse(event.body || '{}')
 
-    if (!query || query.trim().length < 2) {
-      return { statusCode: 200, headers, body: JSON.stringify({ data: [] }) }
+    if (!termino || termino.trim().length < 2) {
+      return { statusCode: 200, headers, body: JSON.stringify([]) }
     }
 
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabase = createClient(
+      process.env.VITE_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    )
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Config incompleta' }) }
+    const sinPrefijo = termino.trim()
+      .replace(/^\+34/, '')
+      .replace(/^0034/, '')
+      .replace(/[\s\-().]/g, '')
+
+    // Remove leading 34 only if remaining looks like a 9-digit Spanish phone
+    const cleaned = sinPrefijo.replace(/^34(\d{9})$/, '$1')
+    const t = `%${cleaned}%`
+
+    // Search main fields
+    const { data, error } = await supabase
+      .from('clientes')
+      .select('*')
+      .or(`dni.ilike.${t},cups.ilike.${t},nombre.ilike.${t}`)
+      .limit(20)
+
+    if (error) {
+      console.error('[search-clients] Query error:', error.message)
+      return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) }
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    })
+    let results = data || []
 
-    const trimmed = query.trim()
+    // If looks like a phone number and no results from main fields, search datos_extra
+    const isPhone = /^\d{6,}$/.test(cleaned)
+    if (isPhone || results.length === 0) {
+      // Search datos_extra as cast text — service role bypasses RLS
+      const { data: extraResults } = await supabase
+        .from('clientes')
+        .select('*')
+        .filter('datos_extra::text', 'ilike', t)
+        .limit(20)
 
-    // Normalize phone: strip +34/0034/34 prefix only if it looks like a phone
-    const isPhone = /^\+?\d[\d\s\-().]{5,}$/.test(trimmed)
-    let searchTerm = trimmed
-    if (isPhone) {
-      searchTerm = trimmed
-        .replace(/^\+34/, '')
-        .replace(/^0034/, '')
-        .replace(/^34(\d{6,})$/, '$1')
-        .replace(/[\s\-().]/g, '')
-    }
-
-    // Search with cleaned term, and also with original if different
-    const { data, error } = await supabase.rpc('buscar_clientes', {
-      termino: searchTerm,
-    })
-
-    // If phone search returned nothing, try with original term (for DNI like 34XXX)
-    if (!error && data?.length === 0 && searchTerm !== trimmed) {
-      const { data: data2 } = await supabase.rpc('buscar_clientes', { termino: trimmed })
-      if (data2?.length > 0) {
-        return { statusCode: 200, headers, body: JSON.stringify({ data: data2 }) }
+      if (extraResults) {
+        const existingIds = new Set(results.map(r => r.id))
+        for (const r of extraResults) {
+          if (!existingIds.has(r.id)) results.push(r)
+        }
       }
     }
 
-    if (error) {
-      console.error('[search-clients] RPC error:', error.message)
-      // Fallback: basic field search
-      const t = `%${trimmed}%`
-      const { data: fb } = await supabase
-        .from('clientes')
-        .select('*')
-        .or(`cups.ilike.${t},dni.ilike.${t},nombre.ilike.${t}`)
-        .limit(20)
-      return { statusCode: 200, headers, body: JSON.stringify({ data: fb || [] }) }
-    }
-
-    return { statusCode: 200, headers, body: JSON.stringify({ data: data || [] }) }
+    return { statusCode: 200, headers, body: JSON.stringify(results) }
 
   } catch (err) {
     console.error('[search-clients] Unexpected:', err.message)
