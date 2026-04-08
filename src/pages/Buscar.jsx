@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Search, XCircle } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Button from '../components/UI/Button'
 import FichaTramitabilidad from '../components/Clientes/FichaTramitabilidad'
@@ -26,8 +27,8 @@ export default function Buscar() {
   const [alerta, setAlerta] = useState(null)
 
   async function buscar() {
-    const q = query.trim()
-    if (!q || q.length < 2) return
+    const termino = query.trim()
+    if (!termino) return
 
     setBuscando(true)
     setBuscado(true)
@@ -36,28 +37,33 @@ export default function Buscar() {
     setResultados([])
 
     try {
-      const res = await fetch('/.netlify/functions/search-clients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q, rol: usuario?.rol }),
+      // Quitar prefijo +34 o 34 para búsqueda de teléfonos
+      const sinPrefijo = termino.replace(/^\+34/, '').replace(/^34/, '').trim()
+
+      const { data, error } = await supabase.rpc('buscar_clientes', {
+        termino: sinPrefijo,
       })
-      const result = await res.json()
-      if (!res.ok) throw new Error(result.error || 'Error en la búsqueda')
 
-      const data = result.data || []
-      setResultados(data)
+      if (error) {
+        console.error('Error RPC:', error)
+        return
+      }
 
-      if (data.length === 0) {
+      const resultados = data || []
+      setResultados(resultados)
+
+      if (resultados.length === 0) {
         setSeleccionado(null)
-      } else if (!esAdmin && data.some(c => esEstadoBloqueado(c.estado))) {
+      } else if (!esAdmin && resultados.some(c => esEstadoBloqueado(c.estado))) {
         setSeleccionado(null)
         setAlerta({
           tipo: 'proceso_activo',
           mensaje: 'CLIENTE NO TRAMITABLE — Este cliente ya tiene un proceso activo.',
         })
-      } else if (data.length === 1) {
-        setSeleccionado(data[0])
+      } else if (resultados.length === 1) {
+        setSeleccionado(resultados[0])
       }
+
       // Log search
       fetch('/.netlify/functions/log-search', {
         method: 'POST',
@@ -67,13 +73,10 @@ export default function Buscar() {
           usuario_nombre: usuario?.nombre,
           usuario_email: usuario?.email,
           oficina: usuario?.oficina?.nombre || null,
-          termino_busqueda: q,
-          resultado_encontrado: data.length > 0,
+          termino_busqueda: termino,
+          resultado_encontrado: resultados.length > 0,
         }),
-      })
-        .then(r => r.json())
-        .then(r => console.log('[Buscar] Log registrado:', r))
-        .catch(e => console.warn('[Buscar] Error registrando log:', e))
+      }).catch(() => {})
 
     } catch (err) {
       console.error('Error buscando:', err)
@@ -98,7 +101,7 @@ export default function Buscar() {
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Buscar por CUPS, DNI o Nombre..."
+            placeholder="Buscar por CUPS, DNI, Nombre o Teléfono..."
             className="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"
             autoFocus
           />
