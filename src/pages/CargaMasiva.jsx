@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react'
 import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Pencil, X, ArrowRight, Loader2, File, XCircle } from 'lucide-react'
 import * as XLSX from 'xlsx'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/UI/Card'
 import Button from '../components/UI/Button'
@@ -325,7 +324,7 @@ export default function CargaMasiva() {
 
       let cargados = 0, duplicados = 0, erroresCarga = errores.length
       let primerError = null
-      const BATCH_SIZE = 50
+      const BATCH_SIZE = 200
 
       for (let j = 0; j < clientes.length; j += BATCH_SIZE) {
         if (cancelRef.current) break
@@ -338,41 +337,29 @@ export default function CargaMasiva() {
         })
 
         const batch = clientes.slice(j, j + BATCH_SIZE)
-        const { data, error } = await supabase
-          .from('clientes')
-          .insert(batch)
-          .select()
 
-        if (error) {
-          if (!primerError) {
-            primerError = `[Batch ${j}] code=${error.code} msg=${error.message} details=${error.details} hint=${error.hint}`
-            console.error('PRIMER ERROR DE CARGA:', primerError)
-            console.error('Registro ejemplo:', JSON.stringify(batch[0], null, 2))
-          }
+        try {
+          const res = await fetch('/.netlify/functions/bulk-insert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clientes: batch }),
+          })
+          const result = await res.json()
 
-          // Fallback: try one by one
-          for (const record of batch) {
-            const { data: d, error: e } = await supabase.from('clientes').insert(record).select()
-            if (e) {
-              if (e.code === '23505') {
-                duplicados++
-              } else {
-                erroresCarga++
-                if (!primerError) {
-                  primerError = `code=${e.code} msg=${e.message} details=${e.details}`
-                  console.error('ERROR individual:', primerError, 'Registro:', JSON.stringify(record, null, 2))
-                }
-              }
-            } else {
-              cargados += d?.length || 0
-            }
+          if (!res.ok) {
+            erroresCarga += batch.length
+            if (!primerError) primerError = result.error || `HTTP ${res.status}`
+          } else {
+            cargados += result.cargados || 0
+            duplicados += result.duplicados || 0
+            erroresCarga += result.errores || 0
+            if (result.primerError && !primerError) primerError = result.primerError
           }
-        } else {
-          cargados += data?.length || 0
+        } catch (err) {
+          erroresCarga += batch.length
+          if (!primerError) primerError = `Network: ${err.message}`
         }
       }
-
-      if (primerError) console.warn(`[${archivo.name}] Primer error: ${primerError}`)
 
       updated[i] = {
         ...updated[i],
