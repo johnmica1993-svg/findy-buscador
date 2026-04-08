@@ -12,7 +12,7 @@ export async function handler(event) {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: '{}' }
 
   try {
-    const { usuario_id, usuario_nombre, termino_busqueda, resultado_encontrado } = JSON.parse(event.body || '{}')
+    const { usuario_id, usuario_nombre, usuario_email, oficina, termino_busqueda, resultado_encontrado } = JSON.parse(event.body || '{}')
 
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
@@ -23,6 +23,8 @@ export async function handler(event) {
     await supabase.from('busquedas_log').insert({
       usuario_id,
       usuario_nombre,
+      usuario_email,
+      oficina,
       termino_busqueda,
       resultado_encontrado,
     })

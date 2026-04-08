@@ -65,6 +65,8 @@ export default function Buscar() {
         body: JSON.stringify({
           usuario_id: usuario?.id,
           usuario_nombre: usuario?.nombre,
+          usuario_email: usuario?.email,
+          oficina: usuario?.oficina?.nombre || null,
           termino_busqueda: q,
           resultado_encontrado: data.length > 0,
         }),
