@@ -10,17 +10,18 @@ const CAMPOS_BD = [
   'fecha_alta', 'fecha_activacion', 'fecha_ultimo_cambio', 'fecha_baja', 'estado',
 ]
 
+// campo BD → variantes reconocidas (case-insensitive match via normalize)
 const COLUMN_MAP = {
-  cups: ['cups', 'CUPS', 'Cups'],
-  dni: ['dni', 'DNI', 'nif', 'NIF', 'Dni', 'Nif'],
-  nombre: ['nombre', 'Nombre', 'NOMBRE', 'razon social', 'Razón Social', 'RAZON SOCIAL'],
-  direccion: ['direccion', 'Dirección', 'DIRECCION', 'Direccion', 'dirección'],
-  campana: ['campana', 'campaña', 'Campaña', 'CAMPAÑA', 'Campana', 'CAMPANA'],
-  fecha_alta: ['fecha_alta', 'Fecha Alta', 'FECHA ALTA', 'fecha alta', 'FechaAlta'],
-  fecha_activacion: ['fecha_activacion', 'Fecha Activación', 'FECHA ACTIVACION', 'fecha activacion', 'Fecha Activacion', 'FechaActivacion'],
-  fecha_ultimo_cambio: ['fecha_ultimo_cambio', 'Fecha Último Cambio', 'FECHA ULTIMO CAMBIO', 'fecha ultimo cambio'],
-  fecha_baja: ['fecha_baja', 'Fecha Baja', 'FECHA BAJA', 'fecha baja'],
-  estado: ['estado', 'Estado', 'ESTADO'],
+  cups: ['cups', 'CUPS', 'Cups', 'cup', 'CUP'],
+  dni: ['dni', 'DNI', 'nif', 'NIF', 'Dni', 'Nif', 'CIF', 'cif', 'Cif', 'DNI/NIF', 'NIF/DNI', 'Documento'],
+  nombre: ['nombre', 'Nombre', 'NOMBRE', 'nombre_completo', 'NOMBRE COMPLETO', 'Nombre Completo', 'nombre completo', 'razon social', 'Razón Social', 'RAZON SOCIAL', 'Razon Social', 'titular', 'Titular', 'TITULAR'],
+  direccion: ['direccion', 'Dirección', 'DIRECCION', 'Direccion', 'dirección', 'Domicilio', 'domicilio', 'DOMICILIO', 'direccion_suministro', 'Dirección Suministro'],
+  campana: ['campana', 'campaña', 'Campaña', 'CAMPAÑA', 'Campana', 'CAMPANA', 'comercializadora', 'Comercializadora', 'COMERCIALIZADORA'],
+  fecha_alta: ['fecha_alta', 'Fecha Alta', 'FECHA ALTA', 'fecha alta', 'FechaAlta', 'Alta', 'alta', 'ALTA', 'Fecha de alta'],
+  fecha_activacion: ['fecha_activacion', 'Fecha Activación', 'FECHA ACTIVACION', 'fecha activacion', 'Fecha Activacion', 'FechaActivacion', 'Activación', 'activacion', 'Fecha de activación'],
+  fecha_ultimo_cambio: ['fecha_ultimo_cambio', 'Fecha Último Cambio', 'FECHA ULTIMO CAMBIO', 'fecha ultimo cambio', 'Último Cambio', 'ultimo cambio'],
+  fecha_baja: ['fecha_baja', 'Fecha Baja', 'FECHA BAJA', 'fecha baja', 'Baja', 'baja', 'BAJA', 'Fecha de baja'],
+  estado: ['estado', 'Estado', 'ESTADO', 'status', 'Status', 'STATUS', 'situacion', 'Situación', 'SITUACION'],
 }
 
 function detectarMapeo(hdrs) {
@@ -29,27 +30,17 @@ function detectarMapeo(hdrs) {
   for (const h of hdrs) {
     const hTrim = h?.trim()
     if (!hTrim) continue
+    let found = false
     for (const [campo, variantes] of Object.entries(COLUMN_MAP)) {
-      if (!usados.has(campo) && variantes.includes(hTrim)) {
+      if (!usados.has(campo) && variantes.some(v => v.toLowerCase() === hTrim.toLowerCase())) {
         mapeo[hTrim] = campo
         usados.add(campo)
+        found = true
         break
       }
     }
-    if (!mapeo[hTrim]) mapeo[hTrim] = `extra:${hTrim}`
-  }
-  return mapeo
-}
-
-function headersIguales(a, b) {
-  if (a.length !== b.length) return false
-  return a.every((h, i) => h === b[i])
-}
-
-function reutilizarMapeo(mapeoBase, headersNuevos) {
-  const mapeo = {}
-  for (const h of headersNuevos) {
-    mapeo[h] = mapeoBase[h] || `extra:${h}`
+    // Anything unrecognized → datos_extra
+    if (!found) mapeo[hTrim] = `extra:${hTrim}`
   }
   return mapeo
 }
@@ -211,16 +202,9 @@ export default function CargaMasiva() {
     setCustomName('')
   }
 
-  // Check which files need custom mapping (different headers)
   function getMapeoHeaders() {
     const firstValid = archivos.find(a => a.status !== 'error')
     return firstValid?.headers || []
-  }
-
-  function archivoNecesitaMapeo(archivo) {
-    const baseHeaders = getMapeoHeaders()
-    if (baseHeaders.length === 0 || archivo.status === 'error') return false
-    return !headersIguales(archivo.headers, baseHeaders)
   }
 
   // Build clientes from rows using a mapeo
@@ -293,13 +277,6 @@ export default function CargaMasiva() {
   }
 
   async function iniciarCarga() {
-    // Check if any file needs custom mapping
-    const needsMapping = archivos.findIndex((a, i) => a.status !== 'error' && archivoNecesitaMapeo(a) && !a.mapeo._custom)
-    if (needsMapping >= 0) {
-      setArchivoMapeoIdx(needsMapping)
-      return
-    }
-
     cancelRef.current = false
     setStep(3)
     setRegistrosFallidos([])
@@ -316,12 +293,10 @@ export default function CargaMasiva() {
       updated[i] = { ...updated[i], status: 'procesando' }
       setArchivos([...updated])
 
-      // Determine mapeo for this file
+      // Each file gets its own auto-detected mapeo, or custom if set
       const fileMapeo = archivo.mapeo._custom
         ? archivo.mapeo
-        : headersIguales(archivo.headers, getMapeoHeaders())
-          ? mapeoBase
-          : reutilizarMapeo(mapeoBase, archivo.headers)
+        : detectarMapeo(archivo.headers)
 
       const { clientes, errores } = buildClientes(archivo.rows, archivo.headers, fileMapeo)
 
@@ -566,15 +541,11 @@ export default function CargaMasiva() {
             <div className="space-y-1 max-h-60 overflow-y-auto">
               {archivos.map((a, i) => (
                 <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${
-                  a.status === 'error' ? 'bg-red-50' : archivoNecesitaMapeo(a) ? 'bg-yellow-50' : 'bg-gray-50'
+                  a.status === 'error' ? 'bg-red-50' : 'bg-gray-50'
                 }`}>
-                  {STATUS_ICON[a.status === 'error' ? 'error' : archivoNecesitaMapeo(a) ? 'mapeoPendiente' : 'pendiente']}
+                  {STATUS_ICON[a.status === 'error' ? 'error' : 'pendiente']}
                   <span className="font-medium text-gray-700 flex-1 truncate">{a.name}</span>
                   <span className="text-gray-500">{a.totalRows} filas</span>
-                  {archivoNecesitaMapeo(a) && !a.mapeo._custom && (
-                    <span className="text-yellow-600 text-[10px] font-medium">headers diferentes</span>
-                  )}
-                  {a.mapeo._custom && <span className="text-green-600 text-[10px] font-medium">mapeo custom</span>}
                   {a.status === 'error' && <span className="text-red-600">{a.result?.error}</span>}
                   <button onClick={() => eliminarArchivo(i)} className="p-0.5 hover:bg-gray-200 rounded text-gray-400 hover:text-red-500">
                     <X size={12} />
@@ -583,33 +554,6 @@ export default function CargaMasiva() {
               ))}
             </div>
           </Card>
-
-          {/* Custom mapping modal for file with different headers */}
-          {archivoMapeoIdx !== null && archivos[archivoMapeoIdx] && (
-            <MappingCard
-              titulo={`Mapeo para: ${archivos[archivoMapeoIdx].name}`}
-              subtitulo="Este archivo tiene encabezados diferentes. Configura el mapeo."
-              headers={archivos[archivoMapeoIdx].headers}
-              mapeo={archivos[archivoMapeoIdx].mapeo._custom ? archivos[archivoMapeoIdx].mapeo : detectarMapeo(archivos[archivoMapeoIdx].headers)}
-              preview={archivos[archivoMapeoIdx].rows.slice(0, 3)}
-              onMapeoChange={(h, d) => {
-                const updated = [...archivos]
-                const m = updated[archivoMapeoIdx].mapeo._custom ? { ...updated[archivoMapeoIdx].mapeo } : detectarMapeo(updated[archivoMapeoIdx].headers)
-                m[h] = d
-                updated[archivoMapeoIdx] = { ...updated[archivoMapeoIdx], mapeo: m }
-                setArchivos(updated)
-              }}
-              onConfirm={() => {
-                const m = archivos[archivoMapeoIdx].mapeo._custom ? archivos[archivoMapeoIdx].mapeo : detectarMapeo(archivos[archivoMapeoIdx].headers)
-                confirmarMapeoArchivo(archivoMapeoIdx, m)
-              }}
-              onCancel={() => setArchivoMapeoIdx(null)}
-              editandoCampo={editandoCampo}
-              setEditandoCampo={setEditandoCampo}
-              customName={customName}
-              setCustomName={setCustomName}
-            />
-          )}
 
           {/* Main mapping (from first file) */}
           {archivoMapeoIdx === null && mapeoHeaders.length > 0 && (
