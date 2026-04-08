@@ -1,8 +1,22 @@
 import { useState, useCallback } from 'react'
-import { Search } from 'lucide-react'
+import { Search, XCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import FichaTramitabilidad from '../components/Clientes/FichaTramitabilidad'
+
+const ESTADOS_BLOQUEADOS = [
+  'activado',
+  'tramitando',
+  'pendiente de verificacion',
+  'pendiente de verificación',
+  'pendiente',
+  'activo',
+]
+
+function esEstadoBloqueado(estado) {
+  if (!estado) return false
+  return ESTADOS_BLOQUEADOS.includes(estado.trim().toLowerCase())
+}
 
 export default function Buscar() {
   const { esAdmin } = useAuth()
@@ -11,21 +25,27 @@ export default function Buscar() {
   const [seleccionado, setSeleccionado] = useState(null)
   const [buscando, setBuscando] = useState(false)
   const [buscado, setBuscado] = useState(false)
+  const [alerta, setAlerta] = useState(null) // { tipo, mensaje }
 
   const buscar = useCallback(async (q) => {
     if (!q || q.length < 2) {
       setResultados([])
       setBuscado(false)
       setSeleccionado(null)
+      setAlerta(null)
       return
     }
     setBuscando(true)
     setBuscado(true)
+    setAlerta(null)
+    setSeleccionado(null)
+
     try {
-      const termino = `%${q}%`
+      const trimmed = q.trim()
 
       if (esAdmin) {
-        // Admin: search broadly, show multiple results
+        // Admin: search broadly, no restrictions
+        const termino = `%${trimmed}%`
         const { data, error } = await supabase
           .from('clientes')
           .select('*')
@@ -35,19 +55,41 @@ export default function Buscar() {
         if (error) throw error
         setResultados(data || [])
         if (data?.length === 1) setSeleccionado(data[0])
-        else setSeleccionado(null)
       } else {
-        // Sub-users: exact match only on CUPS or DNI, one result at a time
-        const trimmed = q.trim()
+        // Sub-users: exact match on CUPS or DNI, with validation
         const { data, error } = await supabase
           .from('clientes')
           .select('*')
           .or(`cups.eq.${trimmed},dni.eq.${trimmed}`)
-          .limit(1)
 
         if (error) throw error
-        setResultados(data || [])
-        setSeleccionado(data?.[0] || null)
+
+        if (!data || data.length === 0) {
+          setResultados([])
+          setSeleccionado(null)
+        } else if (data.length > 1) {
+          // Duplicate records
+          setResultados([])
+          setSeleccionado(null)
+          setAlerta({
+            tipo: 'duplicado',
+            mensaje: 'CLIENTE NO TRAMITABLE — Registro duplicado en el sistema. Contacta al administrador.',
+          })
+        } else {
+          // Single result — check estado
+          const cliente = data[0]
+          if (esEstadoBloqueado(cliente.estado)) {
+            setResultados(data)
+            setSeleccionado(null)
+            setAlerta({
+              tipo: 'proceso_activo',
+              mensaje: 'CLIENTE NO TRAMITABLE — Este cliente ya tiene un proceso activo.',
+            })
+          } else {
+            setResultados(data)
+            setSeleccionado(cliente)
+          }
+        }
       }
     } catch (err) {
       console.error('Error buscando:', err)
@@ -88,8 +130,19 @@ export default function Buscar() {
         <p className="text-xs text-gray-400 -mt-4 mb-4">Introduce el CUPS o DNI completo del cliente para verificar su tramitabilidad.</p>
       )}
 
-      {/* Resultados */}
-      {buscado && !buscando && resultados.length === 0 && (
+      {/* Alerta de bloqueo (solo sub-usuarios) */}
+      {alerta && (
+        <div className="mb-6 rounded-xl border-2 border-red-400 bg-red-50 p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <XCircle className="text-red-600 shrink-0" size={28} />
+            <h3 className="text-lg font-bold text-red-800">NO TRAMITABLE</h3>
+          </div>
+          <p className="text-sm text-red-700">{alerta.mensaje}</p>
+        </div>
+      )}
+
+      {/* Sin resultados */}
+      {buscado && !buscando && resultados.length === 0 && !alerta && (
         <div className="text-center py-12 text-gray-500">
           <Search size={48} className="mx-auto mb-3 text-gray-300" />
           <p>No se encontraron clientes para "{query}"</p>
