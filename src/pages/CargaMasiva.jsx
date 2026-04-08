@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Pencil, X, ArrowRight, Loader2, File, XCircle, Download, RotateCcw } from 'lucide-react'
 import * as XLSX from 'xlsx'
+import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/UI/Card'
 import Button from '../components/UI/Button'
@@ -346,6 +347,19 @@ export default function CargaMasiva() {
     return { clientes, errores: errs }
   }
 
+  // Send one batch to the Netlify Function
+  async function enviarBatch(batch) {
+    const res = await fetch('/.netlify/functions/bulk-insert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientes: batch }),
+    })
+    const text = await res.text()
+    let result
+    try { result = JSON.parse(text) } catch { result = { error: text.slice(0, 300) } }
+    return { ok: res.ok, status: res.status, result, batch }
+  }
+
   async function iniciarCarga() {
     cancelRef.current = false
     setStep(3)
@@ -353,95 +367,94 @@ export default function CargaMasiva() {
     let totalCargados = 0, totalActualizados = 0, totalDuplicados = 0, totalErrores = 0
     const allFallidos = []
 
+    // Keep-alive: refresh Supabase session every 4 minutes
+    const keepAlive = setInterval(async () => {
+      try { await supabase.auth.refreshSession() } catch {}
+    }, 4 * 60 * 1000)
+
     const updated = [...archivos]
+    const BATCH_SIZE = 200
+    const PARALLEL = 3
 
-    for (let i = 0; i < updated.length; i++) {
-      if (cancelRef.current) break
-      const archivo = updated[i]
-      if (archivo.status === 'error') continue
-
-      updated[i] = { ...updated[i], status: 'procesando' }
-      setArchivos([...updated])
-
-      // Each file gets its own auto-detected mapeo, or custom if set
-      const fileMapeo = archivo.mapeo._custom
-        ? archivo.mapeo
-        : detectarMapeo(archivo.headers)
-
-      const { clientes, errores } = buildClientes(archivo.rows, archivo.headers, fileMapeo)
-
-      console.log(`[CargaMasiva] Archivo: ${archivo.name}`)
-      console.log(`[CargaMasiva] Filas raw: ${archivo.rows.length}, Clientes válidos: ${clientes.length}, Errores validación: ${errores.length}`)
-      console.log(`[CargaMasiva] Mapeo usado:`, fileMapeo)
-      if (clientes.length > 0) console.log(`[CargaMasiva] Primer registro:`, JSON.stringify(clientes[0]))
-      if (errores.length > 0) console.log(`[CargaMasiva] Primeros errores:`, errores.slice(0, 5))
-
-      let cargados = 0, actualizados = 0, duplicados = 0, erroresCarga = errores.length
-      let primerError = errores.length > 0 ? `Validación: ${errores.length} errores (ej: ${errores[0]?.error})` : null
-      const fileFallidos = []
-      const BATCH_SIZE = 25
-
-      for (let j = 0; j < clientes.length; j += BATCH_SIZE) {
+    try {
+      for (let i = 0; i < updated.length; i++) {
         if (cancelRef.current) break
+        const archivo = updated[i]
+        if (archivo.status === 'error') continue
 
-        setProgreso({
-          archivoIdx: i + 1,
-          archivoNombre: archivo.name,
-          filaActual: Math.min(j + BATCH_SIZE, clientes.length),
-          filasTotal: clientes.length,
-        })
+        updated[i] = { ...updated[i], status: 'procesando' }
+        setArchivos([...updated])
 
-        const batch = clientes.slice(j, j + BATCH_SIZE)
+        const fileMapeo = archivo.mapeo._custom
+          ? archivo.mapeo
+          : detectarMapeo(archivo.headers)
 
-        try {
-          const res = await fetch('/.netlify/functions/bulk-insert', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ clientes: batch }),
+        const { clientes, errores } = buildClientes(archivo.rows, archivo.headers, fileMapeo)
+
+        console.log(`[CargaMasiva] ${archivo.name}: ${clientes.length} válidos, ${errores.length} errores validación`)
+
+        let cargados = 0, actualizados = 0, duplicados = 0, erroresCarga = errores.length
+        let primerError = errores.length > 0 ? `Validación: ${errores.length} errores (ej: ${errores[0]?.error})` : null
+        const fileFallidos = []
+
+        // Build all batches
+        const batches = []
+        for (let j = 0; j < clientes.length; j += BATCH_SIZE) {
+          batches.push(clientes.slice(j, j + BATCH_SIZE))
+        }
+
+        // Process PARALLEL batches at a time
+        for (let b = 0; b < batches.length; b += PARALLEL) {
+          if (cancelRef.current) break
+
+          const chunk = batches.slice(b, b + PARALLEL)
+          const processed = (b + chunk.length) * BATCH_SIZE
+          setProgreso({
+            archivoIdx: i + 1,
+            archivoNombre: archivo.name,
+            filaActual: Math.min(processed, clientes.length),
+            filasTotal: clientes.length,
           })
 
-          const text = await res.text()
-          let result
-          try { result = JSON.parse(text) } catch { result = { error: text.slice(0, 300) } }
+          const results = await Promise.all(chunk.map(batch =>
+            enviarBatch(batch).catch(err => ({
+              ok: false, result: { error: `Red: ${err.message}` }, batch
+            }))
+          ))
 
-          if (!res.ok) {
-            // Whole batch failed (timeout, server error)
-            const reason = result.error || `HTTP ${res.status}`
-            batch.forEach(r => fileFallidos.push({ record: r, error: reason }))
-            erroresCarga += batch.length
-            if (!primerError) primerError = reason
-          } else {
-            cargados += result.cargados || 0
-            actualizados += result.actualizados || 0
-            duplicados += result.duplicados || 0
-            erroresCarga += result.errores || 0
-            if (result.primerError && !primerError) primerError = result.primerError
-            if (result.fallidos?.length > 0) {
-              fileFallidos.push(...result.fallidos)
+          for (const { ok, status, result, batch } of results) {
+            if (!ok) {
+              const reason = result.error || `HTTP ${status}`
+              batch.forEach(r => fileFallidos.push({ record: r, error: reason }))
+              erroresCarga += batch.length
+              if (!primerError) primerError = reason
+            } else {
+              cargados += result.cargados || 0
+              actualizados += result.actualizados || 0
+              duplicados += result.duplicados || 0
+              erroresCarga += result.errores || 0
+              if (result.primerError && !primerError) primerError = result.primerError
+              if (result.fallidos?.length > 0) fileFallidos.push(...result.fallidos)
             }
           }
-        } catch (err) {
-          // Network/timeout error — mark entire batch as failed
-          const reason = `Timeout o error de red: ${err.message}`
-          batch.forEach(r => fileFallidos.push({ record: r, error: reason }))
-          erroresCarga += batch.length
-          if (!primerError) primerError = reason
         }
+
+        allFallidos.push(...fileFallidos)
+
+        updated[i] = {
+          ...updated[i],
+          status: erroresCarga > 0 && cargados === 0 ? 'error' : 'completado',
+          result: { cargados, actualizados, duplicados, errores: erroresCarga, primerError },
+        }
+        setArchivos([...updated])
+
+        totalCargados += cargados
+        totalActualizados += actualizados
+        totalDuplicados += duplicados
+        totalErrores += erroresCarga
       }
-
-      allFallidos.push(...fileFallidos)
-
-      updated[i] = {
-        ...updated[i],
-        status: erroresCarga > 0 && cargados === 0 ? 'error' : 'completado',
-        result: { cargados, actualizados, duplicados, errores: erroresCarga, primerError },
-      }
-      setArchivos([...updated])
-
-      totalCargados += cargados
-      totalActualizados += actualizados
-      totalDuplicados += duplicados
-      totalErrores += erroresCarga
+    } finally {
+      clearInterval(keepAlive)
     }
 
     setRegistrosFallidos(allFallidos)

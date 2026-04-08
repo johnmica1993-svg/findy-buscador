@@ -31,31 +31,29 @@ export async function handler(event) {
 
     const trimmed = query.trim()
 
-    // Normalize phone: strip +34 or leading 34
-    const sinPrefijo = trimmed.replace(/^\+34/, '').replace(/^34(\d{9})$/, '$1').replace(/[\s\-]/g, '')
+    // Normalize: strip +34 or leading 34 prefix, remove spaces/dashes
+    const sinPrefijo = trimmed
+      .replace(/^\+34/, '')
+      .replace(/^0034/, '')
+      .replace(/^34(\d{9})$/, '$1')
+      .replace(/[\s\-().]/g, '')
 
-    const lim = rol === 'ADMIN' ? 50 : 20
+    // Use the term that gives better results — the cleaned version
+    const searchTerm = sinPrefijo || trimmed
 
-    // Use RPC for a single SQL query that searches everything
     const { data, error } = await supabase.rpc('buscar_clientes', {
-      termino: trimmed,
-      termino_tel: sinPrefijo,
-      lim: lim,
+      termino: searchTerm,
     })
 
     if (error) {
       console.error('[search-clients] RPC error:', error.message)
-      // Fallback: basic search without phone
+      // Fallback: basic field search
       const t = `%${trimmed}%`
-      const { data: fb, error: fbErr } = await supabase
+      const { data: fb } = await supabase
         .from('clientes')
         .select('*')
         .or(`cups.ilike.${t},dni.ilike.${t},nombre.ilike.${t}`)
-        .limit(lim)
-
-      if (fbErr) {
-        return { statusCode: 500, headers, body: JSON.stringify({ error: fbErr.message }) }
-      }
+        .limit(20)
       return { statusCode: 200, headers, body: JSON.stringify({ data: fb || [] }) }
     }
 
