@@ -10,9 +10,9 @@ const CAMPOS_BD = [
   'fecha_alta', 'fecha_activacion', 'fecha_ultimo_cambio', 'fecha_baja', 'estado',
 ]
 
-// campo BD → variantes reconocidas (case-insensitive match via normalize)
+// campo BD → variantes reconocidas (case-insensitive)
 const COLUMN_MAP = {
-  cups: ['cups', 'CUPS', 'Cups', 'cup', 'CUP'],
+  cups: ['cups', 'CUPS', 'Cups', 'cup', 'CUP', 'Id CUPS', 'id_cups', 'ID CUPS', 'ID_CUPS', 'idcups', 'Id cups'],
   dni: ['dni', 'DNI', 'nif', 'NIF', 'Dni', 'Nif', 'CIF', 'cif', 'Cif', 'DNI/NIF', 'NIF/DNI', 'Documento'],
   nombre: ['nombre', 'Nombre', 'NOMBRE', 'nombre_completo', 'NOMBRE COMPLETO', 'Nombre Completo', 'nombre completo', 'razon social', 'Razón Social', 'RAZON SOCIAL', 'Razon Social', 'titular', 'Titular', 'TITULAR'],
   direccion: ['direccion', 'Dirección', 'DIRECCION', 'Direccion', 'dirección', 'Domicilio', 'domicilio', 'DOMICILIO', 'direccion_suministro', 'Dirección Suministro'],
@@ -24,24 +24,62 @@ const COLUMN_MAP = {
   estado: ['estado', 'Estado', 'ESTADO', 'status', 'Status', 'STATUS', 'situacion', 'Situación', 'SITUACION'],
 }
 
+// Columns that map to normalized datos_extra keys
+const EXTRA_MAP = {
+  'extra:telefono1': ['telefono1', 'Telefono1', 'TELEFONO1', 'Telefono 1', 'TELEFON 1', 'Tel1', 'tel1', 'TEL1', 'Teléfono', 'telefono', 'TELEFONO', 'Teléfono 1', 'Movil', 'movil', 'MOVIL', 'Móvil'],
+  'extra:telefono2': ['telefono2', 'Telefono2', 'TELEFONO2', 'Telefono 2', 'TELEFON 2', 'Tel2', 'tel2', 'TEL2', 'Teléfono 2'],
+  'extra:email': ['email', 'Email', 'EMAIL', 'correo', 'Correo', 'CORREO', 'correo electronico', 'CORREO ELECTRONICO', 'Correo Electronico', 'Correo Electrónico', 'e-mail', 'E-mail'],
+  'extra:IBAN': ['iban', 'IBAN', 'Iban', 'cuenta', 'Cuenta', 'cuenta_bancaria', 'Cuenta Bancaria', 'CUENTA BANCARIA'],
+  'extra:codigo_postal': ['codigo postal', 'Codigo Postal', 'CODIGO POSTAL', 'CodigoPostal', 'cp', 'CP', 'Cp', 'C.P.', 'codigo_postal'],
+  'extra:provincia': ['provincia', 'Provincia', 'PROVINCIA'],
+  'extra:municipio': ['municipio', 'Municipio', 'MUNICIPIO', 'poblacion', 'Poblacion', 'POBLACION', 'Población', 'ciudad', 'Ciudad', 'CIUDAD', 'localidad', 'Localidad', 'LOCALIDAD'],
+  // Special: these will be concatenated into nombre or direccion in buildClientes
+  '_apellido1': ['apellido1', 'Apellido1', 'APELLIDO1', 'Apellido 1', 'apellido_1', 'Primer Apellido', 'primer apellido'],
+  '_apellido2': ['apellido2', 'Apellido2', 'APELLIDO2', 'Apellido 2', 'apellido_2', 'Segundo Apellido', 'segundo apellido'],
+  '_via': ['via', 'Via', 'VIA', 'Tipo Via', 'tipo_via', 'TIPO VIA', 'Tipo Vía'],
+  '_numero': ['numero', 'Numero', 'NUMERO', 'Número', 'Num', 'num', 'Nº'],
+  '_portal': ['portal', 'Portal', 'PORTAL'],
+  '_escalera': ['escalera', 'Escalera', 'ESCALERA', 'Esc', 'esc'],
+  '_piso': ['piso', 'Piso', 'PISO', 'Planta', 'planta'],
+  '_puerta': ['puerta', 'Puerta', 'PUERTA', 'Pta', 'pta'],
+}
+
 function detectarMapeo(hdrs) {
   const mapeo = {}
   const usados = new Set()
+
   for (const h of hdrs) {
     const hTrim = h?.trim()
     if (!hTrim) continue
+    const hLow = hTrim.toLowerCase()
     let found = false
+
+    // Check main BD fields
     for (const [campo, variantes] of Object.entries(COLUMN_MAP)) {
-      if (!usados.has(campo) && variantes.some(v => v.toLowerCase() === hTrim.toLowerCase())) {
+      if (!usados.has(campo) && variantes.some(v => v.toLowerCase() === hLow)) {
         mapeo[hTrim] = campo
         usados.add(campo)
         found = true
         break
       }
     }
-    // Anything unrecognized → datos_extra
-    if (!found) mapeo[hTrim] = `extra:${hTrim}`
+    if (found) continue
+
+    // Check known extras and special fields
+    for (const [destino, variantes] of Object.entries(EXTRA_MAP)) {
+      if (!usados.has(destino) && variantes.some(v => v.toLowerCase() === hLow)) {
+        mapeo[hTrim] = destino
+        usados.add(destino)
+        found = true
+        break
+      }
+    }
+    if (found) continue
+
+    // Anything else → datos_extra with original name
+    mapeo[hTrim] = `extra:${hTrim}`
   }
+
   return mapeo
 }
 
@@ -211,10 +249,13 @@ export default function CargaMasiva() {
   function buildClientes(rows, headers, mapeo) {
     const campoToIdx = {}
     const extraFields = []
+    const specialFields = {} // _apellido1, _via, _numero, etc.
     for (const [excelHeader, destino] of Object.entries(mapeo)) {
       const colIdx = headers.indexOf(excelHeader)
       if (colIdx < 0 || !destino || destino === '') continue
-      if (destino.startsWith('extra:')) {
+      if (destino.startsWith('_')) {
+        specialFields[destino] = colIdx
+      } else if (destino.startsWith('extra:')) {
         extraFields.push({ name: destino.slice(6), colIdx })
       } else {
         campoToIdx[destino] = colIdx
@@ -230,11 +271,16 @@ export default function CargaMasiva() {
         const colIdx = campoToIdx[campo]
         return colIdx !== undefined ? row[colIdx] : null
       }
+      const getSpecial = (key) => {
+        const colIdx = specialFields[key]
+        if (colIdx === undefined) return ''
+        const v = row[colIdx]
+        return (v !== null && v !== undefined) ? String(v).trim() : ''
+      }
 
       const cups = String(getVal('cups') || '').trim() || null
       const dniVal = limpiarDni(getVal('dni'))
 
-      // Only skip if both cups AND dni are identical to a previous row in this file
       const dupeKey = (cups && dniVal) ? `${cups}||${dniVal}` : null
       if (dupeKey && cupsVistos.has(dupeKey)) {
         errs.push({ fila: idx + 2, error: `Duplicado en archivo: ${cups} / ${dniVal}` })
@@ -242,6 +288,7 @@ export default function CargaMasiva() {
       }
       if (dupeKey) cupsVistos.add(dupeKey)
 
+      // Build datos_extra
       let datos_extra = null
       if (extraFields.length > 0) {
         datos_extra = {}
@@ -254,13 +301,36 @@ export default function CargaMasiva() {
         if (Object.keys(datos_extra).length === 0) datos_extra = null
       }
 
+      // Concatenate nombre + apellido1 + apellido2
+      const nombreBase = String(getVal('nombre') || '').trim()
+      const ap1 = getSpecial('_apellido1')
+      const ap2 = getSpecial('_apellido2')
+      const nombreCompleto = [nombreBase, ap1, ap2].filter(Boolean).join(' ') || null
+
+      // Concatenate direccion parts
+      const dirBase = String(getVal('direccion') || '').trim()
+      const via = getSpecial('_via')
+      const numero = getSpecial('_numero')
+      const portal = getSpecial('_portal')
+      const escalera = getSpecial('_escalera')
+      const piso = getSpecial('_piso')
+      const puerta = getSpecial('_puerta')
+      const dirParts = [via, numero, portal, escalera, piso, puerta].filter(Boolean)
+      let direccion = dirBase
+      if (!direccion && dirParts.length > 0) {
+        direccion = dirParts.join(' ')
+      } else if (direccion && dirParts.length > 0) {
+        direccion = direccion + ', ' + dirParts.join(' ')
+      }
+      direccion = direccion || null
+
       const estadoRaw = getVal('estado')
 
       clientes.push({
         cups,
         dni: dniVal,
-        nombre: String(getVal('nombre') || '').trim() || null,
-        direccion: String(getVal('direccion') || '').trim() || null,
+        nombre: nombreCompleto,
+        direccion,
         campana: String(getVal('campana') || '').trim().toUpperCase().replace('Ñ', 'N') || null,
         fecha_alta: parseFecha(getVal('fecha_alta')),
         fecha_activacion: parseFecha(getVal('fecha_activacion')),
