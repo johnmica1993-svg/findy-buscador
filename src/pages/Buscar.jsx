@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Search, XCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import Button from '../components/UI/Button'
 import FichaTramitabilidad from '../components/Clientes/FichaTramitabilidad'
 
 const ESTADOS_BLOQUEADOS = [
@@ -8,8 +9,6 @@ const ESTADOS_BLOQUEADOS = [
   'tramitando',
   'pendiente de verificacion',
   'pendiente de verificación',
-  'pendiente',
-  'activo',
 ]
 
 function esEstadoBloqueado(estado) {
@@ -26,37 +25,31 @@ export default function Buscar() {
   const [buscado, setBuscado] = useState(false)
   const [alerta, setAlerta] = useState(null)
 
-  const buscar = useCallback(async (q) => {
-    if (!q || q.length < 2) {
-      setResultados([])
-      setBuscado(false)
-      setSeleccionado(null)
-      setAlerta(null)
-      return
-    }
+  async function buscar() {
+    const q = query.trim()
+    if (!q || q.length < 2) return
+
     setBuscando(true)
     setBuscado(true)
     setAlerta(null)
     setSeleccionado(null)
+    setResultados([])
 
     try {
       const res = await fetch('/.netlify/functions/search-clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q.trim(), rol: usuario?.rol }),
+        body: JSON.stringify({ query: q, rol: usuario?.rol }),
       })
       const result = await res.json()
-
       if (!res.ok) throw new Error(result.error || 'Error en la búsqueda')
 
       const data = result.data || []
-
       setResultados(data)
 
       if (data.length === 0) {
         setSeleccionado(null)
       } else if (!esAdmin && data.some(c => esEstadoBloqueado(c.estado))) {
-        // Sub-users: block if ANY result has an active process
         setSeleccionado(null)
         setAlerta({
           tipo: 'proceso_activo',
@@ -70,33 +63,32 @@ export default function Buscar() {
     } finally {
       setBuscando(false)
     }
-  }, [esAdmin, usuario])
+  }
 
-  let debounceTimer
-  function handleChange(e) {
-    const val = e.target.value
-    setQuery(val)
-    clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(() => buscar(val), 300)
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') buscar()
   }
 
   return (
     <div className="max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Buscador de Clientes</h2>
 
-      <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={22} />
-        <input
-          type="text"
-          value={query}
-          onChange={handleChange}
-          placeholder="Buscar por CUPS, DNI o Nombre..."
-          className="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"
-          autoFocus
-        />
-        {buscando && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">Buscando...</div>
-        )}
+      <div className="flex gap-3 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={22} />
+          <input
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Buscar por CUPS, DNI o Nombre..."
+            className="w-full pl-12 pr-4 py-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"
+            autoFocus
+          />
+        </div>
+        <Button onClick={buscar} disabled={buscando || query.trim().length < 2} className="px-8 py-4 text-lg rounded-xl">
+          {buscando ? 'Buscando...' : 'Buscar'}
+        </Button>
       </div>
 
       {alerta && (
