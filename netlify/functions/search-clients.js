@@ -37,24 +37,81 @@ export async function handler(event) {
     const trimmed = query.trim()
     const termino = `%${trimmed}%`
 
+    // Normalize phone: strip +34 or 34 prefix
+    const telNorm = trimmed.replace(/^\+34/, '').replace(/^34(\d{9})$/, '$1')
+    const telTerm = `%${telNorm}%`
+
+    // Build OR conditions
+    const conditions = [
+      `cups.ilike.${termino}`,
+      `dni.ilike.${termino}`,
+      `nombre.ilike.${termino}`,
+    ]
+
+    // If it looks like a phone number (mostly digits), add phone search
+    const isPhone = /^\+?\d[\d\s-]{5,}$/.test(trimmed)
+    if (isPhone) {
+      // Search in datos_extra JSONB for common phone field names
+      // We'll do this via raw SQL since Supabase JS client can't do JSONB text search in .or()
+    }
+
+    // First query: standard fields
     let q = supabase
       .from('clientes')
       .select('*')
-      .or(`cups.ilike.${termino},dni.ilike.${termino},nombre.ilike.${termino}`)
+      .or(conditions.join(','))
 
     if (rol === 'ADMIN') {
+      q = q.limit(50)
+    } else {
       q = q.limit(20)
     }
-    // No limit for sub-users so we can detect duplicates
 
-    const { data, error } = await q
+    const { data: results1, error: err1 } = await q
 
-    if (error) {
-      console.error('[search-clients] Error:', error.message)
-      return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) }
+    if (err1) {
+      console.error('[search-clients] Query error:', err1.message)
+      return { statusCode: 500, headers, body: JSON.stringify({ error: err1.message }) }
     }
 
-    return { statusCode: 200, headers, body: JSON.stringify({ data: data || [] }) }
+    let allResults = results1 || []
+
+    // If phone-like query, also search in datos_extra JSONB
+    if (isPhone && telNorm.length >= 6) {
+      const { data: results2, error: err2 } = await supabase.rpc('search_by_phone', {
+        phone_term: telNorm,
+      }).limit(20)
+
+      if (!err2 && results2) {
+        // Merge without duplicates
+        const existingIds = new Set(allResults.map(r => r.id))
+        for (const r of results2) {
+          if (!existingIds.has(r.id)) {
+            allResults.push(r)
+            existingIds.add(r.id)
+          }
+        }
+      } else if (err2) {
+        // RPC doesn't exist yet, fallback: search datos_extra as text
+        console.log('[search-clients] RPC not available, trying text search')
+        const { data: results3 } = await supabase
+          .from('clientes')
+          .select('*')
+          .or(`datos_extra::text.ilike.%${telNorm}%`)
+          .limit(20)
+
+        if (results3) {
+          const existingIds = new Set(allResults.map(r => r.id))
+          for (const r of results3) {
+            if (!existingIds.has(r.id)) {
+              allResults.push(r)
+            }
+          }
+        }
+      }
+    }
+
+    return { statusCode: 200, headers, body: JSON.stringify({ data: allResults }) }
 
   } catch (err) {
     console.error('[search-clients] Unexpected:', err.message)
