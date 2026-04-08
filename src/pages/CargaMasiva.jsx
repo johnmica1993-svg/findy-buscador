@@ -350,7 +350,7 @@ export default function CargaMasiva() {
     cancelRef.current = false
     setStep(3)
     setRegistrosFallidos([])
-    let totalCargados = 0, totalDuplicados = 0, totalErrores = 0
+    let totalCargados = 0, totalActualizados = 0, totalDuplicados = 0, totalErrores = 0
     const allFallidos = []
 
     const updated = [...archivos]
@@ -376,7 +376,7 @@ export default function CargaMasiva() {
       if (clientes.length > 0) console.log(`[CargaMasiva] Primer registro:`, JSON.stringify(clientes[0]))
       if (errores.length > 0) console.log(`[CargaMasiva] Primeros errores:`, errores.slice(0, 5))
 
-      let cargados = 0, duplicados = 0, erroresCarga = errores.length
+      let cargados = 0, actualizados = 0, duplicados = 0, erroresCarga = errores.length
       let primerError = errores.length > 0 ? `Validación: ${errores.length} errores (ej: ${errores[0]?.error})` : null
       const fileFallidos = []
       const BATCH_SIZE = 25
@@ -412,10 +412,10 @@ export default function CargaMasiva() {
             if (!primerError) primerError = reason
           } else {
             cargados += result.cargados || 0
+            actualizados += result.actualizados || 0
             duplicados += result.duplicados || 0
             erroresCarga += result.errores || 0
             if (result.primerError && !primerError) primerError = result.primerError
-            // Collect individual failed records from the function
             if (result.fallidos?.length > 0) {
               fileFallidos.push(...result.fallidos)
             }
@@ -434,17 +434,18 @@ export default function CargaMasiva() {
       updated[i] = {
         ...updated[i],
         status: erroresCarga > 0 && cargados === 0 ? 'error' : 'completado',
-        result: { cargados, duplicados, errores: erroresCarga, primerError },
+        result: { cargados, actualizados, duplicados, errores: erroresCarga, primerError },
       }
       setArchivos([...updated])
 
       totalCargados += cargados
+      totalActualizados += actualizados
       totalDuplicados += duplicados
       totalErrores += erroresCarga
     }
 
     setRegistrosFallidos(allFallidos)
-    setResultadoGlobal({ cargados: totalCargados, duplicados: totalDuplicados, errores: totalErrores })
+    setResultadoGlobal({ cargados: totalCargados, actualizados: totalActualizados, duplicados: totalDuplicados, errores: totalErrores })
     setStep(4)
   }
 
@@ -497,7 +498,7 @@ export default function CargaMasiva() {
     // Start processing immediately
     cancelRef.current = false
     setStep(3)
-    let totalCargados = 0, totalDuplicados = 0, totalErrores = 0
+    let totalCargados = 0, totalActualizados = 0, totalDuplicados = 0, totalErrores = 0
     const allFallidos = []
     const updated = [{
       name: `Reintento (${clientes.length} registros)`,
@@ -645,7 +646,7 @@ export default function CargaMasiva() {
           <div className="flex justify-end gap-3">
             <Button
               onClick={iniciarCarga}
-              disabled={totalArchivosValidos === 0 || !Object.values(mapeoBase).includes('cups')}
+              disabled={totalArchivosValidos === 0 || !Object.values(mapeoBase).some(v => CAMPOS_BD.includes(v))}
             >
               Cargar {totalArchivosValidos} archivo{totalArchivosValidos !== 1 ? 's' : ''} ({totalFilas.toLocaleString()} filas)
             </Button>
@@ -727,10 +728,14 @@ export default function CargaMasiva() {
             <h3 className="text-xl font-bold text-gray-900 mb-2">Carga completada</h3>
             <p className="text-sm text-gray-500 mb-6">{totalArchivosValidos} archivos procesados</p>
 
-            <div className="flex justify-center gap-8 mb-6">
+            <div className="flex justify-center gap-6 mb-6">
               <div>
                 <p className="text-3xl font-bold text-green-600">{resultadoGlobal.cargados.toLocaleString()}</p>
-                <p className="text-sm text-gray-500">Cargados</p>
+                <p className="text-sm text-gray-500">Nuevos</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-blue-600">{(resultadoGlobal.actualizados || 0).toLocaleString()}</p>
+                <p className="text-sm text-gray-500">Actualizados</p>
               </div>
               <div>
                 <p className="text-3xl font-bold text-yellow-600">{resultadoGlobal.duplicados.toLocaleString()}</p>
@@ -752,9 +757,10 @@ export default function CargaMasiva() {
                     <span className="font-medium text-gray-700 flex-1 truncate">{a.name}</span>
                     {a.result && a.status !== 'error' ? (
                       <span className="text-gray-500">
-                        <span className="text-green-600">{a.result.cargados}</span> /
-                        <span className="text-yellow-600 ml-1">{a.result.duplicados}</span> /
-                        <span className="text-red-600 ml-1">{a.result.errores}</span>
+                        <span className="text-green-600">{a.result.cargados}</span>
+                        {a.result.actualizados > 0 && <span className="text-blue-600 ml-1">+{a.result.actualizados}upd</span>}
+                        <span className="text-yellow-600 ml-1">/{a.result.duplicados}</span>
+                        <span className="text-red-600 ml-1">/{a.result.errores}</span>
                       </span>
                     ) : a.result?.error ? (
                       <span className="text-red-500">{a.result.error}</span>
