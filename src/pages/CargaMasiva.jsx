@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Pencil, X, ArrowRight, Loader2, File, XCircle } from 'lucide-react'
+import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Pencil, X, ArrowRight, Loader2, File, XCircle, Download, RotateCcw } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/UI/Card'
@@ -131,6 +131,7 @@ export default function CargaMasiva() {
   // Progress
   const [progreso, setProgreso] = useState({ archivoIdx: 0, filaActual: 0, filasTotal: 0, archivoNombre: '' })
   const [resultadoGlobal, setResultadoGlobal] = useState({ cargados: 0, duplicados: 0, errores: 0 })
+  const [registrosFallidos, setRegistrosFallidos] = useState([]) // [{record, error}]
 
   // Collect files from input or drop
   async function agregarArchivos(fileList) {
@@ -301,7 +302,9 @@ export default function CargaMasiva() {
 
     cancelRef.current = false
     setStep(3)
+    setRegistrosFallidos([])
     let totalCargados = 0, totalDuplicados = 0, totalErrores = 0
+    const allFallidos = []
 
     const updated = [...archivos]
 
@@ -330,7 +333,8 @@ export default function CargaMasiva() {
 
       let cargados = 0, duplicados = 0, erroresCarga = errores.length
       let primerError = errores.length > 0 ? `Validación: ${errores.length} errores (ej: ${errores[0]?.error})` : null
-      const BATCH_SIZE = 50
+      const fileFallidos = []
+      const BATCH_SIZE = 25
 
       for (let j = 0; j < clientes.length; j += BATCH_SIZE) {
         if (cancelRef.current) break
@@ -345,36 +349,42 @@ export default function CargaMasiva() {
         const batch = clientes.slice(j, j + BATCH_SIZE)
 
         try {
-          const bodyStr = JSON.stringify({ clientes: batch })
-          console.log(`[CargaMasiva] Enviando batch ${j}-${j + batch.length} (${(bodyStr.length / 1024).toFixed(1)}KB)`)
-
           const res = await fetch('/.netlify/functions/bulk-insert', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: bodyStr,
+            body: JSON.stringify({ clientes: batch }),
           })
 
           const text = await res.text()
           let result
-          try { result = JSON.parse(text) } catch { result = { error: text.slice(0, 200) } }
-
-          console.log(`[CargaMasiva] Respuesta batch ${j}:`, res.status, result)
+          try { result = JSON.parse(text) } catch { result = { error: text.slice(0, 300) } }
 
           if (!res.ok) {
+            // Whole batch failed (timeout, server error)
+            const reason = result.error || `HTTP ${res.status}`
+            batch.forEach(r => fileFallidos.push({ record: r, error: reason }))
             erroresCarga += batch.length
-            if (!primerError) primerError = result.error || `HTTP ${res.status}: ${text.slice(0, 200)}`
+            if (!primerError) primerError = reason
           } else {
             cargados += result.cargados || 0
             duplicados += result.duplicados || 0
             erroresCarga += result.errores || 0
             if (result.primerError && !primerError) primerError = result.primerError
+            // Collect individual failed records from the function
+            if (result.fallidos?.length > 0) {
+              fileFallidos.push(...result.fallidos)
+            }
           }
         } catch (err) {
-          console.error(`[CargaMasiva] Fetch error batch ${j}:`, err)
+          // Network/timeout error — mark entire batch as failed
+          const reason = `Timeout o error de red: ${err.message}`
+          batch.forEach(r => fileFallidos.push({ record: r, error: reason }))
           erroresCarga += batch.length
-          if (!primerError) primerError = `Network: ${err.message}`
+          if (!primerError) primerError = reason
         }
       }
+
+      allFallidos.push(...fileFallidos)
 
       updated[i] = {
         ...updated[i],
@@ -388,6 +398,7 @@ export default function CargaMasiva() {
       totalErrores += erroresCarga
     }
 
+    setRegistrosFallidos(allFallidos)
     setResultadoGlobal({ cargados: totalCargados, duplicados: totalDuplicados, errores: totalErrores })
     setStep(4)
   }
@@ -406,7 +417,100 @@ export default function CargaMasiva() {
     setArchivoMapeoIdx(null)
     setResultadoGlobal({ cargados: 0, duplicados: 0, errores: 0 })
     setProgreso({ archivoIdx: 0, filaActual: 0, filasTotal: 0, archivoNombre: '' })
+    setRegistrosFallidos([])
     cancelRef.current = false
+  }
+
+  function descargarFallidosCSV() {
+    if (registrosFallidos.length === 0) return
+    const records = registrosFallidos.map(f => ({ ...f.record, _error: f.error }))
+    const ws = XLSX.utils.json_to_sheet(records)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Fallidos')
+    XLSX.writeFile(wb, `fallidos_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  }
+
+  async function reintentarFallidos() {
+    if (registrosFallidos.length === 0) return
+    const clientes = registrosFallidos.map(f => f.record)
+
+    // Create a virtual file entry for retry
+    setArchivos([{
+      name: `Reintento (${clientes.length} registros)`,
+      file: null,
+      headers: Object.keys(clientes[0] || {}),
+      rows: [],
+      mapeo: { _custom: true },
+      status: 'pendiente',
+      result: null,
+      totalRows: clientes.length,
+      _retryClientes: clientes,
+    }])
+    setRegistrosFallidos([])
+    setResultadoGlobal({ cargados: 0, duplicados: 0, errores: 0 })
+
+    // Start processing immediately
+    cancelRef.current = false
+    setStep(3)
+    let totalCargados = 0, totalDuplicados = 0, totalErrores = 0
+    const allFallidos = []
+    const updated = [{
+      name: `Reintento (${clientes.length} registros)`,
+      status: 'procesando',
+      result: null,
+      totalRows: clientes.length,
+    }]
+    setArchivos([...updated])
+
+    let cargados = 0, duplicados = 0, erroresCarga = 0
+    let primerError = null
+    const fileFallidos = []
+    const BATCH_SIZE = 25
+
+    for (let j = 0; j < clientes.length; j += BATCH_SIZE) {
+      if (cancelRef.current) break
+      setProgreso({ archivoIdx: 1, archivoNombre: 'Reintento', filaActual: Math.min(j + BATCH_SIZE, clientes.length), filasTotal: clientes.length })
+
+      const batch = clientes.slice(j, j + BATCH_SIZE)
+      try {
+        const res = await fetch('/.netlify/functions/bulk-insert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientes: batch }),
+        })
+        const text = await res.text()
+        let result
+        try { result = JSON.parse(text) } catch { result = { error: text.slice(0, 300) } }
+
+        if (!res.ok) {
+          const reason = result.error || `HTTP ${res.status}`
+          batch.forEach(r => fileFallidos.push({ record: r, error: reason }))
+          erroresCarga += batch.length
+          if (!primerError) primerError = reason
+        } else {
+          cargados += result.cargados || 0
+          duplicados += result.duplicados || 0
+          erroresCarga += result.errores || 0
+          if (result.primerError && !primerError) primerError = result.primerError
+          if (result.fallidos?.length > 0) fileFallidos.push(...result.fallidos)
+        }
+      } catch (err) {
+        const reason = `Timeout o error de red: ${err.message}`
+        batch.forEach(r => fileFallidos.push({ record: r, error: reason }))
+        erroresCarga += batch.length
+        if (!primerError) primerError = reason
+      }
+    }
+
+    updated[0] = {
+      ...updated[0],
+      status: erroresCarga > 0 && cargados === 0 ? 'error' : 'completado',
+      result: { cargados, duplicados, errores: erroresCarga, primerError },
+    }
+    setArchivos([...updated])
+    setRegistrosFallidos(fileFallidos)
+    setResultadoGlobal({ cargados, duplicados, errores: erroresCarga })
+    setStep(4)
   }
 
   const totalFilas = archivos.reduce((s, a) => s + (a.status !== 'error' ? a.totalRows : 0), 0)
@@ -646,13 +750,44 @@ export default function CargaMasiva() {
               </div>
             </div>
 
-            {/* Show first error if any */}
+            {/* Error details */}
             {archivos.some(a => a.result?.primerError) && (
               <div className="text-left max-w-lg mx-auto mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <h4 className="text-xs font-semibold text-red-700 mb-1">Primer error encontrado:</h4>
                 <p className="text-xs text-red-600 font-mono break-all">
                   {archivos.find(a => a.result?.primerError)?.result.primerError}
                 </p>
+              </div>
+            )}
+
+            {/* Failed records actions */}
+            {registrosFallidos.length > 0 && (
+              <div className="text-left max-w-lg mx-auto mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <h4 className="text-sm font-semibold text-orange-800 mb-2">
+                  {registrosFallidos.length} registros fallidos
+                </h4>
+                <p className="text-xs text-orange-700 mb-3">
+                  Puedes descargar los registros que fallaron para revisarlos o reintentar la carga.
+                </p>
+                {/* Show first 5 error reasons */}
+                <div className="mb-3 space-y-1 max-h-32 overflow-y-auto">
+                  {[...new Set(registrosFallidos.map(f => f.error))].slice(0, 5).map((err, i) => {
+                    const count = registrosFallidos.filter(f => f.error === err).length
+                    return (
+                      <div key={i} className="text-xs text-orange-700 bg-orange-100 rounded px-2 py-1">
+                        <span className="font-semibold">{count}x</span> {err}
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="secondary" onClick={descargarFallidosCSV} className="text-xs">
+                    <Download size={14} /> Descargar fallidos (.xlsx)
+                  </Button>
+                  <Button onClick={reintentarFallidos} className="text-xs">
+                    <RotateCcw size={14} /> Reintentar ({registrosFallidos.length})
+                  </Button>
+                </div>
               </div>
             )}
 
