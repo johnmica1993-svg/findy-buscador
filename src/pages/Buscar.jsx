@@ -56,11 +56,12 @@ export default function Buscar() {
         setResultados(data || [])
         if (data?.length === 1) setSeleccionado(data[0])
       } else {
-        // Sub-users: exact match on CUPS or DNI, with validation
+        // Sub-users: flexible match on CUPS or DNI with ILIKE
+        const termino = `%${trimmed}%`
         const { data, error } = await supabase
           .from('clientes')
           .select('*')
-          .or(`cups.eq.${trimmed},dni.eq.${trimmed}`)
+          .or(`cups.ilike.${termino},dni.ilike.${termino}`)
 
         if (error) throw error
 

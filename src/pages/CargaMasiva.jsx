@@ -69,6 +69,19 @@ function parseFecha(val) {
   return null
 }
 
+function limpiarDni(raw) {
+  if (!raw) return null
+  const str = String(raw).trim()
+  if (!str) return null
+  // Extract DNI/NIF/CIF pattern: optional letter + 7-8 digits + optional letter
+  const match = str.match(/([A-Za-z]?\d{7,8}[A-Za-z]?)/)
+  if (match) return match[1].toUpperCase()
+  // Fallback: strip non-alphanumeric, check length
+  const cleaned = str.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+  if (cleaned.length >= 8 && cleaned.length <= 10) return cleaned
+  return str.trim()
+}
+
 function leerArchivo(file) {
   return new Promise((resolve) => {
     const reader = new FileReader()
@@ -255,7 +268,7 @@ export default function CargaMasiva() {
 
       clientes.push({
         cups,
-        dni: String(getVal('dni') || '').trim() || null,
+        dni: limpiarDni(getVal('dni')),
         nombre: String(getVal('nombre') || '').trim() || null,
         direccion: String(getVal('direccion') || '').trim() || null,
         campana: String(getVal('campana') || '').trim().toUpperCase().replace('Ñ', 'N') || null,
