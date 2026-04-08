@@ -31,19 +31,29 @@ export async function handler(event) {
 
     const trimmed = query.trim()
 
-    // Normalize: strip +34 or leading 34 prefix, remove spaces/dashes
-    const sinPrefijo = trimmed
-      .replace(/^\+34/, '')
-      .replace(/^0034/, '')
-      .replace(/^34(\d{9})$/, '$1')
-      .replace(/[\s\-().]/g, '')
+    // Normalize phone: strip +34/0034/34 prefix only if it looks like a phone
+    const isPhone = /^\+?\d[\d\s\-().]{5,}$/.test(trimmed)
+    let searchTerm = trimmed
+    if (isPhone) {
+      searchTerm = trimmed
+        .replace(/^\+34/, '')
+        .replace(/^0034/, '')
+        .replace(/^34(\d{6,})$/, '$1')
+        .replace(/[\s\-().]/g, '')
+    }
 
-    // Use the term that gives better results — the cleaned version
-    const searchTerm = sinPrefijo || trimmed
-
+    // Search with cleaned term, and also with original if different
     const { data, error } = await supabase.rpc('buscar_clientes', {
       termino: searchTerm,
     })
+
+    // If phone search returned nothing, try with original term (for DNI like 34XXX)
+    if (!error && data?.length === 0 && searchTerm !== trimmed) {
+      const { data: data2 } = await supabase.rpc('buscar_clientes', { termino: trimmed })
+      if (data2?.length > 0) {
+        return { statusCode: 200, headers, body: JSON.stringify({ data: data2 }) }
+      }
+    }
 
     if (error) {
       console.error('[search-clients] RPC error:', error.message)
