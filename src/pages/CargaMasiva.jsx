@@ -324,7 +324,8 @@ export default function CargaMasiva() {
       const { clientes, errores } = buildClientes(archivo.rows, archivo.headers, fileMapeo)
 
       let cargados = 0, duplicados = 0, erroresCarga = errores.length
-      const BATCH_SIZE = 100
+      let primerError = null
+      const BATCH_SIZE = 50
 
       for (let j = 0; j < clientes.length; j += BATCH_SIZE) {
         if (cancelRef.current) break
@@ -343,25 +344,40 @@ export default function CargaMasiva() {
           .select()
 
         if (error) {
-          // If it's a unique constraint violation, try inserting one by one
-          if (error.code === '23505') {
-            for (const record of batch) {
-              const { data: d, error: e } = await supabase.from('clientes').insert(record).select()
-              if (e) { duplicados++ } else { cargados += d?.length || 0 }
+          if (!primerError) {
+            primerError = `[Batch ${j}] code=${error.code} msg=${error.message} details=${error.details} hint=${error.hint}`
+            console.error('PRIMER ERROR DE CARGA:', primerError)
+            console.error('Registro ejemplo:', JSON.stringify(batch[0], null, 2))
+          }
+
+          // Fallback: try one by one
+          for (const record of batch) {
+            const { data: d, error: e } = await supabase.from('clientes').insert(record).select()
+            if (e) {
+              if (e.code === '23505') {
+                duplicados++
+              } else {
+                erroresCarga++
+                if (!primerError) {
+                  primerError = `code=${e.code} msg=${e.message} details=${e.details}`
+                  console.error('ERROR individual:', primerError, 'Registro:', JSON.stringify(record, null, 2))
+                }
+              }
+            } else {
+              cargados += d?.length || 0
             }
-          } else {
-            erroresCarga += batch.length
-            console.error('Batch error:', error.message)
           }
         } else {
           cargados += data?.length || 0
         }
       }
 
+      if (primerError) console.warn(`[${archivo.name}] Primer error: ${primerError}`)
+
       updated[i] = {
         ...updated[i],
         status: erroresCarga > 0 && cargados === 0 ? 'error' : 'completado',
-        result: { cargados, duplicados, errores: erroresCarga },
+        result: { cargados, duplicados, errores: erroresCarga, primerError },
       }
       setArchivos([...updated])
 
@@ -627,6 +643,16 @@ export default function CargaMasiva() {
                 ))}
               </div>
             </div>
+
+            {/* Show first error if any */}
+            {archivos.some(a => a.result?.primerError) && (
+              <div className="text-left max-w-lg mx-auto mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <h4 className="text-xs font-semibold text-red-700 mb-1">Primer error encontrado:</h4>
+                <p className="text-xs text-red-600 font-mono break-all">
+                  {archivos.find(a => a.result?.primerError)?.result.primerError}
+                </p>
+              </div>
+            )}
 
             <div className="mt-6">
               <Button onClick={resetTodo}>Cargar más archivos</Button>
