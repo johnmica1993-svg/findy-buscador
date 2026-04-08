@@ -48,14 +48,15 @@ export async function handler(event) {
     let errores = 0
     let primerError = null
 
-    // Try batch insert first
+    // Upsert with cups as unique key, skip duplicates
     const { data, error } = await supabase
       .from('clientes')
-      .insert(clientes)
+      .upsert(clientes, { onConflict: 'cups', ignoreDuplicates: true })
       .select('id')
 
     if (!error) {
       cargados = data?.length || 0
+      duplicados = clientes.length - cargados
     } else {
       // Batch failed — fallback to one by one
       if (!primerError) {
@@ -66,21 +67,18 @@ export async function handler(event) {
       for (const record of clientes) {
         const { data: d, error: e } = await supabase
           .from('clientes')
-          .insert(record)
+          .upsert(record, { onConflict: 'cups', ignoreDuplicates: true })
           .select('id')
 
         if (e) {
-          if (e.code === '23505') {
-            duplicados++
-          } else {
-            errores++
-            if (!primerError) {
-              primerError = `row: code=${e.code} msg=${e.message}`
-              console.error('[bulk-insert] Row error:', e.code, e.message, JSON.stringify(record).slice(0, 200))
-            }
+          errores++
+          if (!primerError) {
+            primerError = `row: code=${e.code} msg=${e.message}`
+            console.error('[bulk-insert] Row error:', e.code, e.message, JSON.stringify(record).slice(0, 200))
           }
         } else {
-          cargados += d?.length || 0
+          if (d?.length > 0) cargados++
+          else duplicados++
         }
       }
     }
