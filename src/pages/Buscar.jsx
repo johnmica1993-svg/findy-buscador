@@ -70,7 +70,10 @@ export default function Buscar() {
           termino_busqueda: q,
           resultado_encontrado: data.length > 0,
         }),
-      }).catch(() => {})
+      })
+        .then(r => r.json())
+        .then(r => console.log('[Buscar] Log registrado:', r))
+        .catch(e => console.warn('[Buscar] Error registrando log:', e))
 
     } catch (err) {
       console.error('Error buscando:', err)

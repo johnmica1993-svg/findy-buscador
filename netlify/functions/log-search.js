@@ -20,17 +20,36 @@ export async function handler(event) {
       { auth: { autoRefreshToken: false, persistSession: false } },
     )
 
-    await supabase.from('busquedas_log').insert({
-      usuario_id,
-      usuario_nombre,
-      usuario_email,
-      oficina,
-      termino_busqueda,
-      resultado_encontrado,
+    // First try with all fields
+    const { error } = await supabase.from('busquedas_log').insert({
+      usuario_id: usuario_id || null,
+      usuario_nombre: usuario_nombre || null,
+      usuario_email: usuario_email || null,
+      oficina: oficina || null,
+      termino_busqueda: termino_busqueda || null,
+      resultado_encontrado: resultado_encontrado ?? null,
     })
+
+    if (error) {
+      console.error('[log-search] Insert error:', error.code, error.message)
+
+      // Fallback: try without the columns that might not exist
+      const { error: err2 } = await supabase.from('busquedas_log').insert({
+        usuario_id: usuario_id || null,
+        usuario_nombre: usuario_nombre || null,
+        termino_busqueda: termino_busqueda || null,
+        resultado_encontrado: resultado_encontrado ?? null,
+      })
+
+      if (err2) {
+        console.error('[log-search] Fallback error:', err2.code, err2.message)
+        return { statusCode: 200, headers, body: JSON.stringify({ ok: false, error: err2.message }) }
+      }
+    }
 
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) }
   } catch (err) {
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: false }) }
+    console.error('[log-search] Unexpected:', err.message)
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: false, error: err.message }) }
   }
 }
