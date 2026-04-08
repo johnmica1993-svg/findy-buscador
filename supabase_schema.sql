@@ -37,6 +37,7 @@ CREATE TABLE clientes (
   fecha_baja DATE,
   fecha_activacion DATE,
   estado TEXT DEFAULT 'PENDIENTE' CHECK (estado IN ('ACTIVO', 'BAJA', 'PENDIENTE', 'CANCELADO')),
+  datos_extra JSONB,
   oficina_id UUID REFERENCES oficinas(id) ON DELETE SET NULL,
   created_by UUID REFERENCES usuarios(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT now(),

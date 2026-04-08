@@ -1,11 +1,15 @@
-import { useState, useCallback } from 'react'
-import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
+import { useState } from 'react'
+import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Pencil, X, ArrowRight } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/UI/Card'
 import Button from '../components/UI/Button'
-import Badge from '../components/UI/Badge'
+
+const CAMPOS_BD = [
+  'cups', 'dni', 'nombre', 'direccion', 'campana',
+  'fecha_alta', 'fecha_activacion', 'fecha_ultimo_cambio', 'fecha_baja', 'estado',
+]
 
 const COLUMN_MAP = {
   cups: ['cups', 'CUPS', 'Cups'],
@@ -20,11 +24,25 @@ const COLUMN_MAP = {
   estado: ['estado', 'Estado', 'ESTADO'],
 }
 
-function detectarMapeo(headers) {
+function detectarMapeo(hdrs) {
+  // mapeo: excelHeader → campoDestino
   const mapeo = {}
-  for (const [campo, variantes] of Object.entries(COLUMN_MAP)) {
-    const found = headers.find(h => variantes.includes(h?.trim()))
-    if (found) mapeo[campo] = found
+  const usados = new Set()
+
+  for (const h of hdrs) {
+    const hTrim = h?.trim()
+    if (!hTrim) continue
+    for (const [campo, variantes] of Object.entries(COLUMN_MAP)) {
+      if (!usados.has(campo) && variantes.includes(hTrim)) {
+        mapeo[hTrim] = campo
+        usados.add(campo)
+        break
+      }
+    }
+    // If no match, mark as datos_extra with original name
+    if (!mapeo[hTrim]) {
+      mapeo[hTrim] = `extra:${hTrim}`
+    }
   }
   return mapeo
 }
@@ -37,10 +55,8 @@ function parseFecha(val) {
     if (d) return `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`
   }
   const str = String(val).trim()
-  // dd/mm/yyyy
   const match = str.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/)
   if (match) return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`
-  // yyyy-mm-dd
   if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.substring(0, 10)
   return null
 }
@@ -51,7 +67,9 @@ export default function CargaMasiva() {
   const [fileName, setFileName] = useState('')
   const [headers, setHeaders] = useState([])
   const [rows, setRows] = useState([])
-  const [mapeo, setMapeo] = useState({})
+  const [mapeo, setMapeo] = useState({}) // excelHeader → campo destino
+  const [editandoCampo, setEditandoCampo] = useState(null) // header being custom-edited
+  const [customName, setCustomName] = useState('')
   const [preview, setPreview] = useState([])
   const [errores, setErrores] = useState([])
   const [resultado, setResultado] = useState(null)
@@ -71,7 +89,7 @@ export default function CargaMasiva() {
         return
       }
 
-      const hdrs = data[0].map(h => String(h || '').trim())
+      const hdrs = data[0].map(h => String(h || '').trim()).filter(Boolean)
       const dataRows = data.slice(1).filter(r => r.some(c => c !== null && c !== undefined && c !== ''))
 
       setHeaders(hdrs)
@@ -95,8 +113,28 @@ export default function CargaMasiva() {
     if (file) procesarArchivo(file)
   }
 
-  function updateMapeo(campo, header) {
-    setMapeo(prev => ({ ...prev, [campo]: header || undefined }))
+  function updateMapeo(excelHeader, destino) {
+    setMapeo(prev => ({ ...prev, [excelHeader]: destino }))
+  }
+
+  function guardarCustomName(excelHeader) {
+    const name = customName.trim()
+    if (name) {
+      const dest = CAMPOS_BD.includes(name) ? name : `extra:${name}`
+      updateMapeo(excelHeader, dest)
+    }
+    setEditandoCampo(null)
+    setCustomName('')
+  }
+
+  function getDestinoLabel(destino) {
+    if (!destino) return 'No mapear'
+    if (destino.startsWith('extra:')) return `📦 ${destino.slice(6)} (extra)`
+    return destino
+  }
+
+  function esNoMapeado(destino) {
+    return !destino || destino === ''
   }
 
   function validarYCargar() {
@@ -104,12 +142,24 @@ export default function CargaMasiva() {
     const cupsVistos = new Set()
     const clientesValidos = []
 
+    // Build reverse map: campo → excelHeaderIndex
+    const campoToIdx = {}
+    const extraFields = []
+    for (const [excelHeader, destino] of Object.entries(mapeo)) {
+      const colIdx = headers.indexOf(excelHeader)
+      if (colIdx < 0) continue
+      if (!destino || destino === '') continue
+      if (destino.startsWith('extra:')) {
+        extraFields.push({ name: destino.slice(6), colIdx })
+      } else {
+        campoToIdx[destino] = colIdx
+      }
+    }
+
     rows.forEach((row, idx) => {
       const getVal = (campo) => {
-        const hdr = mapeo[campo]
-        if (!hdr) return null
-        const colIdx = headers.indexOf(hdr)
-        return colIdx >= 0 ? row[colIdx] : null
+        const colIdx = campoToIdx[campo]
+        return colIdx !== undefined ? row[colIdx] : null
       }
 
       const cups = String(getVal('cups') || '').trim()
@@ -123,6 +173,24 @@ export default function CargaMasiva() {
       }
       cupsVistos.add(cups)
 
+      // Build datos_extra from unmapped extra columns
+      let datos_extra = null
+      if (extraFields.length > 0) {
+        datos_extra = {}
+        for (const { name, colIdx } of extraFields) {
+          const v = row[colIdx]
+          if (v !== null && v !== undefined && v !== '') {
+            datos_extra[name] = typeof v === 'object' && v instanceof Date
+              ? v.toISOString().split('T')[0]
+              : String(v)
+          }
+        }
+        if (Object.keys(datos_extra).length === 0) datos_extra = null
+      }
+
+      const estadoRaw = getVal('estado')
+      const estado = estadoRaw ? String(estadoRaw).trim() : null
+
       clientesValidos.push({
         cups,
         dni: String(getVal('dni') || '').trim() || null,
@@ -133,7 +201,8 @@ export default function CargaMasiva() {
         fecha_activacion: parseFecha(getVal('fecha_activacion')),
         fecha_ultimo_cambio: parseFecha(getVal('fecha_ultimo_cambio')),
         fecha_baja: parseFecha(getVal('fecha_baja')),
-        estado: String(getVal('estado') || 'PENDIENTE').trim().toUpperCase(),
+        estado,
+        datos_extra,
         oficina_id: usuario?.oficina_id || null,
         created_by: usuario?.id,
       })
@@ -162,6 +231,7 @@ export default function CargaMasiva() {
 
       if (error) {
         erroresCarga += batch.length
+        console.error('Batch error:', error.message)
       } else {
         cargados += data?.length || 0
         duplicados += batch.length - (data?.length || 0)
@@ -173,8 +243,13 @@ export default function CargaMasiva() {
     setCargando(false)
   }
 
+  // Count stats for mapping
+  const mapeados = Object.values(mapeo).filter(v => v && v !== '').length
+  const extras = Object.values(mapeo).filter(v => v?.startsWith('extra:')).length
+  const sinMapear = headers.length - mapeados
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Carga Masiva</h2>
 
       {/* Step 1: Upload */}
@@ -206,35 +281,107 @@ export default function CargaMasiva() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="font-semibold text-gray-900">{fileName}</h3>
-                <p className="text-sm text-gray-500">{rows.length} filas detectadas</p>
+                <p className="text-sm text-gray-500">
+                  {rows.length} filas · {headers.length} columnas
+                  <span className="mx-2">·</span>
+                  <span className="text-green-600">{mapeados - extras} campos BD</span>
+                  {extras > 0 && <><span className="mx-1">·</span><span className="text-blue-600">{extras} extras</span></>}
+                  {sinMapear > 0 && <><span className="mx-1">·</span><span className="text-red-500">{sinMapear} sin mapear</span></>}
+                </p>
               </div>
               <Button variant="secondary" onClick={() => { setStep(1); setRows([]); setHeaders([]) }}>
                 Cambiar archivo
               </Button>
             </div>
 
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Mapeo de columnas</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {Object.keys(COLUMN_MAP).map(campo => (
-                <div key={campo} className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-gray-600 w-32">{campo}</span>
-                  <select
-                    value={mapeo[campo] || ''}
-                    onChange={e => updateMapeo(campo, e.target.value)}
-                    className="flex-1 text-xs border border-gray-300 rounded px-2 py-1"
+            <h4 className="text-sm font-medium text-gray-700 mb-3">Mapeo de columnas</h4>
+            <div className="space-y-1.5">
+              {headers.map(h => {
+                const destino = mapeo[h] || ''
+                const noMapeado = esNoMapeado(destino)
+                const esExtra = destino.startsWith('extra:')
+                const editando = editandoCampo === h
+
+                return (
+                  <div
+                    key={h}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                      noMapeado
+                        ? 'border-red-200 bg-red-50'
+                        : esExtra
+                        ? 'border-blue-200 bg-blue-50'
+                        : 'border-gray-200 bg-white'
+                    }`}
                   >
-                    <option value="">— No mapear —</option>
-                    {headers.map(h => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-                  {mapeo[campo] && <CheckCircle size={14} className="text-green-500 shrink-0" />}
-                </div>
-              ))}
+                    {/* Excel column name */}
+                    <span className={`text-xs font-mono font-medium w-40 shrink-0 truncate ${noMapeado ? 'text-red-600' : 'text-gray-700'}`} title={h}>
+                      {h}
+                    </span>
+
+                    <ArrowRight size={14} className="text-gray-400 shrink-0" />
+
+                    {editando ? (
+                      <div className="flex items-center gap-1 flex-1">
+                        <input
+                          type="text"
+                          value={customName}
+                          onChange={e => setCustomName(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') guardarCustomName(h); if (e.key === 'Escape') setEditandoCampo(null) }}
+                          placeholder="Nombre del campo..."
+                          className="flex-1 text-xs border border-blue-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          autoFocus
+                        />
+                        <button onClick={() => guardarCustomName(h)} className="text-green-600 hover:text-green-800 p-1">
+                          <CheckCircle size={14} />
+                        </button>
+                        <button onClick={() => setEditandoCampo(null)} className="text-gray-400 hover:text-gray-600 p-1">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <select
+                          value={destino}
+                          onChange={e => updateMapeo(h, e.target.value)}
+                          className={`flex-1 text-xs border rounded px-2 py-1 ${
+                            noMapeado ? 'border-red-300 text-red-600' : 'border-gray-300'
+                          }`}
+                        >
+                          <option value="">— No mapear —</option>
+                          <optgroup label="Campos de la BD">
+                            {CAMPOS_BD.map(c => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="Guardar como extra">
+                            <option value={`extra:${h}`}>📦 Guardar como "{h}" (datos extra)</option>
+                          </optgroup>
+                        </select>
+
+                        <button
+                          onClick={() => { setEditandoCampo(h); setCustomName(destino.startsWith('extra:') ? destino.slice(6) : destino) }}
+                          className="p-1 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600 shrink-0"
+                          title="Editar nombre de campo"
+                        >
+                          <Pencil size={13} />
+                        </button>
+
+                        {!noMapeado && (
+                          <span className={`text-xs px-1.5 py-0.5 rounded shrink-0 ${
+                            esExtra ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                          }`}>
+                            {esExtra ? 'extra' : 'BD'}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </Card>
 
-          {/* Preview table */}
+          {/* Preview table with mapping indicators */}
           <Card className="overflow-hidden">
             <div className="p-3 bg-gray-50 border-b border-gray-200">
               <span className="text-sm font-medium text-gray-700">Vista previa (primeras 5 filas)</span>
@@ -243,17 +390,38 @@ export default function CargaMasiva() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="bg-gray-50">
-                    {headers.map((h, i) => (
-                      <th key={i} className="px-3 py-2 text-left font-medium text-gray-600">{h}</th>
-                    ))}
+                    {headers.map((h, i) => {
+                      const dest = mapeo[h] || ''
+                      const noMapeado = esNoMapeado(dest)
+                      const esExtra = dest.startsWith('extra:')
+                      return (
+                        <th key={i} className={`px-3 py-1 text-left font-medium border-b-2 ${
+                          noMapeado
+                            ? 'text-red-500 border-red-300 bg-red-50'
+                            : esExtra
+                            ? 'text-blue-600 border-blue-300 bg-blue-50'
+                            : 'text-green-700 border-green-300 bg-green-50'
+                        }`}>
+                          <div className="truncate max-w-[120px]" title={h}>{h}</div>
+                          <div className={`text-[10px] font-normal mt-0.5 ${noMapeado ? 'text-red-400' : esExtra ? 'text-blue-400' : 'text-green-500'}`}>
+                            {noMapeado ? '✗ sin mapear' : `→ ${getDestinoLabel(dest)}`}
+                          </div>
+                        </th>
+                      )
+                    })}
                   </tr>
                 </thead>
                 <tbody>
                   {preview.map((row, i) => (
                     <tr key={i} className="border-t border-gray-100">
-                      {headers.map((_, j) => (
-                        <td key={j} className="px-3 py-2 text-gray-700">{row[j] != null ? String(row[j]) : ''}</td>
-                      ))}
+                      {headers.map((h, j) => {
+                        const noMapeado = esNoMapeado(mapeo[h])
+                        return (
+                          <td key={j} className={`px-3 py-2 ${noMapeado ? 'text-red-400 line-through' : 'text-gray-700'}`}>
+                            {row[j] != null ? String(row[j]) : ''}
+                          </td>
+                        )
+                      })}
                     </tr>
                   ))}
                 </tbody>
@@ -278,7 +446,7 @@ export default function CargaMasiva() {
             <Button variant="secondary" onClick={() => { validarYCargar() }}>
               Validar
             </Button>
-            <Button onClick={ejecutarCarga} disabled={cargando || !mapeo.cups}>
+            <Button onClick={ejecutarCarga} disabled={cargando || !Object.values(mapeo).includes('cups')}>
               {cargando ? 'Cargando...' : `Cargar ${rows.length} clientes`}
             </Button>
           </div>
