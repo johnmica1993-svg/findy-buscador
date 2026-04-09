@@ -49,7 +49,7 @@ export default function Buscar() {
         return
       }
 
-      const lista = Array.isArray(data) ? data : data.data || []
+      const lista = Array.isArray(data) ? data : data.clientes || data.data || []
       setResultados(lista)
 
       if (lista.length === 0) {
