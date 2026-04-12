@@ -470,7 +470,7 @@ export default function CargaMasiva() {
 
     const abortController = new AbortController()
     const updated = [...archivos]
-    const CHUNK_SIZE = 5000
+    const CHUNK_SIZE = 10000
     const MAX_PARALLEL = 5
 
     try {
@@ -647,7 +647,7 @@ export default function CargaMasiva() {
     let primerError = null
     const fileFallidos = []
     let procesados = 0
-    const CHUNK_SIZE = 5000
+    const CHUNK_SIZE = 10000
     const MAX_PARALLEL = 5
 
     const chunks = []

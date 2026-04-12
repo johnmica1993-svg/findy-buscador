@@ -1,14 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-function getSupabase() {
-  return createClient(
-    process.env.VITE_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  )
-}
-
-export async function handler(event, context) {
+exports.handler = async (event, context) => {
   if (context) context.callbackWaitsForEmptyEventLoop = false
 
   const headers = {
@@ -22,14 +12,21 @@ export async function handler(event, context) {
 
   try {
     const body = JSON.parse(event.body || '{}')
-    const supabase = getSupabase()
 
     // Cancel a job
     if (body.cancelar && body.job_id) {
-      await supabase.from('carga_jobs').update({
-        estado: 'cancelado',
-        updated_at: new Date().toISOString(),
-      }).eq('id', body.job_id)
+      await fetch(
+        `${process.env.VITE_SUPABASE_URL}/rest/v1/carga_jobs?id=eq.${body.job_id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY,
+            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          },
+          body: JSON.stringify({ estado: 'cancelado', updated_at: new Date().toISOString() }),
+        }
+      )
       return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) }
     }
 
@@ -39,92 +36,86 @@ export async function handler(event, context) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'No hay clientes' }) }
     }
 
+    const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+    const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!SUPABASE_URL || !SERVICE_KEY) {
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Config incompleta' }) }
+    }
+
     // Check if job was cancelled
     if (job_id) {
-      const { data: job } = await supabase
-        .from('carga_jobs')
-        .select('estado')
-        .eq('id', job_id)
-        .single()
-      if (job?.estado === 'cancelado') {
+      const jobRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/carga_jobs?id=eq.${job_id}&select=estado`,
+        {
+          headers: { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` },
+        }
+      )
+      const jobData = await jobRes.json()
+      if (jobData?.[0]?.estado === 'cancelado') {
         return { statusCode: 200, headers, body: JSON.stringify({ cargados: 0, errores: 0, cancelado: true }) }
       }
     }
 
-    // Split: with CUPS → upsert, without CUPS → insert
-    const conCups = []
-    const sinCups = []
-    for (const r of clientes) {
-      if (r.cups?.trim()) conCups.push(r)
-      else sinCups.push(r)
-    }
+    // Call the stored procedure — PostgreSQL processes everything in one transaction
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bulk_upsert_clientes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SERVICE_KEY,
+        'Authorization': `Bearer ${SERVICE_KEY}`,
+      },
+      body: JSON.stringify({ registros: clientes }),
+    })
 
-    let cargados = 0
-    let errores = 0
-    let primerError = null
-    const fallidos = []
-    const SUB_BATCH = 2000
-
-    // Upsert records with CUPS
-    for (let i = 0; i < conCups.length; i += SUB_BATCH) {
-      const batch = conCups.slice(i, i + SUB_BATCH)
-      const { data, error } = await supabase
-        .from('clientes')
-        .upsert(batch, { onConflict: 'cups', ignoreDuplicates: false })
-        .select('id')
-
-      if (error) {
-        if (!primerError) primerError = `${error.code}: ${error.message}`
-        errores += batch.length
-        batch.forEach(r => fallidos.push({ record: r, error: `${error.code}: ${error.message}` }))
-      } else {
-        cargados += data?.length || 0
+    if (!response.ok) {
+      const errorText = await response.text()
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          cargados: 0,
+          errores: clientes.length,
+          primerError: `Supabase ${response.status}: ${errorText.slice(0, 300)}`,
+          fallidos: [],
+        }),
       }
     }
 
-    // Insert records without CUPS
-    for (let i = 0; i < sinCups.length; i += SUB_BATCH) {
-      const batch = sinCups.slice(i, i + SUB_BATCH)
-      const { data, error } = await supabase
-        .from('clientes')
-        .insert(batch)
-        .select('id')
-
-      if (error) {
-        if (!primerError) primerError = `${error.code}: ${error.message}`
-        errores += batch.length
-        batch.forEach(r => fallidos.push({ record: r, error: `${error.code}: ${error.message}` }))
-      } else {
-        cargados += data?.length || 0
-      }
-    }
+    const result = await response.json()
 
     // Update job progress
     if (job_id) {
-      await supabase.rpc('incrementar_job', {
-        p_job_id: job_id,
-        p_procesados: clientes.length,
-        p_insertados: cargados,
-        p_errores: errores,
-      }).catch(() => {
-        // Fallback if RPC doesn't exist
-        supabase.from('carga_jobs').update({
-          procesados: supabase.rpc ? undefined : 0, // won't work but won't crash
-          updated_at: new Date().toISOString(),
-        }).eq('id', job_id).catch(() => {})
-      })
+      await fetch(
+        `${SUPABASE_URL}/rest/v1/carga_jobs?id=eq.${job_id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SERVICE_KEY,
+            'Authorization': `Bearer ${SERVICE_KEY}`,
+          },
+          body: JSON.stringify({
+            procesados: clientes.length,
+            insertados: result.insertados || 0,
+            actualizados: result.actualizados || 0,
+            errores: result.errores || 0,
+            updated_at: new Date().toISOString(),
+          }),
+        }
+      ).catch(() => {})
     }
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
-        cargados,
-        actualizados: 0,
+        cargados: (result.insertados || 0) + (result.actualizados || 0),
+        actualizados: result.actualizados || 0,
         duplicados: 0,
-        errores,
-        primerError,
-        fallidos: fallidos.slice(0, 100),
+        errores: result.errores || 0,
+        primerError: null,
+        fallidos: [],
       }),
     }
 
