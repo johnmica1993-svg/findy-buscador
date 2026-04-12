@@ -223,6 +223,8 @@ export default function CargaMasiva() {
     canceladoRef.current = false
 
     try {
+      const t0 = performance.now()
+
       // Read all files and build records
       let allRegistros = []
       let fileName = validFiles.map(f => f.name).join(', ')
@@ -236,6 +238,8 @@ export default function CargaMasiva() {
         const registros = rawData.map(row => mapearRegistro(row, usuario))
         allRegistros.push(...registros)
       }
+
+      console.log(`EXCEL PARSE: ${((performance.now() - t0) / 1000).toFixed(1)}s — ${allRegistros.length} registros`)
 
       if (allRegistros.length === 0) {
         setEstado('error')
@@ -288,6 +292,13 @@ export default function CargaMasiva() {
 
       const grupo = chunks.slice(i, Math.min(i + PARALLEL, chunks.length))
 
+      if (i === desdeChunk) {
+        console.log(`TAMAÑO JSON primer chunk: ${(JSON.stringify(grupo[0]).length / 1024 / 1024).toFixed(1)} MB (${grupo[0].length} registros)`)
+        console.log(`CHUNKS TOTALES: ${chunks.length}, PARALLEL: ${PARALLEL}, ROUNDS: ${Math.ceil(chunks.length / PARALLEL)}`)
+      }
+
+      const tChunk = performance.now()
+
       const resultados = await Promise.all(
         grupo.map(chunk =>
           fetch('/.netlify/functions/bulk-insert', {
@@ -299,6 +310,8 @@ export default function CargaMasiva() {
             .catch(err => ({ cargados: 0, errores: chunk.length, primerError: err.message }))
         )
       )
+
+      console.log(`ROUND ${Math.floor(i / PARALLEL) + 1}: ${((performance.now() - tChunk) / 1000).toFixed(1)}s — ${grupo.length}x${grupo[0]?.length} registros`, resultados.map(r => `ok:${r.cargados||0} err:${r.errores||0} ${r.primerError||''}`))
 
       for (const r of resultados) {
         if (r.cancelado) { canceladoRef.current = true; break }
