@@ -153,8 +153,8 @@ function mapearRegistro(row, usuario) {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY
-const CHUNK_SIZE = 5000
-const PARALLEL = 3
+const CHUNK_SIZE = 15000
+const PARALLEL = 4
 
 // ─── Component ───
 

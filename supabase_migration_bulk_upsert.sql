@@ -1,81 +1,46 @@
+DROP FUNCTION IF EXISTS bulk_upsert_clientes(JSONB);
+
 CREATE OR REPLACE FUNCTION bulk_upsert_clientes(registros JSONB)
 RETURNS JSONB AS $$
-DECLARE
-  rec JSONB;
-  insertados INT := 0;
-  actualizados INT := 0;
-  errores_count INT := 0;
-  v_cups TEXT;
-BEGIN
-  FOR rec IN SELECT * FROM jsonb_array_elements(registros)
-  LOOP
-    v_cups := rec->>'cups';
-
-    IF v_cups IS NOT NULL AND v_cups != '' THEN
-      BEGIN
-        INSERT INTO clientes (
-          cups, dni, nombre, direccion, campana,
-          fecha_alta, fecha_baja, fecha_activacion,
-          fecha_ultimo_cambio, estado, oficina_id, datos_extra
-        )
-        VALUES (
-          v_cups,
-          rec->>'dni',
-          rec->>'nombre',
-          rec->>'direccion',
-          rec->>'campana',
-          (NULLIF(rec->>'fecha_alta', ''))::date,
-          (NULLIF(rec->>'fecha_baja', ''))::date,
-          (NULLIF(rec->>'fecha_activacion', ''))::date,
-          (NULLIF(rec->>'fecha_ultimo_cambio', ''))::date,
-          rec->>'estado',
-          (NULLIF(rec->>'oficina_id', ''))::uuid,
-          CASE WHEN rec->'datos_extra' IS NOT NULL AND rec->>'datos_extra' != 'null'
-               THEN rec->'datos_extra' ELSE NULL END
-        )
-        ON CONFLICT (cups) DO UPDATE SET
-          dni = COALESCE(EXCLUDED.dni, clientes.dni),
-          nombre = COALESCE(EXCLUDED.nombre, clientes.nombre),
-          direccion = COALESCE(EXCLUDED.direccion, clientes.direccion),
-          campana = COALESCE(EXCLUDED.campana, clientes.campana),
-          estado = COALESCE(EXCLUDED.estado, clientes.estado),
-          datos_extra = CASE
-            WHEN clientes.datos_extra IS NULL THEN EXCLUDED.datos_extra
-            WHEN EXCLUDED.datos_extra IS NULL THEN clientes.datos_extra
-            ELSE clientes.datos_extra || EXCLUDED.datos_extra
-          END,
-          updated_at = now();
-
-        insertados := insertados + 1;
-      EXCEPTION WHEN OTHERS THEN
-        errores_count := errores_count + 1;
-      END;
-    ELSE
-      BEGIN
-        INSERT INTO clientes (
-          dni, nombre, direccion, campana, estado,
-          oficina_id, datos_extra
-        )
-        VALUES (
-          rec->>'dni', rec->>'nombre', rec->>'direccion',
-          rec->>'campana', rec->>'estado',
-          (NULLIF(rec->>'oficina_id', ''))::uuid,
-          CASE WHEN rec->'datos_extra' IS NOT NULL AND rec->>'datos_extra' != 'null'
-               THEN rec->'datos_extra' ELSE NULL END
-        );
-        insertados := insertados + 1;
-      EXCEPTION WHEN OTHERS THEN
-        errores_count := errores_count + 1;
-      END;
-    END IF;
-  END LOOP;
-
-  RETURN jsonb_build_object(
-    'insertados', insertados,
-    'actualizados', actualizados,
-    'errores', errores_count
+  WITH input AS (
+    SELECT
+      nullif(trim(r->>'cups'), '')        AS cups,
+      r->>'dni'                            AS dni,
+      r->>'nombre'                         AS nombre,
+      r->>'direccion'                      AS direccion,
+      r->>'campana'                        AS campana,
+      r->>'estado'                         AS estado,
+      nullif(r->>'oficina_id','')::uuid    AS oficina_id,
+      COALESCE(r->'datos_extra', '{}'::jsonb) AS datos_extra
+    FROM jsonb_array_elements(registros) AS r
+  ),
+  upserted AS (
+    INSERT INTO clientes(cups, dni, nombre, direccion, campana, estado, oficina_id, datos_extra)
+    SELECT cups, dni, nombre, direccion, campana, estado, oficina_id, datos_extra
+    FROM input
+    WHERE cups IS NOT NULL
+    ON CONFLICT (cups) DO UPDATE SET
+      dni        = COALESCE(NULLIF(EXCLUDED.dni,''),        clientes.dni),
+      nombre     = COALESCE(NULLIF(EXCLUDED.nombre,''),     clientes.nombre),
+      direccion  = COALESCE(NULLIF(EXCLUDED.direccion,''),  clientes.direccion),
+      campana    = COALESCE(NULLIF(EXCLUDED.campana,''),    clientes.campana),
+      estado     = COALESCE(NULLIF(EXCLUDED.estado,''),     clientes.estado),
+      datos_extra = clientes.datos_extra || EXCLUDED.datos_extra
+    RETURNING (xmax = 0) AS es_insert
+  ),
+  sin_cups_ins AS (
+    INSERT INTO clientes(dni, nombre, direccion, campana, estado, oficina_id, datos_extra)
+    SELECT dni, nombre, direccion, campana, estado, oficina_id, datos_extra
+    FROM input WHERE cups IS NULL
+    RETURNING 1
+  )
+  SELECT jsonb_build_object(
+    'insertados',   (SELECT COUNT(*) FROM upserted WHERE es_insert)
+                  + (SELECT COUNT(*) FROM sin_cups_ins),
+    'actualizados', (SELECT COUNT(*) FROM upserted WHERE NOT es_insert)
   );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET statement_timeout = '300s';
+$$ LANGUAGE sql SECURITY DEFINER;
 
+GRANT EXECUTE ON FUNCTION bulk_upsert_clientes(JSONB) TO anon;
+GRANT EXECUTE ON FUNCTION bulk_upsert_clientes(JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION bulk_upsert_clientes(JSONB) TO service_role;
