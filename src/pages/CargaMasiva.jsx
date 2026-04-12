@@ -376,7 +376,7 @@ export default function CargaMasiva() {
     }, 4 * 60 * 1000)
 
     const updated = [...archivos]
-    const BATCH_SIZE = 200
+    const BATCH_SIZE = 1000
     const PARALLEL = 3
 
     try {
@@ -538,7 +538,7 @@ export default function CargaMasiva() {
     let cargados = 0, duplicados = 0, erroresCarga = 0
     let primerError = null
     const fileFallidos = []
-    const BATCH_SIZE = 25
+    const BATCH_SIZE = 1000
 
     for (let j = 0; j < clientes.length; j += BATCH_SIZE) {
       if (cancelRef.current) break

@@ -1,21 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Count non-null, non-empty fields in a record (excluding meta fields)
-const META_KEYS = new Set(['id', 'created_at', 'updated_at', 'oficina_id', 'created_by'])
-function countFields(record) {
-  if (!record) return 0
-  let count = 0
-  for (const [k, v] of Object.entries(record)) {
-    if (META_KEYS.has(k)) continue
-    if (k === 'datos_extra' && v) {
-      count += Object.keys(v).length
-    } else if (v !== null && v !== undefined && v !== '') {
-      count++
-    }
-  }
-  return count
-}
-
 export async function handler(event) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -45,74 +29,56 @@ export async function handler(event) {
       auth: { autoRefreshToken: false, persistSession: false },
     })
 
+    // Split: records with CUPS go to upsert, without CUPS go to plain insert
+    const conCups = []
+    const sinCups = []
+    for (const r of clientes) {
+      const cups = r.cups?.trim()
+      if (cups) {
+        conCups.push(r)
+      } else {
+        sinCups.push(r)
+      }
+    }
+
     let cargados = 0
     let actualizados = 0
-    let duplicados = 0
+    let errores = 0
+    let primerError = null
     const fallidos = []
-    const duplicadosDetalle = [] // {cups, existente_campos, nuevo_campos, accion}
 
-    for (const record of clientes) {
-      const cups = record.cups?.trim()
-
-      if (!cups) {
-        const { error: e } = await supabase.from('clientes').insert(record)
-        if (e) {
-          fallidos.push({ record, error: `${e.code}: ${e.message}` })
-        } else {
-          cargados++
-        }
-        continue
-      }
-
-      const { data: existing } = await supabase
+    // 1. Upsert records WITH CUPS — PostgreSQL handles ON CONFLICT
+    if (conCups.length > 0) {
+      const { data, error } = await supabase
         .from('clientes')
-        .select('*')
-        .eq('cups', cups)
-        .limit(1)
-        .single()
+        .upsert(conCups, { onConflict: 'cups', ignoreDuplicates: false })
+        .select('id')
 
-      if (!existing) {
-        const { error: e } = await supabase.from('clientes').insert(record)
-        if (e) {
-          fallidos.push({ record, error: `${e.code}: ${e.message}` })
-        } else {
-          cargados++
-        }
+      if (error) {
+        if (!primerError) primerError = `upsert: ${error.code}: ${error.message}`
+        errores += conCups.length
+        conCups.forEach(r => fallidos.push({ record: r, error: `${error.code}: ${error.message}` }))
       } else {
-        const newCount = countFields(record)
-        const existingCount = countFields(existing)
+        // upsert with ignoreDuplicates:false updates existing rows
+        // data.length = total rows affected (inserts + updates)
+        cargados = data?.length || 0
+        actualizados = Math.max(0, conCups.length - cargados)
+      }
+    }
 
-        if (newCount > existingCount) {
-          const { error: e } = await supabase
-            .from('clientes')
-            .update(record)
-            .eq('cups', cups)
-          if (e) {
-            fallidos.push({ record, error: `update: ${e.code}: ${e.message}` })
-          } else {
-            actualizados++
-            duplicadosDetalle.push({
-              cups,
-              accion: 'ACTUALIZADO',
-              razon: `Nuevo tiene ${newCount} campos vs ${existingCount} del existente`,
-              existente_dni: existing.dni,
-              existente_nombre: existing.nombre,
-              nuevo_dni: record.dni,
-              nuevo_nombre: record.nombre,
-            })
-          }
-        } else {
-          duplicados++
-          duplicadosDetalle.push({
-            cups,
-            accion: 'SALTADO',
-            razon: `Existente tiene ${existingCount} campos vs ${newCount} del nuevo`,
-            existente_dni: existing.dni,
-            existente_nombre: existing.nombre,
-            nuevo_dni: record.dni,
-            nuevo_nombre: record.nombre,
-          })
-        }
+    // 2. Insert records WITHOUT CUPS — plain insert, no conflict possible
+    if (sinCups.length > 0) {
+      const { data, error } = await supabase
+        .from('clientes')
+        .insert(sinCups)
+        .select('id')
+
+      if (error) {
+        if (!primerError) primerError = `insert: ${error.code}: ${error.message}`
+        errores += sinCups.length
+        sinCups.forEach(r => fallidos.push({ record: r, error: `${error.code}: ${error.message}` }))
+      } else {
+        cargados += data?.length || 0
       }
     }
 
@@ -122,11 +88,10 @@ export async function handler(event) {
       body: JSON.stringify({
         cargados,
         actualizados,
-        duplicados,
-        errores: fallidos.length,
-        primerError: fallidos[0]?.error || null,
-        fallidos: fallidos.slice(0, 500),
-        duplicadosDetalle: duplicadosDetalle.slice(0, 500),
+        duplicados: 0,
+        errores,
+        primerError,
+        fallidos: fallidos.slice(0, 200),
       }),
     }
 
