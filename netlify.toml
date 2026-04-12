@@ -3,6 +3,10 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[functions]
+  [functions."bulk-insert"]
+    timeout = 26
+
 [dev]
   command = "npm run dev"
   port = 8888

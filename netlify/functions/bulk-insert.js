@@ -1,6 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
-export async function handler(event) {
+export async function handler(event, context) {
+  // Don't wait for empty event loop
+  if (context) context.callbackWaitsForEmptyEventLoop = false
+
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -29,12 +32,11 @@ export async function handler(event) {
       auth: { autoRefreshToken: false, persistSession: false },
     })
 
-    // Split: records with CUPS go to upsert, without CUPS go to plain insert
+    // Split: with CUPS → upsert, without CUPS → insert
     const conCups = []
     const sinCups = []
     for (const r of clientes) {
-      const cups = r.cups?.trim()
-      if (cups) {
+      if (r.cups?.trim()) {
         conCups.push(r)
       } else {
         sinCups.push(r)
@@ -47,36 +49,36 @@ export async function handler(event) {
     let primerError = null
     const fallidos = []
 
-    // 1. Upsert records WITH CUPS — PostgreSQL handles ON CONFLICT
-    if (conCups.length > 0) {
+    // Process conCups in sub-batches of 2000 for PostgreSQL efficiency
+    const SUB_BATCH = 2000
+    for (let i = 0; i < conCups.length; i += SUB_BATCH) {
+      const batch = conCups.slice(i, i + SUB_BATCH)
       const { data, error } = await supabase
         .from('clientes')
-        .upsert(conCups, { onConflict: 'cups', ignoreDuplicates: false })
+        .upsert(batch, { onConflict: 'cups', ignoreDuplicates: false })
         .select('id')
 
       if (error) {
-        if (!primerError) primerError = `upsert: ${error.code}: ${error.message}`
-        errores += conCups.length
-        conCups.forEach(r => fallidos.push({ record: r, error: `${error.code}: ${error.message}` }))
+        if (!primerError) primerError = `${error.code}: ${error.message}`
+        errores += batch.length
+        batch.forEach(r => fallidos.push({ record: r, error: `${error.code}: ${error.message}` }))
       } else {
-        // upsert with ignoreDuplicates:false updates existing rows
-        // data.length = total rows affected (inserts + updates)
-        cargados = data?.length || 0
-        actualizados = Math.max(0, conCups.length - cargados)
+        cargados += data?.length || 0
       }
     }
 
-    // 2. Insert records WITHOUT CUPS — plain insert, no conflict possible
-    if (sinCups.length > 0) {
+    // Insert sinCups in sub-batches
+    for (let i = 0; i < sinCups.length; i += SUB_BATCH) {
+      const batch = sinCups.slice(i, i + SUB_BATCH)
       const { data, error } = await supabase
         .from('clientes')
-        .insert(sinCups)
+        .insert(batch)
         .select('id')
 
       if (error) {
-        if (!primerError) primerError = `insert: ${error.code}: ${error.message}`
-        errores += sinCups.length
-        sinCups.forEach(r => fallidos.push({ record: r, error: `${error.code}: ${error.message}` }))
+        if (!primerError) primerError = `${error.code}: ${error.message}`
+        errores += batch.length
+        batch.forEach(r => fallidos.push({ record: r, error: `${error.code}: ${error.message}` }))
       } else {
         cargados += data?.length || 0
       }
@@ -91,7 +93,7 @@ export async function handler(event) {
         duplicados: 0,
         errores,
         primerError,
-        fallidos: fallidos.slice(0, 200),
+        fallidos: fallidos.slice(0, 100),
       }),
     }
 

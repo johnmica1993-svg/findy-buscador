@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react'
 import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Pencil, X, ArrowRight, Loader2, File, XCircle, Download, RotateCcw } from 'lucide-react'
 import * as XLSX from 'xlsx'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/UI/Card'
 import Button from '../components/UI/Button'
@@ -348,17 +347,18 @@ export default function CargaMasiva() {
     return { clientes, errores: errs }
   }
 
-  // Send one batch to the Netlify Function
-  async function enviarBatch(batch) {
+  // Send one chunk to the Netlify Function with AbortController support
+  async function enviarChunk(chunk, signal) {
     const res = await fetch('/.netlify/functions/bulk-insert', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientes: batch }),
+      body: JSON.stringify({ clientes: chunk }),
+      signal,
     })
     const text = await res.text()
     let result
     try { result = JSON.parse(text) } catch { result = { error: text.slice(0, 300) } }
-    return { ok: res.ok, status: res.status, result, batch }
+    return { ok: res.ok, status: res.status, result, chunk }
   }
 
   async function iniciarCarga() {
@@ -368,20 +368,15 @@ export default function CargaMasiva() {
     setDuplicadosDetalle([])
     let totalCargados = 0, totalActualizados = 0, totalDuplicados = 0, totalErrores = 0
     const allFallidos = []
-    const allDuplicados = []
 
-    // Keep-alive: refresh Supabase session every 4 minutes
-    const keepAlive = setInterval(async () => {
-      try { await supabase.auth.refreshSession() } catch {}
-    }, 4 * 60 * 1000)
-
+    const abortController = new AbortController()
     const updated = [...archivos]
-    const BATCH_SIZE = 1000
-    const PARALLEL = 3
+    const CHUNK_SIZE = 5000
+    const MAX_PARALLEL = 5
 
     try {
       for (let i = 0; i < updated.length; i++) {
-        if (cancelRef.current) break
+        if (cancelRef.current) { abortController.abort(); break }
         const archivo = updated[i]
         if (archivo.status === 'error') continue
 
@@ -399,37 +394,32 @@ export default function CargaMasiva() {
         let cargados = 0, actualizados = 0, duplicados = 0, erroresCarga = errores.length
         let primerError = errores.length > 0 ? `Validación: ${errores.length} errores (ej: ${errores[0]?.error})` : null
         const fileFallidos = []
+        let procesados = 0
 
-        // Build all batches
-        const batches = []
-        for (let j = 0; j < clientes.length; j += BATCH_SIZE) {
-          batches.push(clientes.slice(j, j + BATCH_SIZE))
+        // Build chunks of CHUNK_SIZE
+        const chunks = []
+        for (let j = 0; j < clientes.length; j += CHUNK_SIZE) {
+          chunks.push(clientes.slice(j, j + CHUNK_SIZE))
         }
 
-        // Process PARALLEL batches at a time
-        for (let b = 0; b < batches.length; b += PARALLEL) {
-          if (cancelRef.current) break
+        // Process MAX_PARALLEL chunks simultaneously
+        for (let c = 0; c < chunks.length; c += MAX_PARALLEL) {
+          if (cancelRef.current) { abortController.abort(); break }
 
-          const chunk = batches.slice(b, b + PARALLEL)
-          const processed = (b + chunk.length) * BATCH_SIZE
-          setProgreso({
-            archivoIdx: i + 1,
-            archivoNombre: archivo.name,
-            filaActual: Math.min(processed, clientes.length),
-            filasTotal: clientes.length,
-          })
+          const grupo = chunks.slice(c, c + MAX_PARALLEL)
 
-          const results = await Promise.all(chunk.map(batch =>
-            enviarBatch(batch).catch(err => ({
-              ok: false, result: { error: `Red: ${err.message}` }, batch
+          const results = await Promise.all(grupo.map(chunk =>
+            enviarChunk(chunk, abortController.signal).catch(err => ({
+              ok: false, result: { error: err.name === 'AbortError' ? 'Cancelado' : `Red: ${err.message}` }, chunk
             }))
           ))
 
-          for (const { ok, status, result, batch } of results) {
+          for (const { ok, status, result, chunk } of results) {
+            procesados += chunk.length
             if (!ok) {
               const reason = result.error || `HTTP ${status}`
-              batch.forEach(r => fileFallidos.push({ record: r, error: reason }))
-              erroresCarga += batch.length
+              chunk.forEach(r => fileFallidos.push({ record: r, error: reason }))
+              erroresCarga += chunk.length
               if (!primerError) primerError = reason
             } else {
               cargados += result.cargados || 0
@@ -438,9 +428,15 @@ export default function CargaMasiva() {
               erroresCarga += result.errores || 0
               if (result.primerError && !primerError) primerError = result.primerError
               if (result.fallidos?.length > 0) fileFallidos.push(...result.fallidos)
-              if (result.duplicadosDetalle?.length > 0) allDuplicados.push(...result.duplicadosDetalle)
             }
           }
+
+          setProgreso({
+            archivoIdx: i + 1,
+            archivoNombre: archivo.name,
+            filaActual: Math.min(procesados, clientes.length),
+            filasTotal: clientes.length,
+          })
         }
 
         allFallidos.push(...fileFallidos)
@@ -457,12 +453,11 @@ export default function CargaMasiva() {
         totalDuplicados += duplicados
         totalErrores += erroresCarga
       }
-    } finally {
-      clearInterval(keepAlive)
+    } catch (e) {
+      console.error('[CargaMasiva] Error general:', e)
     }
 
     setRegistrosFallidos(allFallidos)
-    setDuplicadosDetalle(allDuplicados)
     setResultadoGlobal({ cargados: totalCargados, actualizados: totalActualizados, duplicados: totalDuplicados, errores: totalErrores })
     setStep(4)
   }
@@ -507,26 +502,11 @@ export default function CargaMasiva() {
     if (registrosFallidos.length === 0) return
     const clientes = registrosFallidos.map(f => f.record)
 
-    // Create a virtual file entry for retry
-    setArchivos([{
-      name: `Reintento (${clientes.length} registros)`,
-      file: null,
-      headers: Object.keys(clientes[0] || {}),
-      rows: [],
-      mapeo: { _custom: true },
-      status: 'pendiente',
-      result: null,
-      totalRows: clientes.length,
-      _retryClientes: clientes,
-    }])
     setRegistrosFallidos([])
-    setResultadoGlobal({ cargados: 0, duplicados: 0, errores: 0 })
-
-    // Start processing immediately
+    setResultadoGlobal({ cargados: 0, actualizados: 0, duplicados: 0, errores: 0 })
     cancelRef.current = false
     setStep(3)
-    let totalCargados = 0, totalActualizados = 0, totalDuplicados = 0, totalErrores = 0
-    const allFallidos = []
+
     const updated = [{
       name: `Reintento (${clientes.length} registros)`,
       status: 'procesando',
@@ -535,54 +515,55 @@ export default function CargaMasiva() {
     }]
     setArchivos([...updated])
 
-    let cargados = 0, duplicados = 0, erroresCarga = 0
+    let cargados = 0, actualizados = 0, duplicados = 0, erroresCarga = 0
     let primerError = null
     const fileFallidos = []
-    const BATCH_SIZE = 1000
+    let procesados = 0
+    const CHUNK_SIZE = 5000
+    const MAX_PARALLEL = 5
 
-    for (let j = 0; j < clientes.length; j += BATCH_SIZE) {
+    const chunks = []
+    for (let j = 0; j < clientes.length; j += CHUNK_SIZE) {
+      chunks.push(clientes.slice(j, j + CHUNK_SIZE))
+    }
+
+    for (let c = 0; c < chunks.length; c += MAX_PARALLEL) {
       if (cancelRef.current) break
-      setProgreso({ archivoIdx: 1, archivoNombre: 'Reintento', filaActual: Math.min(j + BATCH_SIZE, clientes.length), filasTotal: clientes.length })
+      const grupo = chunks.slice(c, c + MAX_PARALLEL)
 
-      const batch = clientes.slice(j, j + BATCH_SIZE)
-      try {
-        const res = await fetch('/.netlify/functions/bulk-insert', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientes: batch }),
-        })
-        const text = await res.text()
-        let result
-        try { result = JSON.parse(text) } catch { result = { error: text.slice(0, 300) } }
+      const results = await Promise.all(grupo.map(chunk =>
+        enviarChunk(chunk).catch(err => ({
+          ok: false, result: { error: `Red: ${err.message}` }, chunk
+        }))
+      ))
 
-        if (!res.ok) {
-          const reason = result.error || `HTTP ${res.status}`
-          batch.forEach(r => fileFallidos.push({ record: r, error: reason }))
-          erroresCarga += batch.length
-          if (!primerError) primerError = reason
+      for (const { ok, result, chunk } of results) {
+        procesados += chunk.length
+        if (!ok) {
+          chunk.forEach(r => fileFallidos.push({ record: r, error: result.error }))
+          erroresCarga += chunk.length
+          if (!primerError) primerError = result.error
         } else {
           cargados += result.cargados || 0
+          actualizados += result.actualizados || 0
           duplicados += result.duplicados || 0
           erroresCarga += result.errores || 0
           if (result.primerError && !primerError) primerError = result.primerError
           if (result.fallidos?.length > 0) fileFallidos.push(...result.fallidos)
         }
-      } catch (err) {
-        const reason = `Timeout o error de red: ${err.message}`
-        batch.forEach(r => fileFallidos.push({ record: r, error: reason }))
-        erroresCarga += batch.length
-        if (!primerError) primerError = reason
       }
+
+      setProgreso({ archivoIdx: 1, archivoNombre: 'Reintento', filaActual: Math.min(procesados, clientes.length), filasTotal: clientes.length })
     }
 
     updated[0] = {
       ...updated[0],
       status: erroresCarga > 0 && cargados === 0 ? 'error' : 'completado',
-      result: { cargados, duplicados, errores: erroresCarga, primerError },
+      result: { cargados, actualizados, duplicados, errores: erroresCarga, primerError },
     }
     setArchivos([...updated])
     setRegistrosFallidos(fileFallidos)
-    setResultadoGlobal({ cargados, duplicados, errores: erroresCarga })
+    setResultadoGlobal({ cargados, actualizados, duplicados, errores: erroresCarga })
     setStep(4)
   }
 
