@@ -15,7 +15,6 @@ export default function Login() {
   const [resetLoading, setResetLoading] = useState(false)
   const [resetMsg, setResetMsg] = useState('')
   const [resetError, setResetError] = useState('')
-  const [tempPassword, setTempPassword] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -45,14 +44,7 @@ export default function Login() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Error al restablecer la contraseña')
-      if (data.tempPassword) {
-        setTempPassword(data.tempPassword)
-        setResetMsg(data.emailSent
-          ? 'Te enviamos una contraseña temporal a tu correo.'
-          : 'Contraseña restablecida. Usa la contraseña temporal que aparece abajo.')
-      } else {
-        setResetMsg('Te enviamos una contraseña temporal a tu correo. Revisa tu bandeja de entrada.')
-      }
+      setResetMsg('Te enviamos una contraseña temporal a tu correo. Revisa tu bandeja de entrada (y spam).')
     } catch (err) {
       setResetError(err.message || 'Error al conectar con el servidor.')
     } finally {
@@ -108,7 +100,7 @@ export default function Login() {
 
               <div className="mt-4 text-center">
                 <button
-                  onClick={() => { setModo('recuperar'); setResetEmail(email); setResetMsg(''); setResetError(''); setTempPassword('') }}
+                  onClick={() => { setModo('recuperar'); setResetEmail(email); setResetMsg(''); setResetError('') }}
                   className="text-sm text-blue-700 hover:text-blue-900 hover:underline"
                 >
                   ¿Olvidaste tu contraseña?
@@ -134,16 +126,6 @@ export default function Login() {
               {resetMsg && (
                 <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-700">
                   {resetMsg}
-                </div>
-              )}
-
-              {tempPassword && (
-                <div className="mb-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
-                  <p className="text-xs text-blue-600 mb-2 font-medium">Tu contraseña temporal:</p>
-                  <div className="bg-white rounded-lg px-4 py-3 text-center border border-blue-200">
-                    <code className="text-xl font-bold text-blue-800 tracking-widest select-all">{tempPassword}</code>
-                  </div>
-                  <p className="text-xs text-red-600 mt-2 font-medium">Cámbiala después de iniciar sesión.</p>
                 </div>
               )}
 

@@ -193,24 +193,10 @@ export async function handler(event) {
       }
     }
 
-    // Build response
+    // Build response — never expose tempPassword to the client
     const response = {
-      message: emailSent
-        ? 'Te enviamos una contraseña temporal a tu correo.'
-        : 'Contraseña restablecida. Usa la contraseña temporal que aparece abajo.',
+      message: 'Te enviamos una contraseña temporal a tu correo. Revisa tu bandeja de entrada (y spam).',
       emailSent,
-      emailMethod,
-    }
-
-    // In development: always include temp password so the user can test
-    if (process.env.CONTEXT !== 'production') {
-      response.tempPassword = tempPassword
-      response._note = 'La contraseña temporal se muestra aquí porque estás en modo desarrollo.'
-    }
-
-    // If email couldn't be sent, include password in response as fallback
-    if (!emailSent) {
-      response.tempPassword = tempPassword
     }
 
     console.log(`[reset-password] Done. Method: ${emailMethod}, Sent: ${emailSent}`)
