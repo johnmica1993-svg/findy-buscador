@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Pencil, X, ArrowRight, Loader2, File, XCircle, Download, RotateCcw } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { useAuth } from '../context/AuthContext'
@@ -157,11 +157,111 @@ export default function CargaMasiva() {
   const [customName, setCustomName] = useState('')
   const [dragOver, setDragOver] = useState(false)
 
-  // Progress
+  // Progress & job tracking
   const [progreso, setProgreso] = useState({ archivoIdx: 0, filaActual: 0, filasTotal: 0, archivoNombre: '' })
   const [resultadoGlobal, setResultadoGlobal] = useState({ cargados: 0, duplicados: 0, errores: 0 })
   const [registrosFallidos, setRegistrosFallidos] = useState([])
-  const [duplicadosDetalle, setDuplicadosDetalle] = useState([]) // [{cups, accion, razon, ...}]
+  const [duplicadosDetalle, setDuplicadosDetalle] = useState([])
+  const [jobId, setJobId] = useState(null)
+  const pollingRef = useRef(null)
+
+  // On mount: check if there's an active job from a previous session
+  useEffect(() => {
+    const savedJobId = localStorage.getItem('findy_job_id')
+    if (savedJobId) {
+      setJobId(savedJobId)
+      setStep(3)
+      iniciarPolling(savedJobId)
+    }
+    return () => { if (pollingRef.current) clearInterval(pollingRef.current) }
+  }, [])
+
+  function iniciarPolling(id) {
+    if (pollingRef.current) clearInterval(pollingRef.current)
+    pollingRef.current = setInterval(async () => {
+      try {
+        const res = await fetch('/.netlify/functions/job-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id: id }),
+        })
+        const job = await res.json()
+        if (!job || !job.id) return
+
+        setProgreso({
+          archivoIdx: 1,
+          archivoNombre: job.nombre_archivo || 'Carga',
+          filaActual: job.procesados || 0,
+          filasTotal: job.total_registros || 0,
+        })
+
+        if (job.estado === 'completado' || job.estado === 'error' || job.estado === 'cancelado') {
+          clearInterval(pollingRef.current)
+          pollingRef.current = null
+          localStorage.removeItem('findy_job_id')
+          setResultadoGlobal({
+            cargados: job.insertados || 0,
+            actualizados: job.actualizados || 0,
+            duplicados: 0,
+            errores: job.errores || 0,
+          })
+          setStep(4)
+          setArchivos([{
+            name: job.nombre_archivo || 'Carga',
+            status: job.estado === 'completado' ? 'completado' : 'error',
+            totalRows: job.total_registros || 0,
+            result: {
+              cargados: job.insertados || 0,
+              actualizados: job.actualizados || 0,
+              duplicados: 0,
+              errores: job.errores || 0,
+              primerError: job.error_mensaje,
+            },
+          }])
+        }
+      } catch (e) {
+        console.warn('[Polling] Error:', e)
+      }
+    }, 2000)
+  }
+
+  async function crearJob(nombreArchivo, totalRegistros) {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/carga_jobs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=representation',
+        },
+        body: JSON.stringify({
+          usuario_id: usuario?.id,
+          estado: 'procesando',
+          total_registros: totalRegistros,
+          nombre_archivo: nombreArchivo,
+        }),
+      })
+      const data = await res.json()
+      return data?.[0]?.id || null
+    } catch {
+      return null
+    }
+  }
+
+  async function actualizarJob(id, updates) {
+    try {
+      await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/carga_jobs?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ ...updates, updated_at: new Date().toISOString() }),
+      })
+    } catch {}
+  }
 
   // Collect files from input or drop
   async function agregarArchivos(fileList) {
@@ -347,12 +447,11 @@ export default function CargaMasiva() {
     return { clientes, errores: errs }
   }
 
-  // Send one chunk to the Netlify Function with AbortController support
-  async function enviarChunk(chunk, signal) {
+  async function enviarChunk(chunk, jid, signal) {
     const res = await fetch('/.netlify/functions/bulk-insert', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientes: chunk }),
+      body: JSON.stringify({ clientes: chunk, job_id: jid }),
       signal,
     })
     const text = await res.text()
@@ -391,31 +490,38 @@ export default function CargaMasiva() {
 
         console.log(`[CargaMasiva] ${archivo.name}: ${clientes.length} válidos, ${errores.length} errores validación`)
 
+        // Create job in Supabase
+        const jid = await crearJob(archivo.name, clientes.length)
+        if (jid) {
+          setJobId(jid)
+          localStorage.setItem('findy_job_id', jid)
+          iniciarPolling(jid)
+        }
+
         let cargados = 0, actualizados = 0, duplicados = 0, erroresCarga = errores.length
         let primerError = errores.length > 0 ? `Validación: ${errores.length} errores (ej: ${errores[0]?.error})` : null
         const fileFallidos = []
         let procesados = 0
 
-        // Build chunks of CHUNK_SIZE
         const chunks = []
         for (let j = 0; j < clientes.length; j += CHUNK_SIZE) {
           chunks.push(clientes.slice(j, j + CHUNK_SIZE))
         }
 
-        // Process MAX_PARALLEL chunks simultaneously
         for (let c = 0; c < chunks.length; c += MAX_PARALLEL) {
           if (cancelRef.current) { abortController.abort(); break }
 
           const grupo = chunks.slice(c, c + MAX_PARALLEL)
 
           const results = await Promise.all(grupo.map(chunk =>
-            enviarChunk(chunk, abortController.signal).catch(err => ({
+            enviarChunk(chunk, jid, abortController.signal).catch(err => ({
               ok: false, result: { error: err.name === 'AbortError' ? 'Cancelado' : `Red: ${err.message}` }, chunk
             }))
           ))
 
           for (const { ok, status, result, chunk } of results) {
             procesados += chunk.length
+            if (result.cancelado) { cancelRef.current = true; break }
             if (!ok) {
               const reason = result.error || `HTTP ${status}`
               chunk.forEach(r => fileFallidos.push({ record: r, error: reason }))
@@ -431,12 +537,31 @@ export default function CargaMasiva() {
             }
           }
 
+          // Update job progress directly
+          if (jid) {
+            await actualizarJob(jid, { procesados, insertados: cargados, errores: erroresCarga })
+          }
+
           setProgreso({
             archivoIdx: i + 1,
             archivoNombre: archivo.name,
             filaActual: Math.min(procesados, clientes.length),
             filasTotal: clientes.length,
           })
+        }
+
+        // Mark job complete
+        if (jid) {
+          await actualizarJob(jid, {
+            estado: cancelRef.current ? 'cancelado' : erroresCarga > 0 && cargados === 0 ? 'error' : 'completado',
+            procesados: clientes.length,
+            insertados: cargados,
+            actualizados,
+            errores: erroresCarga,
+            error_mensaje: primerError,
+          })
+          if (pollingRef.current) clearInterval(pollingRef.current)
+          localStorage.removeItem('findy_job_id')
         }
 
         allFallidos.push(...fileFallidos)
@@ -478,6 +603,9 @@ export default function CargaMasiva() {
     setProgreso({ archivoIdx: 0, filaActual: 0, filasTotal: 0, archivoNombre: '' })
     setRegistrosFallidos([])
     setDuplicadosDetalle([])
+    setJobId(null)
+    localStorage.removeItem('findy_job_id')
+    if (pollingRef.current) clearInterval(pollingRef.current)
     cancelRef.current = false
   }
 
@@ -720,7 +848,16 @@ export default function CargaMasiva() {
             </div>
 
             <div className="mt-4 flex justify-end">
-              <Button variant="danger" onClick={() => { cancelRef.current = true }}>
+              <Button variant="danger" onClick={() => {
+                cancelRef.current = true
+                if (jobId) {
+                  fetch('/.netlify/functions/bulk-insert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cancelar: true, job_id: jobId }),
+                  }).catch(() => {})
+                }
+              }}>
                 Cancelar
               </Button>
             </div>
