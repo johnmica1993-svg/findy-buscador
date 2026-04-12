@@ -153,7 +153,7 @@ function mapearRegistro(row, usuario) {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY
-const CHUNK_SIZE = 15000
+const CHUNK_SIZE = 10000
 const PARALLEL = 4
 
 // ─── Component ───
@@ -301,12 +301,17 @@ export default function CargaMasiva() {
 
       const resultados = await Promise.all(
         grupo.map(chunk =>
-          fetch('/.netlify/functions/bulk-insert', {
+          fetch(`${SUPABASE_URL}/rest/v1/rpc/bulk_upsert_clientes`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ clientes: chunk, job_id: jid }),
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON,
+              'Authorization': `Bearer ${SUPABASE_ANON}`,
+            },
+            body: JSON.stringify({ registros: chunk }),
           })
             .then(r => r.json())
+            .then(r => ({ cargados: (r.insertados || 0) + (r.actualizados || 0), actualizados: r.actualizados || 0, errores: r.errores || 0 }))
             .catch(err => ({ cargados: 0, errores: chunk.length, primerError: err.message }))
         )
       )
@@ -372,12 +377,7 @@ export default function CargaMasiva() {
     if (jobId) {
       await supabase.from('carga_jobs').update({ estado: 'cancelado' }).eq('id', jobId).catch(() => {})
       await eliminarJobLocal(jobId).catch(() => {})
-      // Also tell in-flight bulk-insert calls to stop
-      fetch('/.netlify/functions/bulk-insert', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cancelar: true, job_id: jobId }),
-      }).catch(() => {})
+      // Cancel flag is set in carga_jobs above — in-flight requests will finish but results are ignored
     }
     setEstado('idle')
     setProgreso(0)
