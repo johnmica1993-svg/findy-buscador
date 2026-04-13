@@ -135,12 +135,14 @@ export default function CargaMasiva() {
   const [resultadosPorArchivo, setResultadosPorArchivo] = useState([])
   const [informe, setInforme] = useState({
     insertados: 0, actualizados: 0, duplicados_en_crm: 0, duplicados_internos: 0,
-    cups_actualizados: [], cups_duplicados_internos: [],
+    detalle_actualizados: [], cups_duplicados_internos: [],
   })
+  const [erroresDetalle, setErroresDetalle] = useState([])
   const [errorMsg, setErrorMsg] = useState(null)
   const [expandDetalle, setExpandDetalle] = useState(false)
   const [expandActualizados, setExpandActualizados] = useState(false)
   const [expandDuplicados, setExpandDuplicados] = useState(false)
+  const [expandErrores, setExpandErrores] = useState(false)
 
   // ── Mapear registro ──
 
@@ -196,8 +198,10 @@ export default function CargaMasiva() {
 
     const mapearRegistro = crearMapearRegistro(mapeoLocal)
     let insertados = 0, actualizados = 0, errores = 0
-    const cupsActualizados = []
+    const detalleActualizados = []
     const cupsDuplicadosInternos = []
+    const erroresChunks = []
+    let chunkIdx = 0
     const cupsVistos = new Set()
 
     for (let rowStart = 1; rowStart <= totalFilas; rowStart += CHUNK_SIZE) {
@@ -254,13 +258,14 @@ export default function CargaMasiva() {
             console.error('Chunk size:', batch.length)
             console.error('Primer registro:', JSON.stringify(batch[0]))
             errores += batch.length
+            erroresChunks.push({ chunk: chunkIdx, mensaje: errorText.slice(0, 200), registros: batch.length })
           } else {
             const r = await res.json()
             console.log(`Chunk OK (${elapsed}s): ${batch.length} → ${r.insertados} nuevos, ${r.actualizados} act`)
             insertados += r.insertados || 0
             actualizados += r.actualizados || 0
-            if (r.cups_actualizados?.length > 0 && cupsActualizados.length < 200) {
-              cupsActualizados.push(...r.cups_actualizados)
+            if (r.detalle_actualizados?.length > 0 && detalleActualizados.length < 300) {
+              detalleActualizados.push(...r.detalle_actualizados)
             }
             if (r.cups_duplicados_internos?.length > 0 && cupsDuplicadosInternos.length < 200) {
               cupsDuplicadosInternos.push(...r.cups_duplicados_internos)
@@ -268,9 +273,10 @@ export default function CargaMasiva() {
           }
         } catch (err) {
           console.error('=== FETCH ERROR ===', err.name, err.message)
-          console.error('Primer registro:', JSON.stringify(batch[0]))
           errores += batch.length
+          erroresChunks.push({ chunk: chunkIdx, mensaje: err.name === 'AbortError' ? 'Timeout (25s)' : err.message, registros: batch.length })
         }
+        chunkIdx++
       }
 
       onProgress(totalFilas > 0 ? Math.round(((rowEnd) / totalFilas) * 100) : 100, {
@@ -281,7 +287,7 @@ export default function CargaMasiva() {
     }
 
     cupsVistos.clear()
-    return { insertados, actualizados, errores, total: totalFilas, cups_actualizados: cupsActualizados.slice(0, 200), cups_duplicados_internos: cupsDuplicadosInternos.slice(0, 200) }
+    return { insertados, actualizados, errores, total: totalFilas, detalle_actualizados: detalleActualizados.slice(0, 300), cups_duplicados_internos: cupsDuplicadosInternos.slice(0, 200), erroresChunks }
   }
 
   // ── Handlers ──
@@ -369,9 +375,10 @@ export default function CargaMasiva() {
       setInforme({
         insertados: result.insertados, actualizados: result.actualizados,
         duplicados_en_crm: result.actualizados, duplicados_internos: 0,
-        cups_actualizados: result.cups_actualizados || [],
+        detalle_actualizados: result.detalle_actualizados || [],
         cups_duplicados_internos: result.cups_duplicados_internos || [],
       })
+      setErroresDetalle(result.erroresChunks || [])
       setProgreso(100)
       setPaso(5)
     } catch (err) {
@@ -437,13 +444,15 @@ export default function CargaMasiva() {
     setResultadosPorArchivo(resultados)
     setStats({ total: totalFilas, procesados: totalFilas, insertados: totalInsertados, actualizados: totalActualizados, errores: totalErrores })
     // Accumulate informe from all files
-    const allCupsAct = resultados.flatMap(r => r.cups_actualizados || []).slice(0, 200)
+    const allDetAct = resultados.flatMap(r => r.detalle_actualizados || []).slice(0, 300)
     const allCupsDup = resultados.flatMap(r => r.cups_duplicados_internos || []).slice(0, 200)
+    const allErrChunks = resultados.flatMap(r => r.erroresChunks || [])
     setInforme({
       insertados: totalInsertados, actualizados: totalActualizados,
       duplicados_en_crm: totalActualizados, duplicados_internos: allCupsDup.length,
-      cups_actualizados: allCupsAct, cups_duplicados_internos: allCupsDup,
+      detalle_actualizados: allDetAct, cups_duplicados_internos: allCupsDup,
     })
+    setErroresDetalle(allErrChunks)
     setProgreso(100)
     setPaso(5)
   }
@@ -458,7 +467,9 @@ export default function CargaMasiva() {
     setProgreso(0)
     setStats({ total: 0, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
     setResultadosPorArchivo([])
-    setInforme({ insertados: 0, actualizados: 0, duplicados_en_crm: 0, duplicados_internos: 0, cups_actualizados: [], cups_duplicados_internos: [] })
+    setInforme({ insertados: 0, actualizados: 0, duplicados_en_crm: 0, duplicados_internos: 0, detalle_actualizados: [], cups_duplicados_internos: [] })
+    setErroresDetalle([])
+    setExpandErrores(false)
     setErrorMsg(null)
     setExpandDetalle(false)
     setExpandActualizados(false)
@@ -632,50 +643,80 @@ export default function CargaMasiva() {
                 <p className="text-xs text-green-700 mt-1">Nuevos</p>
               </div>
               <div
-                className={`bg-blue-50 border border-blue-200 rounded-xl p-4 text-center ${informe.cups_actualizados?.length > 0 ? 'cursor-pointer hover:bg-blue-100 transition-colors' : ''}`}
-                onClick={() => informe.cups_actualizados?.length > 0 && setExpandActualizados(!expandActualizados)}
+                className={`bg-blue-50 border border-blue-200 rounded-xl p-4 text-center ${informe.detalle_actualizados?.length > 0 ? 'cursor-pointer hover:bg-blue-100 transition-colors' : ''}`}
+                onClick={() => informe.detalle_actualizados?.length > 0 && setExpandActualizados(!expandActualizados)}
               >
                 <p className="text-3xl font-bold text-blue-600">{stats.actualizados?.toLocaleString()}</p>
-                <p className="text-xs text-blue-700 mt-1">Actualizados {informe.cups_actualizados?.length > 0 ? (expandActualizados ? '▲' : '▼') : ''}</p>
+                <p className="text-xs text-blue-700 mt-1">Actualizados {informe.detalle_actualizados?.length > 0 ? (expandActualizados ? '▲' : '▼') : ''}</p>
               </div>
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
                 <p className="text-3xl font-bold text-gray-600">{stats.total?.toLocaleString()}</p>
                 <p className="text-xs text-gray-500 mt-1">Total filas</p>
               </div>
               <div
-                className={`bg-red-50 border border-red-200 rounded-xl p-4 text-center ${informe.cups_duplicados_internos?.length > 0 ? 'cursor-pointer hover:bg-red-100 transition-colors' : ''}`}
-                onClick={() => informe.cups_duplicados_internos?.length > 0 && setExpandDuplicados(!expandDuplicados)}
+                className={`bg-red-50 border border-red-200 rounded-xl p-4 text-center ${erroresDetalle.length > 0 ? 'cursor-pointer hover:bg-red-100 transition-colors' : ''}`}
+                onClick={() => erroresDetalle.length > 0 && setExpandErrores(!expandErrores)}
               >
                 <p className="text-3xl font-bold text-red-600">{stats.errores?.toLocaleString()}</p>
-                <p className="text-xs text-red-700 mt-1">Errores {informe.cups_duplicados_internos?.length > 0 ? (expandDuplicados ? '▲' : '▼') : ''}</p>
+                <p className="text-xs text-red-700 mt-1">Errores {erroresDetalle.length > 0 ? (expandErrores ? '▲' : '▼') : ''}</p>
               </div>
             </div>
 
-            {/* Expandable: CUPS actualizados */}
-            {expandActualizados && informe.cups_actualizados?.length > 0 && (
-              <div className="mb-4 max-h-48 overflow-y-auto border border-blue-200 rounded-lg p-3 bg-white text-xs">
-                <p className="font-semibold text-blue-700 mb-2">
-                  CUPS actualizados ({informe.cups_actualizados.length}{stats.actualizados > informe.cups_actualizados.length ? ` de ${stats.actualizados}` : ''}):
-                </p>
-                {informe.cups_actualizados.map((cups, i) => (
-                  <div key={i} className="py-0.5 border-b border-gray-100 font-mono text-gray-700">{cups}</div>
-                ))}
-                {stats.actualizados > informe.cups_actualizados.length && (
-                  <p className="text-gray-400 mt-1 italic">...y {stats.actualizados - informe.cups_actualizados.length} más</p>
+            {/* Expandable: Detalle actualizados */}
+            {expandActualizados && informe.detalle_actualizados?.length > 0 && (
+              <div className="mb-4 border border-blue-200 rounded-lg overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead className="bg-blue-50">
+                    <tr>
+                      <th className="text-left p-2 font-medium text-blue-700">CUPS</th>
+                      <th className="text-left p-2 font-medium text-blue-700">Campos actualizados</th>
+                    </tr>
+                  </thead>
+                  <tbody className="max-h-48 overflow-y-auto">
+                    {informe.detalle_actualizados.map((item, i) => (
+                      <tr key={i} className="border-t border-blue-100 hover:bg-blue-50">
+                        <td className="p-2 font-mono text-gray-700">{item.cups}</td>
+                        <td className="p-2 text-gray-600">{item.cambios || 'datos_extra'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {stats.actualizados > informe.detalle_actualizados.length && (
+                  <p className="text-xs text-gray-400 p-2 bg-blue-50">...y {stats.actualizados - informe.detalle_actualizados.length} más</p>
                 )}
               </div>
             )}
 
             {/* Expandable: Duplicados internos */}
-            {expandDuplicados && informe.cups_duplicados_internos?.length > 0 && (
-              <div className="mb-4 max-h-48 overflow-y-auto border border-red-200 rounded-lg p-3 bg-white text-xs">
-                <p className="font-semibold text-red-700 mb-2">Duplicados internos del archivo:</p>
-                {informe.cups_duplicados_internos.map((d, i) => (
-                  <div key={i} className="flex justify-between py-0.5 border-b border-gray-100">
-                    <span className="font-mono text-gray-700">{d.cups}</span>
-                    <span className="text-red-500 font-semibold">{d.veces}x</span>
+            {informe.cups_duplicados_internos?.length > 0 && (
+              <div className="mb-4">
+                <button onClick={() => setExpandDuplicados(!expandDuplicados)}
+                  className="text-xs font-medium text-orange-700 hover:text-orange-900 mb-1">
+                  {expandDuplicados ? '▼' : '▶'} {informe.cups_duplicados_internos.length} CUPS duplicados en el archivo
+                </button>
+                {expandDuplicados && (
+                  <div className="border border-orange-200 rounded-lg p-3 bg-white text-xs max-h-48 overflow-y-auto">
+                    {informe.cups_duplicados_internos.map((d, i) => (
+                      <div key={i} className="flex justify-between py-0.5 border-b border-gray-100">
+                        <span className="font-mono text-gray-700">{d.cups}</span>
+                        <span className="text-orange-500 font-semibold">{d.veces}x</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Expandable: Errores detalle */}
+            {expandErrores && erroresDetalle.length > 0 && (
+              <div className="mb-4 border border-red-200 rounded-lg p-3 bg-red-50 text-xs">
+                {erroresDetalle.map((e, i) => (
+                  <div key={i} className="mb-1 p-2 bg-white rounded border border-red-100">
+                    <span className="font-semibold text-gray-700">Lote {e.chunk + 1} ({e.registros} registros): </span>
+                    <span className="text-red-600">{e.mensaje}</span>
                   </div>
                 ))}
+                <p className="mt-2 text-gray-500 italic">Los registros con error no se cargaron. Puedes intentar cargarlos de nuevo.</p>
               </div>
             )}
 
@@ -710,14 +751,14 @@ export default function CargaMasiva() {
             )}
 
             {/* Download CSV */}
-            {(informe.cups_actualizados?.length > 0 || informe.cups_duplicados_internos?.length > 0) && (
+            {(informe.detalle_actualizados?.length > 0 || informe.cups_duplicados_internos?.length > 0) && (
               <div className="text-center mb-2">
                 <button
                   onClick={() => {
                     const filas = [
-                      'CUPS,TIPO',
-                      ...(informe.cups_actualizados || []).map(c => `${c},ACTUALIZADO`),
-                      ...(informe.cups_duplicados_internos || []).map(d => `${d.cups},DUPLICADO_INTERNO`),
+                      'CUPS,TIPO,CAMBIOS',
+                      ...(informe.detalle_actualizados || []).map(d => `${d.cups},ACTUALIZADO,${d.cambios || 'datos_extra'}`),
+                      ...(informe.cups_duplicados_internos || []).map(d => `${d.cups},DUPLICADO_INTERNO,${d.veces}x`),
                     ]
                     const blob = new Blob([filas.join('\n')], { type: 'text/csv' })
                     const url = URL.createObjectURL(blob)
