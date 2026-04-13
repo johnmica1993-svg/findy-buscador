@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Search, XCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Button from '../components/UI/Button'
@@ -25,9 +25,12 @@ export default function Buscar() {
   const [buscado, setBuscado] = useState(false)
   const [alerta, setAlerta] = useState(null)
 
+  const inputRef = useRef(null)
+
   async function buscar() {
-    const termino = query.trim()
-    if (!termino) return
+    // Read directly from the DOM input to avoid stale React state
+    const termino = (inputRef.current?.value || query).trim()
+    if (!termino || termino.length < 2) return
 
     setBuscando(true)
     setBuscado(true)
@@ -46,6 +49,7 @@ export default function Buscar() {
 
       if (!res.ok) {
         console.error('Error búsqueda:', data.error)
+        setBuscando(false)
         return
       }
 
@@ -97,6 +101,7 @@ export default function Buscar() {
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={22} />
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
