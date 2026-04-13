@@ -595,24 +595,58 @@ export default function CargaMasiva() {
 
             {errorMsg && <p className="text-sm text-red-600 mb-4 font-mono break-all text-center">{errorMsg}</p>}
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
                 <p className="text-3xl font-bold text-green-600">{stats.insertados?.toLocaleString()}</p>
                 <p className="text-xs text-green-700 mt-1">Nuevos</p>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+              <div
+                className={`bg-blue-50 border border-blue-200 rounded-xl p-4 text-center ${informe.cups_actualizados?.length > 0 ? 'cursor-pointer hover:bg-blue-100 transition-colors' : ''}`}
+                onClick={() => informe.cups_actualizados?.length > 0 && setExpandActualizados(!expandActualizados)}
+              >
                 <p className="text-3xl font-bold text-blue-600">{stats.actualizados?.toLocaleString()}</p>
-                <p className="text-xs text-blue-700 mt-1">Actualizados</p>
+                <p className="text-xs text-blue-700 mt-1">Actualizados {informe.cups_actualizados?.length > 0 ? (expandActualizados ? '▲' : '▼') : ''}</p>
               </div>
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
                 <p className="text-3xl font-bold text-gray-600">{stats.total?.toLocaleString()}</p>
                 <p className="text-xs text-gray-500 mt-1">Total filas</p>
               </div>
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+              <div
+                className={`bg-red-50 border border-red-200 rounded-xl p-4 text-center ${informe.cups_duplicados_internos?.length > 0 ? 'cursor-pointer hover:bg-red-100 transition-colors' : ''}`}
+                onClick={() => informe.cups_duplicados_internos?.length > 0 && setExpandDuplicados(!expandDuplicados)}
+              >
                 <p className="text-3xl font-bold text-red-600">{stats.errores?.toLocaleString()}</p>
-                <p className="text-xs text-red-700 mt-1">Errores</p>
+                <p className="text-xs text-red-700 mt-1">Errores {informe.cups_duplicados_internos?.length > 0 ? (expandDuplicados ? '▲' : '▼') : ''}</p>
               </div>
             </div>
+
+            {/* Expandable: CUPS actualizados */}
+            {expandActualizados && informe.cups_actualizados?.length > 0 && (
+              <div className="mb-4 max-h-48 overflow-y-auto border border-blue-200 rounded-lg p-3 bg-white text-xs">
+                <p className="font-semibold text-blue-700 mb-2">
+                  CUPS actualizados ({informe.cups_actualizados.length}{stats.actualizados > informe.cups_actualizados.length ? ` de ${stats.actualizados}` : ''}):
+                </p>
+                {informe.cups_actualizados.map((cups, i) => (
+                  <div key={i} className="py-0.5 border-b border-gray-100 font-mono text-gray-700">{cups}</div>
+                ))}
+                {stats.actualizados > informe.cups_actualizados.length && (
+                  <p className="text-gray-400 mt-1 italic">...y {stats.actualizados - informe.cups_actualizados.length} más</p>
+                )}
+              </div>
+            )}
+
+            {/* Expandable: Duplicados internos */}
+            {expandDuplicados && informe.cups_duplicados_internos?.length > 0 && (
+              <div className="mb-4 max-h-48 overflow-y-auto border border-red-200 rounded-lg p-3 bg-white text-xs">
+                <p className="font-semibold text-red-700 mb-2">Duplicados internos del archivo:</p>
+                {informe.cups_duplicados_internos.map((d, i) => (
+                  <div key={i} className="flex justify-between py-0.5 border-b border-gray-100">
+                    <span className="font-mono text-gray-700">{d.cups}</span>
+                    <span className="text-red-500 font-semibold">{d.veces}x</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Per-file detail (collapsible) */}
             {resultadosPorArchivo.length > 1 && (
@@ -641,6 +675,31 @@ export default function CargaMasiva() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Download CSV */}
+            {(informe.cups_actualizados?.length > 0 || informe.cups_duplicados_internos?.length > 0) && (
+              <div className="text-center mb-2">
+                <button
+                  onClick={() => {
+                    const filas = [
+                      'CUPS,TIPO',
+                      ...(informe.cups_actualizados || []).map(c => `${c},ACTUALIZADO`),
+                      ...(informe.cups_duplicados_internos || []).map(d => `${d.cups},DUPLICADO_INTERNO`),
+                    ]
+                    const blob = new Blob([filas.join('\n')], { type: 'text/csv' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `informe_carga_${new Date().toISOString().slice(0, 10)}.csv`
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  Descargar informe CSV
+                </button>
               </div>
             )}
           </Card>
