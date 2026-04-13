@@ -103,8 +103,14 @@ export default function CargaMasiva() {
   const [mapeo, setMapeo] = useState({}) // header → campo sistema
   const [progreso, setProgreso] = useState(0)
   const [stats, setStats] = useState({ total: 0, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
+  const [informe, setInforme] = useState({
+    insertados: 0, actualizados: 0, duplicados_en_crm: 0, duplicados_internos: 0,
+    cups_actualizados: [], cups_duplicados_internos: [],
+  })
   const [errorMsg, setErrorMsg] = useState(null)
   const [dragOver, setDragOver] = useState(false)
+  const [expandActualizados, setExpandActualizados] = useState(false)
+  const [expandDuplicados, setExpandDuplicados] = useState(false)
 
   // ── PASO 1: Seleccionar archivo ──
 
@@ -226,6 +232,9 @@ export default function CargaMasiva() {
     setPaso(3)
     setProgreso(0)
     setStats({ total: 0, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
+    setInforme({ insertados: 0, actualizados: 0, duplicados_en_crm: 0, duplicados_internos: 0, cups_actualizados: [], cups_duplicados_internos: [] })
+    setExpandActualizados(false)
+    setExpandDuplicados(false)
     setErrorMsg(null)
 
     try {
@@ -302,6 +311,16 @@ export default function CargaMasiva() {
               const r = await res.json()
               insertadosTotal += r.insertados || 0
               actualizadosTotal += r.actualizados || 0
+
+              // Accumulate informe
+              setInforme(prev => ({
+                insertados: prev.insertados + (r.insertados || 0),
+                actualizados: prev.actualizados + (r.actualizados || 0),
+                duplicados_en_crm: prev.duplicados_en_crm + (r.duplicados_en_crm || 0),
+                duplicados_internos: prev.duplicados_internos + (r.duplicados_internos || 0),
+                cups_actualizados: [...prev.cups_actualizados, ...(r.cups_actualizados || [])].slice(0, 200),
+                cups_duplicados_internos: [...prev.cups_duplicados_internos, ...(r.cups_duplicados_internos || [])].slice(0, 200),
+              }))
             }
           } catch (err) {
             console.error('Fetch error:', err)
@@ -337,8 +356,24 @@ export default function CargaMasiva() {
     setMapeo({})
     setProgreso(0)
     setStats({ total: 0, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
+    setInforme({ insertados: 0, actualizados: 0, duplicados_en_crm: 0, duplicados_internos: 0, cups_actualizados: [], cups_duplicados_internos: [] })
     setErrorMsg(null)
     cancelRef.current = false
+  }
+
+  function descargarInformeCSV() {
+    const rows = []
+    for (const cups of (informe.cups_actualizados || [])) {
+      if (cups) rows.push({ Tipo: 'ACTUALIZADO', CUPS: cups, Veces: '' })
+    }
+    for (const d of (informe.cups_duplicados_internos || [])) {
+      if (d?.cups) rows.push({ Tipo: 'DUPLICADO_INTERNO', CUPS: d.cups, Veces: d.veces })
+    }
+    if (rows.length === 0) rows.push({ Tipo: 'SIN_DATOS', CUPS: '', Veces: '' })
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Informe')
+    XLSX.writeFile(wb, `informe_carga_${new Date().toISOString().slice(0, 10)}.xlsx`)
   }
 
   const mapeados = Object.values(mapeo).filter(v => v !== '[ignorar]').length
@@ -462,40 +497,126 @@ export default function CargaMasiva() {
 
       {/* ═══ PASO 4: Resultado ═══ */}
       {paso === 4 && (
-        <Card className="p-8 text-center">
-          {stats.errores > 0 && stats.insertados === 0 ? (
-            <XCircle className="mx-auto mb-4 text-red-500" size={48} />
-          ) : (
-            <CheckCircle className="mx-auto mb-4 text-green-500" size={48} />
-          )}
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            {stats.errores > 0 && stats.insertados === 0 ? 'Error en la carga' : 'Carga completada'}
-          </h3>
-          <p className="text-sm text-gray-500 mb-6">{archivo?.name}</p>
-
-          {errorMsg && <p className="text-sm text-red-600 mb-4 font-mono break-all">{errorMsg}</p>}
-
-          <div className="flex justify-center gap-8 mb-6">
-            <div>
-              <p className="text-3xl font-bold text-green-600">{stats.insertados.toLocaleString()}</p>
-              <p className="text-sm text-gray-500">Insertados</p>
+        <div className="space-y-4">
+          <Card className="p-6">
+            <div className="text-center mb-6">
+              {stats.errores > 0 && informe.insertados === 0 ? (
+                <XCircle className="mx-auto mb-3 text-red-500" size={48} />
+              ) : (
+                <CheckCircle className="mx-auto mb-3 text-green-500" size={48} />
+              )}
+              <h3 className="text-xl font-bold text-gray-900">
+                {stats.errores > 0 && informe.insertados === 0 ? 'Error en la carga' : 'Carga completada'}
+              </h3>
+              <p className="text-sm text-gray-500">{archivo?.name}</p>
             </div>
-            {stats.actualizados > 0 && (
-              <div>
-                <p className="text-3xl font-bold text-blue-600">{stats.actualizados.toLocaleString()}</p>
-                <p className="text-sm text-gray-500">Actualizados</p>
-              </div>
-            )}
-            {stats.errores > 0 && (
-              <div>
-                <p className="text-3xl font-bold text-red-600">{stats.errores.toLocaleString()}</p>
-                <p className="text-sm text-gray-500">Errores</p>
-              </div>
-            )}
-          </div>
 
-          <Button onClick={resetTodo}>Cargar otro archivo</Button>
-        </Card>
+            {errorMsg && <p className="text-sm text-red-600 mb-4 font-mono break-all text-center">{errorMsg}</p>}
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                <p className="text-3xl font-bold text-green-600">{informe.insertados.toLocaleString()}</p>
+                <p className="text-xs text-green-700 mt-1">Nuevos</p>
+                <p className="text-[10px] text-green-500">Registros nuevos insertados</p>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+                <p className="text-3xl font-bold text-blue-600">{informe.actualizados.toLocaleString()}</p>
+                <p className="text-xs text-blue-700 mt-1">Actualizados</p>
+                <p className="text-[10px] text-blue-500">CUPS existentes actualizados</p>
+              </div>
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-center">
+                <p className="text-3xl font-bold text-orange-600">{informe.duplicados_en_crm.toLocaleString()}</p>
+                <p className="text-xs text-orange-700 mt-1">Duplicados CRM</p>
+                <p className="text-[10px] text-orange-500">Ya estaban en el sistema</p>
+              </div>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+                <p className="text-3xl font-bold text-red-600">{informe.duplicados_internos.toLocaleString()}</p>
+                <p className="text-xs text-red-700 mt-1">Duplicados archivo</p>
+                <p className="text-[10px] text-red-500">CUPS repetidos en el Excel</p>
+              </div>
+            </div>
+
+            {stats.errores > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-center">
+                <p className="text-sm text-red-700 font-medium">{stats.errores.toLocaleString()} registros con error</p>
+              </div>
+            )}
+          </Card>
+
+          {/* Collapsible: CUPS actualizados */}
+          {informe.cups_actualizados.length > 0 && (
+            <Card className="overflow-hidden">
+              <button
+                onClick={() => setExpandActualizados(!expandActualizados)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-blue-50 hover:bg-blue-100 transition-colors text-left"
+              >
+                <span className="text-sm font-medium text-blue-800">
+                  {expandActualizados ? '▼' : '▶'} Ver CUPS actualizados ({informe.duplicados_en_crm.toLocaleString()})
+                </span>
+              </button>
+              {expandActualizados && (
+                <div className="p-3 max-h-60 overflow-y-auto">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1">
+                    {informe.cups_actualizados.map((cups, i) => (
+                      <span key={i} className="text-xs font-mono bg-gray-50 px-2 py-1 rounded truncate">{cups}</span>
+                    ))}
+                  </div>
+                  {informe.duplicados_en_crm > 200 && (
+                    <p className="text-xs text-gray-400 mt-2 text-center">Mostrando 200 de {informe.duplicados_en_crm.toLocaleString()}</p>
+                  )}
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* Collapsible: Duplicados internos */}
+          {informe.cups_duplicados_internos.length > 0 && (
+            <Card className="overflow-hidden">
+              <button
+                onClick={() => setExpandDuplicados(!expandDuplicados)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-red-50 hover:bg-red-100 transition-colors text-left"
+              >
+                <span className="text-sm font-medium text-red-800">
+                  {expandDuplicados ? '▼' : '▶'} Ver duplicados en el archivo ({informe.duplicados_internos.toLocaleString()})
+                </span>
+              </button>
+              {expandDuplicados && (
+                <div className="p-3 max-h-60 overflow-y-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left px-2 py-1 font-medium text-gray-600">CUPS</th>
+                        <th className="text-center px-2 py-1 font-medium text-gray-600">Veces</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {informe.cups_duplicados_internos.map((d, i) => (
+                        <tr key={i} className="border-b border-gray-100">
+                          <td className="px-2 py-1 font-mono">{d.cups}</td>
+                          <td className="px-2 py-1 text-center text-red-600 font-semibold">{d.veces}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {informe.duplicados_internos > 200 && (
+                    <p className="text-xs text-gray-400 mt-2 text-center">Mostrando 200 de {informe.duplicados_internos.toLocaleString()}</p>
+                  )}
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* Actions */}
+          <div className="flex justify-center gap-3">
+            {(informe.cups_actualizados.length > 0 || informe.cups_duplicados_internos.length > 0) && (
+              <Button variant="secondary" onClick={descargarInformeCSV}>
+                Descargar informe
+              </Button>
+            )}
+            <Button onClick={resetTodo}>Cargar otro archivo</Button>
+          </div>
+        </div>
       )}
     </div>
   )
