@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Search, XCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Button from '../components/UI/Button'
@@ -27,8 +27,27 @@ export default function Buscar() {
 
   const inputRef = useRef(null)
 
+  // Warm up Netlify Function on mount
+  useEffect(() => {
+    fetch('/.netlify/functions/search-clients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ termino: '_warmup' }),
+    }).catch(() => {})
+  }, [])
+
+  async function buscarUnaVez(termino) {
+    const res = await fetch('/.netlify/functions/search-clients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ termino }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Error en búsqueda')
+    return Array.isArray(data) ? data : data.clientes || data.data || []
+  }
+
   async function buscar() {
-    // Read directly from the DOM input to avoid stale React state
     const termino = (inputRef.current?.value || query).trim()
     if (!termino || termino.length < 2) return
 
@@ -39,21 +58,14 @@ export default function Buscar() {
     setResultados([])
 
     try {
-      const res = await fetch('/.netlify/functions/search-clients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ termino }),
-      })
+      let lista = await buscarUnaVez(termino)
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        console.error('Error búsqueda:', data.error)
-        setBuscando(false)
-        return
+      // Retry once after 500ms if first attempt returned empty (cold start)
+      if (lista.length === 0) {
+        await new Promise(r => setTimeout(r, 500))
+        lista = await buscarUnaVez(termino)
       }
 
-      const lista = Array.isArray(data) ? data : data.clientes || data.data || []
       setResultados(lista)
 
       if (lista.length === 0) {
