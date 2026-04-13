@@ -1,73 +1,87 @@
-import { useState, useEffect, useRef } from 'react'
-import { Upload, FileSpreadsheet, CheckCircle, XCircle, Loader2, Download } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Upload, FileSpreadsheet, CheckCircle, XCircle, Loader2, ArrowRight, ArrowLeft } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/UI/Card'
 import Button from '../components/UI/Button'
-import {
-  guardarJobLocal, obtenerJobLocal, actualizarChunkLocal,
-  eliminarJobLocal, obtenerJobActivoLocal,
-} from '../utils/cargaDB'
 
-// ─── Column mapping config ───
+// ─── Config ───
 
-const COLUMN_MAP = {
-  cups: ['cups', 'CUPS', 'Cups', 'cup', 'CUP', 'Id CUPS', 'id_cups', 'ID CUPS', 'ID_CUPS', 'idcups', 'Id cups'],
-  dni: ['dni', 'DNI', 'nif', 'NIF', 'Dni', 'Nif', 'CIF', 'cif', 'Cif', 'DNI/NIF', 'NIF/DNI', 'Documento'],
-  nombre: ['nombre', 'Nombre', 'NOMBRE', 'nombre_completo', 'NOMBRE COMPLETO', 'Nombre Completo', 'nombre completo', 'razon social', 'Razón Social', 'RAZON SOCIAL', 'Razon Social', 'titular', 'Titular', 'TITULAR'],
-  direccion: ['direccion', 'Dirección', 'DIRECCION', 'Direccion', 'dirección', 'Domicilio', 'domicilio', 'DOMICILIO', 'direccion_suministro', 'Dirección Suministro'],
-  campana: ['campana', 'campaña', 'Campaña', 'CAMPAÑA', 'Campana', 'CAMPANA', 'comercializadora', 'Comercializadora', 'COMERCIALIZADORA'],
-  fecha_alta: ['fecha_alta', 'Fecha Alta', 'FECHA ALTA', 'fecha alta', 'FechaAlta', 'Alta', 'alta', 'ALTA', 'Fecha de alta'],
-  fecha_activacion: ['fecha_activacion', 'Fecha Activación', 'FECHA ACTIVACION', 'fecha activacion', 'Fecha Activacion', 'FechaActivacion', 'Activación', 'activacion', 'Fecha de activación'],
-  fecha_ultimo_cambio: ['fecha_ultimo_cambio', 'Fecha Último Cambio', 'FECHA ULTIMO CAMBIO', 'fecha ultimo cambio', 'Último Cambio', 'ultimo cambio'],
-  fecha_baja: ['fecha_baja', 'Fecha Baja', 'FECHA BAJA', 'fecha baja', 'Baja', 'baja', 'BAJA', 'Fecha de baja'],
-  estado: ['estado', 'Estado', 'ESTADO', 'status', 'Status', 'STATUS', 'situacion', 'Situación', 'SITUACION'],
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+const CHUNK_SIZE = 5000
+
+const CAMPOS_SISTEMA = [
+  'cups', 'dni', 'nombre', 'direccion', 'campana', 'estado',
+  'fecha_alta', 'fecha_baja', 'fecha_activacion', 'fecha_ultimo_cambio',
+  'Telefono1', 'Telefono2', 'EMAIL', 'IBAN', 'TITULAR',
+  'MUNICIPIO', 'PROVINCIA', 'Codigo Postal', 'Compañia',
+  'Via', 'Numero', 'Portal', 'Escalera', 'Piso', 'Puerta',
+  'Apellido1', 'Apellido2',
+  '[ignorar]',
+]
+
+const CAMPOS_BD = new Set([
+  'cups', 'dni', 'nombre', 'direccion', 'campana', 'estado',
+  'fecha_alta', 'fecha_baja', 'fecha_activacion', 'fecha_ultimo_cambio', 'oficina_id',
+])
+
+// Auto-detect: Excel header → system field (case-insensitive)
+const AUTO_MAP = {
+  cups: 'cups', 'id cups': 'cups', id_cups: 'cups',
+  dni: 'dni', nif: 'dni', cif: 'dni', 'dni/nif': 'dni', documento: 'dni',
+  nombre: 'nombre', 'nombre completo': 'nombre', 'nombre_completo': 'nombre',
+  'razon social': 'nombre', titular: 'nombre',
+  direccion: 'direccion', dirección: 'direccion', domicilio: 'direccion',
+  campana: 'campana', campaña: 'campana', comercializadora: 'campana', compañia: 'Compañia',
+  estado: 'estado', status: 'estado', situacion: 'estado',
+  fecha_alta: 'fecha_alta', 'fecha alta': 'fecha_alta', alta: 'fecha_alta',
+  fecha_baja: 'fecha_baja', 'fecha baja': 'fecha_baja', baja: 'fecha_baja',
+  fecha_activacion: 'fecha_activacion', 'fecha activacion': 'fecha_activacion',
+  'fecha activación': 'fecha_activacion', activacion: 'fecha_activacion',
+  fecha_ultimo_cambio: 'fecha_ultimo_cambio', 'fecha ultimo cambio': 'fecha_ultimo_cambio',
+  telefono1: 'Telefono1', 'telefono 1': 'Telefono1', 'telefon 1': 'Telefono1',
+  telefono: 'Telefono1', tel1: 'Telefono1', movil: 'Telefono1', móvil: 'Telefono1',
+  telefono2: 'Telefono2', 'telefono 2': 'Telefono2', 'telefon 2': 'Telefono2', tel2: 'Telefono2',
+  email: 'EMAIL', correo: 'EMAIL', 'correo electronico': 'EMAIL', 'e-mail': 'EMAIL',
+  iban: 'IBAN', cuenta: 'IBAN', 'cuenta bancaria': 'IBAN',
+  municipio: 'MUNICIPIO', poblacion: 'MUNICIPIO', ciudad: 'MUNICIPIO', localidad: 'MUNICIPIO',
+  provincia: 'PROVINCIA',
+  'codigo postal': 'Codigo Postal', cp: 'Codigo Postal', codigopostal: 'Codigo Postal',
+  via: 'Via', 'tipo via': 'Via', numero: 'Numero', num: 'Numero', 'nº': 'Numero',
+  portal: 'Portal', escalera: 'Escalera', esc: 'Escalera',
+  piso: 'Piso', planta: 'Piso', puerta: 'Puerta', pta: 'Puerta',
+  apellido1: 'Apellido1', 'apellido 1': 'Apellido1', 'primer apellido': 'Apellido1',
+  apellido2: 'Apellido2', 'apellido 2': 'Apellido2', 'segundo apellido': 'Apellido2',
 }
 
-const EXTRA_MAP = {
-  'telefono1': ['telefono1', 'Telefono1', 'TELEFONO1', 'Telefono 1', 'TELEFON 1', 'Tel1', 'tel1', 'TEL1', 'Teléfono', 'telefono', 'TELEFONO', 'Teléfono 1', 'Movil', 'movil', 'MOVIL', 'Móvil'],
-  'telefono2': ['telefono2', 'Telefono2', 'TELEFONO2', 'Telefono 2', 'TELEFON 2', 'Tel2', 'tel2', 'TEL2', 'Teléfono 2'],
-  'email': ['email', 'Email', 'EMAIL', 'correo', 'Correo', 'CORREO', 'correo electronico', 'CORREO ELECTRONICO', 'Correo Electronico', 'Correo Electrónico', 'e-mail', 'E-mail'],
-  'IBAN': ['iban', 'IBAN', 'Iban', 'cuenta', 'Cuenta', 'cuenta_bancaria', 'Cuenta Bancaria', 'CUENTA BANCARIA'],
-  'codigo_postal': ['codigo postal', 'Codigo Postal', 'CODIGO POSTAL', 'CodigoPostal', 'cp', 'CP', 'Cp', 'C.P.', 'codigo_postal'],
-  'provincia': ['provincia', 'Provincia', 'PROVINCIA'],
-  'municipio': ['municipio', 'Municipio', 'MUNICIPIO', 'poblacion', 'Poblacion', 'POBLACION', 'Población', 'ciudad', 'Ciudad', 'CIUDAD', 'localidad', 'Localidad', 'LOCALIDAD'],
-}
-
-const SPECIAL_MAP = {
-  '_apellido1': ['apellido1', 'Apellido1', 'APELLIDO1', 'Apellido 1', 'apellido_1', 'Primer Apellido', 'primer apellido'],
-  '_apellido2': ['apellido2', 'Apellido2', 'APELLIDO2', 'Apellido 2', 'apellido_2', 'Segundo Apellido', 'segundo apellido'],
-  '_via': ['via', 'Via', 'VIA', 'Tipo Via', 'tipo_via', 'TIPO VIA', 'Tipo Vía'],
-  '_numero': ['numero', 'Numero', 'NUMERO', 'Número', 'Num', 'num', 'Nº'],
-  '_portal': ['portal', 'Portal', 'PORTAL'],
-  '_escalera': ['escalera', 'Escalera', 'ESCALERA', 'Esc', 'esc'],
-  '_piso': ['piso', 'Piso', 'PISO', 'Planta', 'planta'],
-  '_puerta': ['puerta', 'Puerta', 'PUERTA', 'Pta', 'pta'],
-}
-
-function parseFecha(val) {
-  if (!val) return null
-  if (val instanceof Date) return val.toISOString().split('T')[0]
-  if (typeof val === 'number') {
-    const d = XLSX.SSF.parse_date_code(val)
-    if (d) return `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`
-  }
-  const str = String(val).trim()
-  const match = str.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/)
-  if (match) return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`
-  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.substring(0, 10)
-  return null
+function autoDetect(header) {
+  const h = header.toLowerCase().trim()
+  return AUTO_MAP[h] || null
 }
 
 function limpiarDni(raw) {
   if (!raw) return null
-  const str = String(raw).trim()
-  if (!str) return null
-  const match = str.match(/([A-Za-z]?\d{7,8}[A-Za-z]?)/)
-  if (match) return match[1].toUpperCase()
-  const cleaned = str.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
-  if (cleaned.length >= 8 && cleaned.length <= 10) return cleaned
-  return str.trim()
+  const s = String(raw).trim()
+  if (!s) return null
+  const m = s.match(/([A-Za-z]?\d{7,8}[A-Za-z]?)/)
+  if (m) return m[1].toUpperCase()
+  const c = s.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+  if (c.length >= 8 && c.length <= 10) return c
+  return s
+}
+
+function parseFecha(val) {
+  if (!val) return null
+  if (typeof val === 'number') {
+    const d = XLSX.SSF.parse_date_code(val)
+    if (d) return `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`
+  }
+  const s = String(val).trim()
+  const m = s.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/)
+  if (m) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10)
+  return null
 }
 
 function str(v) {
@@ -76,412 +90,267 @@ function str(v) {
   return s || null
 }
 
-// Map a raw Excel row (object with original column names) to a clientes record
-function mapearRegistro(row, usuario) {
-  const keys = Object.keys(row)
-  const find = (variants) => {
-    for (const v of variants) {
-      const k = keys.find(k => k.toLowerCase() === v.toLowerCase())
-      if (k && row[k] !== '' && row[k] !== null && row[k] !== undefined) return row[k]
-    }
-    return null
-  }
-
-  // Main fields
-  const cups = str(find(COLUMN_MAP.cups))
-  const nombre = str(find(COLUMN_MAP.nombre))
-  const direccion = str(find(COLUMN_MAP.direccion))
-
-  // Apellidos → concat with nombre
-  const ap1 = str(find(SPECIAL_MAP._apellido1))
-  const ap2 = str(find(SPECIAL_MAP._apellido2))
-  const nombreCompleto = [nombre, ap1, ap2].filter(Boolean).join(' ') || null
-
-  // Address parts → concat with direccion
-  const via = str(find(SPECIAL_MAP._via))
-  const numero = str(find(SPECIAL_MAP._numero))
-  const portal = str(find(SPECIAL_MAP._portal))
-  const escalera = str(find(SPECIAL_MAP._escalera))
-  const piso = str(find(SPECIAL_MAP._piso))
-  const puerta = str(find(SPECIAL_MAP._puerta))
-  const dirParts = [via, numero, portal, escalera, piso, puerta].filter(Boolean)
-  let dirFinal = direccion
-  if (!dirFinal && dirParts.length > 0) dirFinal = dirParts.join(' ')
-  else if (dirFinal && dirParts.length > 0) dirFinal = dirFinal + ', ' + dirParts.join(' ')
-
-  // datos_extra from EXTRA_MAP
-  const datos_extra = {}
-  for (const [extraKey, variants] of Object.entries(EXTRA_MAP)) {
-    const val = str(find(variants))
-    if (val) datos_extra[extraKey] = val
-  }
-
-  // Remaining unmapped columns → datos_extra
-  const mappedLower = new Set()
-  for (const variants of Object.values(COLUMN_MAP)) variants.forEach(v => mappedLower.add(v.toLowerCase()))
-  for (const variants of Object.values(EXTRA_MAP)) variants.forEach(v => mappedLower.add(v.toLowerCase()))
-  for (const variants of Object.values(SPECIAL_MAP)) variants.forEach(v => mappedLower.add(v.toLowerCase()))
-
-  for (const k of keys) {
-    if (!mappedLower.has(k.toLowerCase()) && row[k] !== '' && row[k] !== null && row[k] !== undefined) {
-      datos_extra[k] = typeof row[k] === 'object' && row[k] instanceof Date
-        ? row[k].toISOString().split('T')[0]
-        : String(row[k])
-    }
-  }
-
-  const campanaRaw = str(find(COLUMN_MAP.campana))
-
-  return {
-    cups,
-    dni: limpiarDni(find(COLUMN_MAP.dni)),
-    nombre: nombreCompleto,
-    direccion: dirFinal,
-    campana: campanaRaw ? campanaRaw.toUpperCase().replace('Ñ', 'N') : null,
-    fecha_alta: parseFecha(find(COLUMN_MAP.fecha_alta)),
-    fecha_activacion: parseFecha(find(COLUMN_MAP.fecha_activacion)),
-    fecha_ultimo_cambio: parseFecha(find(COLUMN_MAP.fecha_ultimo_cambio)),
-    fecha_baja: parseFecha(find(COLUMN_MAP.fecha_baja)),
-    estado: str(find(COLUMN_MAP.estado)),
-    oficina_id: usuario?.oficina_id || null,
-    datos_extra: Object.keys(datos_extra).length > 0 ? datos_extra : null,
-  }
-}
-
-// ─── Constants ───
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY
-const CHUNK_SIZE = 20000
-
-const supaHeaders = {
-  'Content-Type': 'application/json',
-  'apikey': SUPABASE_ANON,
-  'Authorization': `Bearer ${SUPABASE_ANON}`,
-}
-
-async function jobInsert(data) {
-  try {
-    await fetch(`${SUPABASE_URL}/rest/v1/carga_jobs`, {
-      method: 'POST', headers: { ...supaHeaders, 'Prefer': 'return=minimal' },
-      body: JSON.stringify(data),
-    })
-  } catch {}
-}
-
-async function jobUpdate(id, data) {
-  try {
-    await fetch(`${SUPABASE_URL}/rest/v1/carga_jobs?id=eq.${id}`, {
-      method: 'PATCH', headers: { ...supaHeaders, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ ...data, updated_at: new Date().toISOString() }),
-    })
-  } catch {}
-}
-
-async function jobGet(id) {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/carga_jobs?id=eq.${id}&select=*`, {
-      headers: supaHeaders,
-    })
-    const arr = await res.json()
-    return arr?.[0] || null
-  } catch { return null }
-}
-const PARALLEL = 5
-
 // ─── Component ───
 
 export default function CargaMasiva() {
   const { usuario } = useAuth()
-  const [estado, setEstado] = useState('idle') // idle, leyendo, procesando, completado, error
+  const cancelRef = useRef(false)
+
+  const [paso, setPaso] = useState(1) // 1=upload, 2=mapeo, 3=procesando, 4=resultado
+  const [archivo, setArchivo] = useState(null)
+  const [headers, setHeaders] = useState([])
+  const [muestras, setMuestras] = useState({}) // header → sample value
+  const [mapeo, setMapeo] = useState({}) // header → campo sistema
   const [progreso, setProgreso] = useState(0)
   const [stats, setStats] = useState({ total: 0, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
-  const [nombreArchivo, setNombreArchivo] = useState('')
-  const [jobId, setJobId] = useState(null)
   const [errorMsg, setErrorMsg] = useState(null)
   const [dragOver, setDragOver] = useState(false)
-  const canceladoRef = useRef(false)
 
-  // On mount: check for pending job in IndexedDB
-  useEffect(() => {
-    verificarJobPendiente()
-  }, [])
+  // ── PASO 1: Seleccionar archivo ──
 
-  async function verificarJobPendiente() {
-    try {
-      const jobLocal = await obtenerJobActivoLocal()
-      if (!jobLocal) return
-
-      const jobRemoto = await jobGet(jobLocal.id)
-
-      if (jobRemoto && jobRemoto.estado === 'procesando') {
-        // Job is still running — show its progress (user must re-upload to continue)
-        setJobId(jobLocal.id)
-        setNombreArchivo(jobLocal.nombreArchivo || jobRemoto.nombre_archivo)
-        setStats({
-          total: jobRemoto.total || 0,
-          procesados: jobRemoto.procesados || 0,
-          insertados: jobRemoto.insertados || 0,
-          actualizados: jobRemoto.actualizados || 0,
-          errores: 0,
-        })
-        setProgreso(jobRemoto.total > 0 ? Math.round(((jobRemoto.procesados || 0) / jobRemoto.total) * 100) : 0)
-        // Show as completed with partial results — can't resume without the file
-        setEstado('completado')
-        await eliminarJobLocal(jobLocal.id)
-      } else if (jobRemoto && jobRemoto.estado === 'completado') {
-        setStats({
-          total: jobRemoto.total || 0,
-          procesados: jobRemoto.procesados || 0,
-          insertados: jobRemoto.insertados || 0,
-          actualizados: jobRemoto.actualizados || 0,
-          errores: 0,
-        })
-        setNombreArchivo(jobRemoto.nombre_archivo || '')
-        setProgreso(100)
-        setEstado('completado')
-        await eliminarJobLocal(jobLocal.id)
-      } else {
-        await eliminarJobLocal(jobLocal.id)
-      }
-    } catch (e) {
-      console.warn('[CargaMasiva] Error checking pending job:', e)
-    }
-  }
-
-  // Send a batch directly to Supabase RPC
-  async function enviarASupabase(batch) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bulk_upsert_clientes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
-        'Prefer': 'return=representation',
-      },
-      body: JSON.stringify({ registros: batch }),
-    })
-    if (!res.ok) {
-      const t = await res.text()
-      throw new Error(`Supabase ${res.status}: ${t.slice(0, 200)}`)
-    }
-    return res.json()
-  }
-
-  // Parse Excel in chunks and pipeline to Supabase
-  async function procesarArchivos(files) {
-    const validExts = ['.xlsx', '.xls', '.csv']
-    const validFiles = Array.from(files).filter(f =>
-      validExts.some(ext => f.name.toLowerCase().endsWith(ext))
-    )
-    if (validFiles.length === 0) return
-
-    setEstado('leyendo')
+  function seleccionarArchivo(file) {
+    if (!file) return
+    setArchivo(file)
     setErrorMsg(null)
-    canceladoRef.current = false
 
-    try {
-      const fileName = validFiles.map(f => f.name).join(', ')
-      setNombreArchivo(fileName)
-
-      let totalFilas = 0
-      let procesados = 0
-      let insertadosTotal = 0
-      let actualizadosTotal = 0
-      let erroresTotal = 0
-      const t0 = performance.now()
-
-      // Create job
-      const jid = crypto.randomUUID()
-      setJobId(jid)
-
-      for (const file of validFiles) {
-        // Read workbook with memory-efficient options
-        const buffer = await file.arrayBuffer()
-        const wb = XLSX.read(buffer, {
-          type: 'array',
-          dense: false,
-          cellDates: false,
-          cellNF: false,
-          cellHTML: false,
-        })
+    // Read only first 2 rows for headers + sample
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'array', sheetRows: 3 })
         const ws = wb.Sheets[wb.SheetNames[0]]
-        const range = XLSX.utils.decode_range(ws['!ref'] || 'A1')
-        totalFilas += range.e.r // rows (0-indexed, row 0 is header)
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' })
 
-        // Extract headers from row 0
-        const headers = []
-        for (let c = range.s.c; c <= range.e.c; c++) {
-          const cell = ws[XLSX.utils.encode_cell({ r: 0, c })]
-          headers.push(cell ? String(cell.v) : `col_${c}`)
+        if (data.length < 1) { setErrorMsg('Archivo vacío'); return }
+
+        const hdrs = data[0].map(h => String(h || '').trim()).filter(Boolean)
+        setHeaders(hdrs)
+
+        // Sample values from row 2
+        const samples = {}
+        if (data[1]) {
+          hdrs.forEach((h, i) => { samples[h] = data[1][i] != null ? String(data[1][i]).slice(0, 50) : '' })
         }
+        setMuestras(samples)
 
-        console.log(`[CargaMasiva] ${file.name}: ${range.e.r} filas, ${headers.length} columnas`)
-
-        // Update stats for UI
-        setStats(prev => ({ ...prev, total: totalFilas }))
-        setEstado('procesando')
-
-        // Create job in Supabase on first file
-        if (file === validFiles[0]) {
-          await jobInsert({
-            id: jid,
-            usuario_id: usuario?.id,
-            estado: 'procesando',
-            total: totalFilas,
-            nombre_archivo: fileName,
-          })
+        // Auto-detect mapping
+        const detected = {}
+        const used = new Set()
+        for (const h of hdrs) {
+          const campo = autoDetect(h)
+          if (campo && !used.has(campo)) {
+            detected[h] = campo
+            used.add(campo)
+          } else {
+            detected[h] = '[ignorar]'
+          }
         }
-
-        // Process rows in batches — never hold more than CHUNK_SIZE rows in RAM
-        const cupsVistos = new Set()
-        const BATCH = CHUNK_SIZE
-
-        for (let rowStart = 1; rowStart <= range.e.r; rowStart += BATCH) {
-          if (canceladoRef.current) break
-
-          const rowEnd = Math.min(rowStart + BATCH - 1, range.e.r)
-          const batch = []
-
-          for (let r = rowStart; r <= rowEnd; r++) {
-            const obj = {}
-            let hasData = false
-            for (let c = range.s.c; c <= range.e.c; c++) {
-              const cell = ws[XLSX.utils.encode_cell({ r, c })]
-              const val = cell ? String(cell.v ?? '') : ''
-              obj[headers[c - range.s.c]] = val
-              if (val) hasData = true
-            }
-            if (!hasData) continue
-
-            const reg = mapearRegistro(obj, usuario)
-            const cups = reg.cups?.trim()
-
-            if (cups) {
-              if (!cupsVistos.has(cups)) {
-                cupsVistos.add(cups)
-                batch.push(reg)
-              }
-            } else {
-              batch.push(reg)
-            }
-          }
-
-          if (batch.length > 0) {
-            try {
-              const r = await enviarASupabase(batch)
-              insertadosTotal += r.insertados || 0
-              actualizadosTotal += r.actualizados || 0
-            } catch (err) {
-              erroresTotal += batch.length
-              console.error(`[CargaMasiva] Chunk error:`, err.message)
-            }
-          }
-
-          procesados += (rowEnd - rowStart + 1)
-          const pct = totalFilas > 0 ? Math.round((procesados / totalFilas) * 100) : 0
-
-          setProgreso(pct)
-          setStats({
-            total: totalFilas,
-            procesados,
-            insertados: insertadosTotal,
-            actualizados: actualizadosTotal,
-            errores: erroresTotal,
-          })
-
-          // Update job in Supabase periodically
-          if (rowStart % (BATCH * 3) === 1 || rowEnd >= range.e.r) {
-            await jobUpdate(jid, {
-              total: totalFilas,
-              procesados,
-              insertados: insertadosTotal,
-              actualizados: actualizadosTotal,
-            })
-          }
-
-          // Yield to event loop
-          await new Promise(resolve => setTimeout(resolve, 0))
-        }
-
-        console.log(`[CargaMasiva] ${file.name} completado en ${((performance.now() - t0) / 1000).toFixed(1)}s`)
+        setMapeo(detected)
+        setPaso(2)
+      } catch (err) {
+        setErrorMsg('Error al leer el archivo: ' + err.message)
       }
-
-      // Mark job complete
-      const finalEstado = canceladoRef.current ? 'cancelado' : 'completado'
-      await jobUpdate(jid, {
-        estado: finalEstado,
-        total: totalFilas,
-        procesados: totalFilas,
-        insertados: insertadosTotal,
-        actualizados: actualizadosTotal,
-      })
-
-      await eliminarJobLocal(jid).catch(() => {})
-
-      if (!canceladoRef.current) {
-        setEstado('completado')
-        setProgreso(100)
-      } else {
-        setEstado('idle')
-        setProgreso(0)
-      }
-
-    } catch (err) {
-      console.error('[CargaMasiva] Error:', err)
-      setEstado('error')
-      setErrorMsg(err.message)
     }
+    reader.readAsArrayBuffer(file)
   }
 
-  async function handleCancelar() {
-    canceladoRef.current = true
-    if (jobId) {
-      await jobUpdate(jobId, { estado: 'cancelado' })
-      await eliminarJobLocal(jobId).catch(() => {})
-      // Cancel flag is set in carga_jobs above — in-flight requests will finish but results are ignored
-    }
-    setEstado('idle')
-    setProgreso(0)
-    setJobId(null)
-  }
-
-  function resetTodo() {
-    setEstado('idle')
-    setProgreso(0)
-    setStats({ total: 0, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
-    setNombreArchivo('')
-    setJobId(null)
-    setErrorMsg(null)
-  }
-
-  function handleFiles(e) {
-    if (e.target.files?.length > 0) procesarArchivos(e.target.files)
+  function handleFile(e) {
+    seleccionarArchivo(e.target.files?.[0])
     e.target.value = ''
   }
 
   function handleDrop(e) {
     e.preventDefault()
     setDragOver(false)
-    const files = []
-    if (e.dataTransfer.items) {
-      for (const item of e.dataTransfer.items) {
-        if (item.kind === 'file') { const f = item.getAsFile(); if (f) files.push(f) }
-      }
-    } else {
-      for (const f of e.dataTransfer.files) files.push(f)
-    }
-    if (files.length > 0) procesarArchivos(files)
+    const file = e.dataTransfer.files?.[0]
+    if (file) seleccionarArchivo(file)
   }
+
+  // ── PASO 2: Confirmar mapeo ──
+
+  function updateMapeo(header, campo) {
+    setMapeo(prev => ({ ...prev, [header]: campo }))
+  }
+
+  // ── PASO 3: Procesar ──
+
+  function mapearRegistro(row) {
+    const reg = { datos_extra: {} }
+
+    for (const [header, campo] of Object.entries(mapeo)) {
+      if (campo === '[ignorar]') continue
+      const raw = row[header]
+      const val = str(raw)
+
+      if (CAMPOS_BD.has(campo)) {
+        if (campo === 'dni') {
+          reg.dni = limpiarDni(raw)
+        } else if (campo.startsWith('fecha')) {
+          reg[campo] = parseFecha(raw)
+        } else if (campo === 'campana') {
+          reg.campana = val ? val.toUpperCase().replace('Ñ', 'N') : null
+        } else {
+          reg[campo] = val
+        }
+      } else {
+        if (val) reg.datos_extra[campo] = val
+      }
+    }
+
+    // Concat Apellido1/2 into nombre
+    const ap1 = reg.datos_extra.Apellido1
+    const ap2 = reg.datos_extra.Apellido2
+    if (ap1 || ap2) {
+      reg.nombre = [reg.nombre, ap1, ap2].filter(Boolean).join(' ') || null
+      delete reg.datos_extra.Apellido1
+      delete reg.datos_extra.Apellido2
+    }
+
+    // Concat address parts into direccion
+    const dirParts = ['Via', 'Numero', 'Portal', 'Escalera', 'Piso', 'Puerta']
+    const parts = dirParts.map(k => reg.datos_extra[k]).filter(Boolean)
+    if (parts.length > 0) {
+      reg.direccion = reg.direccion ? reg.direccion + ', ' + parts.join(' ') : parts.join(' ')
+      dirParts.forEach(k => delete reg.datos_extra[k])
+    }
+
+    reg.oficina_id = usuario?.oficina_id || null
+    if (Object.keys(reg.datos_extra).length === 0) reg.datos_extra = null
+
+    return reg
+  }
+
+  async function iniciarCarga() {
+    if (!archivo) return
+    cancelRef.current = false
+    setPaso(3)
+    setProgreso(0)
+    setStats({ total: 0, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
+    setErrorMsg(null)
+
+    try {
+      const buffer = await archivo.arrayBuffer()
+      const wb = XLSX.read(buffer, { type: 'array', dense: false, cellDates: false, cellNF: false, cellHTML: false })
+      const ws = wb.Sheets[wb.SheetNames[0]]
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1')
+      const totalFilas = range.e.r
+
+      // Map column index to header name
+      const colHeaders = []
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cell = ws[XLSX.utils.encode_cell({ r: 0, c })]
+        colHeaders.push(cell ? String(cell.v) : `col_${c}`)
+      }
+
+      setStats(prev => ({ ...prev, total: totalFilas }))
+      console.log(`[CargaMasiva] ${totalFilas} filas, ${colHeaders.length} columnas`)
+
+      let procesados = 0
+      let insertadosTotal = 0
+      let actualizadosTotal = 0
+      let erroresTotal = 0
+      const cupsVistos = new Set()
+
+      for (let rowStart = 1; rowStart <= totalFilas; rowStart += CHUNK_SIZE) {
+        if (cancelRef.current) break
+
+        const rowEnd = Math.min(rowStart + CHUNK_SIZE - 1, totalFilas)
+        const batch = []
+
+        for (let r = rowStart; r <= rowEnd; r++) {
+          const obj = {}
+          let hasData = false
+          for (let c = range.s.c; c <= range.e.c; c++) {
+            const cell = ws[XLSX.utils.encode_cell({ r, c })]
+            const val = cell ? String(cell.v ?? '') : ''
+            obj[colHeaders[c - range.s.c]] = val
+            if (val) hasData = true
+          }
+          if (!hasData) continue
+
+          const reg = mapearRegistro(obj)
+          const cups = reg.cups?.trim()
+
+          if (cups) {
+            if (!cupsVistos.has(cups)) {
+              cupsVistos.add(cups)
+              batch.push(reg)
+            }
+          } else {
+            batch.push(reg)
+          }
+        }
+
+        if (batch.length > 0) {
+          try {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bulk_upsert_clientes`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Prefer': 'return=representation',
+              },
+              body: JSON.stringify({ registros: batch }),
+            })
+
+            if (!res.ok) {
+              const text = await res.text()
+              console.error('Supabase error:', text)
+              erroresTotal += batch.length
+            } else {
+              const r = await res.json()
+              insertadosTotal += r.insertados || 0
+              actualizadosTotal += r.actualizados || 0
+            }
+          } catch (err) {
+            console.error('Fetch error:', err)
+            erroresTotal += batch.length
+          }
+        }
+
+        procesados += (rowEnd - rowStart + 1)
+        const pct = totalFilas > 0 ? Math.round((procesados / totalFilas) * 100) : 0
+        setProgreso(pct)
+        setStats({ total: totalFilas, procesados, insertados: insertadosTotal, actualizados: actualizadosTotal, errores: erroresTotal })
+
+        // Yield to UI
+        await new Promise(resolve => setTimeout(resolve, 0))
+      }
+
+      cupsVistos.clear()
+      setProgreso(100)
+      setPaso(4)
+
+    } catch (err) {
+      console.error('[CargaMasiva] Error:', err)
+      setErrorMsg(err.message)
+      setPaso(4)
+    }
+  }
+
+  function resetTodo() {
+    setPaso(1)
+    setArchivo(null)
+    setHeaders([])
+    setMuestras({})
+    setMapeo({})
+    setProgreso(0)
+    setStats({ total: 0, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
+    setErrorMsg(null)
+    cancelRef.current = false
+  }
+
+  const mapeados = Object.values(mapeo).filter(v => v !== '[ignorar]').length
 
   // ─── UI ───
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Carga Masiva</h2>
 
-      {/* ═══ IDLE: Upload ═══ */}
-      {estado === 'idle' && (
+      {/* ═══ PASO 1: Upload ═══ */}
+      {paso === 1 && (
         <Card className="p-8">
           <div
             className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors ${dragOver ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}`}
@@ -490,75 +359,121 @@ export default function CargaMasiva() {
             onDrop={handleDrop}
           >
             <Upload className="mx-auto mb-4 text-gray-400" size={48} />
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Arrastra tus archivos aquí</h3>
-            <p className="text-sm text-gray-500 mb-4">Soporta múltiples archivos .xlsx, .xls, .csv</p>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Arrastra tu archivo aquí</h3>
+            <p className="text-sm text-gray-500 mb-4">Formatos: .xlsx, .xls, .csv</p>
             <label className="inline-block">
-              <input type="file" multiple accept=".xlsx,.xls,.csv" onChange={handleFiles} className="hidden" />
+              <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} className="hidden" />
               <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-800 text-white rounded-lg text-sm font-medium cursor-pointer hover:bg-blue-900">
-                <FileSpreadsheet size={16} /> Seleccionar archivos
+                <FileSpreadsheet size={16} /> Seleccionar archivo
               </span>
             </label>
           </div>
+          {errorMsg && <p className="mt-4 text-sm text-red-600 text-center">{errorMsg}</p>}
         </Card>
       )}
 
-      {/* ═══ READING ═══ */}
-      {estado === 'leyendo' && (
-        <Card className="p-8 text-center">
-          <Loader2 className="mx-auto mb-4 text-blue-600 animate-spin" size={48} />
-          <h3 className="text-lg font-semibold text-gray-700">Leyendo archivos...</h3>
-          <p className="text-sm text-gray-500 mt-2">Procesando columnas y preparando datos</p>
-        </Card>
+      {/* ═══ PASO 2: Mapeo de columnas ═══ */}
+      {paso === 2 && (
+        <div className="space-y-4">
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-semibold text-gray-900">{archivo?.name}</h3>
+                <p className="text-sm text-gray-500">{headers.length} columnas detectadas · {mapeados} mapeadas</p>
+              </div>
+              <Button variant="secondary" onClick={resetTodo}>
+                <ArrowLeft size={14} /> Cambiar archivo
+              </Button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="text-left px-3 py-2 font-medium text-gray-600">Columna Excel</th>
+                    <th className="text-left px-3 py-2 font-medium text-gray-600">Campo sistema</th>
+                    <th className="text-left px-3 py-2 font-medium text-gray-600">Ejemplo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {headers.map(h => (
+                    <tr key={h} className={mapeo[h] === '[ignorar]' ? 'bg-gray-50 opacity-50' : ''}>
+                      <td className="px-3 py-2 font-mono text-xs font-medium text-gray-800">{h}</td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={mapeo[h] || '[ignorar]'}
+                          onChange={e => updateMapeo(h, e.target.value)}
+                          className={`w-full text-xs border rounded px-2 py-1.5 ${mapeo[h] === '[ignorar]' ? 'border-gray-200 text-gray-400' : 'border-blue-300 text-gray-800'}`}
+                        >
+                          {CAMPOS_SISTEMA.map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2 text-xs text-gray-500 max-w-[200px] truncate">{muestras[h] || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={resetTodo}>Cancelar</Button>
+            <Button onClick={iniciarCarga} disabled={mapeados === 0}>
+              <ArrowRight size={14} /> Iniciar carga
+            </Button>
+          </div>
+        </div>
       )}
 
-      {/* ═══ PROCESSING ═══ */}
-      {estado === 'procesando' && (
+      {/* ═══ PASO 3: Procesando ═══ */}
+      {paso === 3 && (
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <Loader2 size={24} className="text-blue-600 animate-spin" />
             <div>
-              <h3 className="font-semibold text-gray-900">Procesando: {nombreArchivo}</h3>
+              <h3 className="font-semibold text-gray-900">{archivo?.name}</h3>
               <p className="text-sm text-gray-500">
                 Fila {stats.procesados.toLocaleString()} de {stats.total.toLocaleString()}
               </p>
             </div>
           </div>
 
-          {/* Progress bar */}
           <div className="mb-4">
             <div className="flex justify-between text-xs text-gray-500 mb-1">
-              <span>{stats.insertados.toLocaleString()} insertados</span>
+              <span>{stats.insertados.toLocaleString()} insertados{stats.actualizados > 0 ? `, ${stats.actualizados} actualizados` : ''}</span>
               <span>{progreso}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="bg-blue-600 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${progreso}%` }}
-              />
+              <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: `${progreso}%` }} />
             </div>
           </div>
 
-          <div className="flex justify-between text-xs text-gray-400 mb-4">
-            <span>{stats.actualizados > 0 ? `${stats.actualizados} actualizados` : ''}</span>
-            <span>{stats.errores > 0 ? `${stats.errores} errores` : ''}</span>
-          </div>
-
-          <p className="text-xs text-gray-400 mb-4">
-            Puedes cerrar esta pestaña — al volver la carga continuará desde donde se quedó.
-          </p>
+          {stats.errores > 0 && (
+            <p className="text-xs text-red-500 mb-3">{stats.errores} errores</p>
+          )}
 
           <div className="flex justify-end">
-            <Button variant="danger" onClick={handleCancelar}>Cancelar</Button>
+            <Button variant="danger" onClick={() => { cancelRef.current = true }}>Cancelar</Button>
           </div>
         </Card>
       )}
 
-      {/* ═══ COMPLETED ═══ */}
-      {estado === 'completado' && (
+      {/* ═══ PASO 4: Resultado ═══ */}
+      {paso === 4 && (
         <Card className="p-8 text-center">
-          <CheckCircle className="mx-auto mb-4 text-green-500" size={48} />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Carga completada</h3>
-          <p className="text-sm text-gray-500 mb-6">{nombreArchivo}</p>
+          {stats.errores > 0 && stats.insertados === 0 ? (
+            <XCircle className="mx-auto mb-4 text-red-500" size={48} />
+          ) : (
+            <CheckCircle className="mx-auto mb-4 text-green-500" size={48} />
+          )}
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            {stats.errores > 0 && stats.insertados === 0 ? 'Error en la carga' : 'Carga completada'}
+          </h3>
+          <p className="text-sm text-gray-500 mb-6">{archivo?.name}</p>
+
+          {errorMsg && <p className="text-sm text-red-600 mb-4 font-mono break-all">{errorMsg}</p>}
 
           <div className="flex justify-center gap-8 mb-6">
             <div>
@@ -579,17 +494,7 @@ export default function CargaMasiva() {
             )}
           </div>
 
-          <Button onClick={resetTodo}>Cargar más archivos</Button>
-        </Card>
-      )}
-
-      {/* ═══ ERROR ═══ */}
-      {estado === 'error' && (
-        <Card className="p-8 text-center">
-          <XCircle className="mx-auto mb-4 text-red-500" size={48} />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Error en la carga</h3>
-          {errorMsg && <p className="text-sm text-red-600 mb-4 font-mono">{errorMsg}</p>}
-          <Button onClick={resetTodo}>Intentar de nuevo</Button>
+          <Button onClick={resetTodo}>Cargar otro archivo</Button>
         </Card>
       )}
     </div>
