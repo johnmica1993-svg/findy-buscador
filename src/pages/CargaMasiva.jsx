@@ -9,7 +9,7 @@ import Button from '../components/UI/Button'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
-const CHUNK_SIZE = 1000
+const CHUNK_SIZE = 500
 
 const CAMPOS_SISTEMA = [
   'cups', 'dni', 'nombre', 'direccion', 'campana', 'estado',
@@ -220,25 +220,41 @@ export default function CargaMasiva() {
 
       if (batch.length > 0) {
         try {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 25000)
           const t0 = performance.now()
+
           const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bulk_upsert_clientes`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=representation' },
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Prefer': 'return=representation',
+            },
             body: JSON.stringify({ registros: batch }),
+            signal: controller.signal,
           })
+          clearTimeout(timeoutId)
+
           const elapsed = ((performance.now() - t0) / 1000).toFixed(1)
           if (!res.ok) {
-            const t = await res.text()
-            console.error(`Supabase error (${elapsed}s, ${batch.length} registros):`, res.status, t.slice(0, 300))
+            const errorText = await res.text()
+            console.error('=== ERROR SUPABASE ===')
+            console.error('Status:', res.status)
+            console.error('Body:', errorText)
+            console.error('Chunk size:', batch.length)
+            console.error('Primer registro:', JSON.stringify(batch[0]))
             errores += batch.length
           } else {
             const r = await res.json()
-            console.log(`Chunk OK (${elapsed}s): ${batch.length} enviados → ${r.insertados} nuevos, ${r.actualizados} actualizados`)
+            console.log(`Chunk OK (${elapsed}s): ${batch.length} → ${r.insertados} nuevos, ${r.actualizados} act`)
             insertados += r.insertados || 0
             actualizados += r.actualizados || 0
           }
         } catch (err) {
-          console.error('Fetch error:', err.message)
+          console.error('=== FETCH ERROR ===', err.name, err.message)
+          console.error('Primer registro:', JSON.stringify(batch[0]))
           errores += batch.length
         }
       }
