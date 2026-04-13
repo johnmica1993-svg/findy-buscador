@@ -9,7 +9,7 @@ import Button from '../components/UI/Button'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
-const CHUNK_SIZE = 5000
+const CHUNK_SIZE = 1000
 
 const CAMPOS_SISTEMA = [
   'cups', 'dni', 'nombre', 'direccion', 'campana', 'estado',
@@ -220,22 +220,25 @@ export default function CargaMasiva() {
 
       if (batch.length > 0) {
         try {
+          const t0 = performance.now()
           const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bulk_upsert_clientes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=representation' },
             body: JSON.stringify({ registros: batch }),
           })
+          const elapsed = ((performance.now() - t0) / 1000).toFixed(1)
           if (!res.ok) {
             const t = await res.text()
-            console.error('Supabase error:', res.status, t)
+            console.error(`Supabase error (${elapsed}s, ${batch.length} registros):`, res.status, t.slice(0, 300))
             errores += batch.length
           } else {
             const r = await res.json()
+            console.log(`Chunk OK (${elapsed}s): ${batch.length} enviados → ${r.insertados} nuevos, ${r.actualizados} actualizados`)
             insertados += r.insertados || 0
             actualizados += r.actualizados || 0
           }
         } catch (err) {
-          console.error('Fetch error:', err)
+          console.error('Fetch error:', err.message)
           errores += batch.length
         }
       }
