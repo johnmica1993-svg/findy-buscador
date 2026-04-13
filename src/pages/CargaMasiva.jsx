@@ -186,23 +186,32 @@ export default function CargaMasiva() {
         .single()
 
       if (jobRemoto && jobRemoto.estado === 'procesando') {
+        // Job is still running — show its progress (user must re-upload to continue)
         setJobId(jobLocal.id)
-        setNombreArchivo(jobLocal.nombreArchivo)
+        setNombreArchivo(jobLocal.nombreArchivo || jobRemoto.nombre_archivo)
         setStats({
-          total: jobLocal.total,
+          total: jobRemoto.total || 0,
           procesados: jobRemoto.procesados || 0,
           insertados: jobRemoto.insertados || 0,
           actualizados: jobRemoto.actualizados || 0,
           errores: 0,
         })
-        setProgreso(jobLocal.total > 0 ? Math.round(((jobRemoto.procesados || 0) / jobLocal.total) * 100) : 0)
-        setEstado('procesando')
-
-        const datosLocal = await obtenerJobLocal(jobLocal.id)
-        if (datosLocal?.registros?.length > 0) {
-          canceladoRef.current = false
-          await procesarDesdeChunk(jobLocal.id, datosLocal.registros, jobLocal.chunkActual || 0)
-        }
+        setProgreso(jobRemoto.total > 0 ? Math.round(((jobRemoto.procesados || 0) / jobRemoto.total) * 100) : 0)
+        // Show as completed with partial results — can't resume without the file
+        setEstado('completado')
+        await eliminarJobLocal(jobLocal.id)
+      } else if (jobRemoto && jobRemoto.estado === 'completado') {
+        setStats({
+          total: jobRemoto.total || 0,
+          procesados: jobRemoto.procesados || 0,
+          insertados: jobRemoto.insertados || 0,
+          actualizados: jobRemoto.actualizados || 0,
+          errores: 0,
+        })
+        setNombreArchivo(jobRemoto.nombre_archivo || '')
+        setProgreso(100)
+        setEstado('completado')
+        await eliminarJobLocal(jobLocal.id)
       } else {
         await eliminarJobLocal(jobLocal.id)
       }
@@ -211,6 +220,26 @@ export default function CargaMasiva() {
     }
   }
 
+  // Send a batch directly to Supabase RPC
+  async function enviarASupabase(batch) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bulk_upsert_clientes`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Prefer': 'return=representation',
+      },
+      body: JSON.stringify({ registros: batch }),
+    })
+    if (!res.ok) {
+      const t = await res.text()
+      throw new Error(`Supabase ${res.status}: ${t.slice(0, 200)}`)
+    }
+    return res.json()
+  }
+
+  // Parse Excel in chunks and pipeline to Supabase
   async function procesarArchivos(files) {
     const validExts = ['.xlsx', '.xls', '.csv']
     const validFiles = Array.from(files).filter(f =>
@@ -223,156 +252,157 @@ export default function CargaMasiva() {
     canceladoRef.current = false
 
     try {
+      const fileName = validFiles.map(f => f.name).join(', ')
+      setNombreArchivo(fileName)
+
+      let totalFilas = 0
+      let procesados = 0
+      let insertadosTotal = 0
+      let actualizadosTotal = 0
+      let erroresTotal = 0
       const t0 = performance.now()
 
-      // Read all files and build records
-      let allRegistros = []
-      let fileName = validFiles.map(f => f.name).join(', ')
+      // Create job
+      const jid = crypto.randomUUID()
+      setJobId(jid)
 
       for (const file of validFiles) {
+        // Read workbook with memory-efficient options
         const buffer = await file.arrayBuffer()
-        const wb = XLSX.read(buffer, { cellDates: true })
+        const wb = XLSX.read(buffer, {
+          type: 'array',
+          dense: false,
+          cellDates: false,
+          cellNF: false,
+          cellHTML: false,
+        })
         const ws = wb.Sheets[wb.SheetNames[0]]
-        const rawData = XLSX.utils.sheet_to_json(ws, { defval: '' })
+        const range = XLSX.utils.decode_range(ws['!ref'] || 'A1')
+        totalFilas += range.e.r // rows (0-indexed, row 0 is header)
 
-        const registros = rawData.map(row => mapearRegistro(row, usuario))
-        allRegistros.push(...registros)
+        // Extract headers from row 0
+        const headers = []
+        for (let c = range.s.c; c <= range.e.c; c++) {
+          const cell = ws[XLSX.utils.encode_cell({ r: 0, c })]
+          headers.push(cell ? String(cell.v) : `col_${c}`)
+        }
+
+        console.log(`[CargaMasiva] ${file.name}: ${range.e.r} filas, ${headers.length} columnas`)
+
+        // Update stats for UI
+        setStats(prev => ({ ...prev, total: totalFilas }))
+        setEstado('procesando')
+
+        // Create job in Supabase on first file
+        if (file === validFiles[0]) {
+          await supabase.from('carga_jobs').insert({
+            id: jid,
+            usuario_id: usuario?.id,
+            estado: 'procesando',
+            total: totalFilas,
+            nombre_archivo: fileName,
+          }).catch(() => {})
+        }
+
+        // Process rows in batches — never hold more than CHUNK_SIZE rows in RAM
+        const cupsVistos = new Set()
+        const BATCH = CHUNK_SIZE
+
+        for (let rowStart = 1; rowStart <= range.e.r; rowStart += BATCH) {
+          if (canceladoRef.current) break
+
+          const rowEnd = Math.min(rowStart + BATCH - 1, range.e.r)
+          const batch = []
+
+          for (let r = rowStart; r <= rowEnd; r++) {
+            const obj = {}
+            let hasData = false
+            for (let c = range.s.c; c <= range.e.c; c++) {
+              const cell = ws[XLSX.utils.encode_cell({ r, c })]
+              const val = cell ? String(cell.v ?? '') : ''
+              obj[headers[c - range.s.c]] = val
+              if (val) hasData = true
+            }
+            if (!hasData) continue
+
+            const reg = mapearRegistro(obj, usuario)
+            const cups = reg.cups?.trim()
+
+            if (cups) {
+              if (!cupsVistos.has(cups)) {
+                cupsVistos.add(cups)
+                batch.push(reg)
+              }
+            } else {
+              batch.push(reg)
+            }
+          }
+
+          if (batch.length > 0) {
+            try {
+              const r = await enviarASupabase(batch)
+              insertadosTotal += r.insertados || 0
+              actualizadosTotal += r.actualizados || 0
+            } catch (err) {
+              erroresTotal += batch.length
+              console.error(`[CargaMasiva] Chunk error:`, err.message)
+            }
+          }
+
+          procesados += (rowEnd - rowStart + 1)
+          const pct = totalFilas > 0 ? Math.round((procesados / totalFilas) * 100) : 0
+
+          setProgreso(pct)
+          setStats({
+            total: totalFilas,
+            procesados,
+            insertados: insertadosTotal,
+            actualizados: actualizadosTotal,
+            errores: erroresTotal,
+          })
+
+          // Update job in Supabase periodically
+          if (rowStart % (BATCH * 3) === 1 || rowEnd >= range.e.r) {
+            await supabase.from('carga_jobs').update({
+              total: totalFilas,
+              procesados,
+              insertados: insertadosTotal,
+              actualizados: actualizadosTotal,
+              updated_at: new Date().toISOString(),
+            }).eq('id', jid).catch(() => {})
+          }
+
+          // Yield to event loop
+          await new Promise(resolve => setTimeout(resolve, 0))
+        }
+
+        console.log(`[CargaMasiva] ${file.name} completado en ${((performance.now() - t0) / 1000).toFixed(1)}s`)
       }
 
-      console.log(`EXCEL PARSE: ${((performance.now() - t0) / 1000).toFixed(1)}s — ${allRegistros.length} registros`)
+      // Mark job complete
+      const finalEstado = canceladoRef.current ? 'cancelado' : 'completado'
+      await supabase.from('carga_jobs').update({
+        estado: finalEstado,
+        total: totalFilas,
+        procesados: totalFilas,
+        insertados: insertadosTotal,
+        actualizados: actualizadosTotal,
+      }).eq('id', jid).catch(() => {})
 
-      if (allRegistros.length === 0) {
-        setEstado('error')
-        setErrorMsg('Los archivos no contienen datos')
-        return
+      await eliminarJobLocal(jid).catch(() => {})
+
+      if (!canceladoRef.current) {
+        setEstado('completado')
+        setProgreso(100)
+      } else {
+        setEstado('idle')
+        setProgreso(0)
       }
-
-      setNombreArchivo(fileName)
-      console.log(`[CargaMasiva] ${allRegistros.length} registros de ${validFiles.length} archivos`)
-
-      // Generate job ID and save to IndexedDB
-      const id = crypto.randomUUID()
-      await guardarJobLocal(id, allRegistros, fileName)
-
-      // Create job in Supabase
-      await supabase.from('carga_jobs').insert({
-        id,
-        usuario_id: usuario?.id,
-        estado: 'procesando',
-        total: allRegistros.length,
-        nombre_archivo: fileName,
-      })
-
-      setJobId(id)
-      setStats({ total: allRegistros.length, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
-      setEstado('procesando')
-      setProgreso(0)
-
-      await procesarDesdeChunk(id, allRegistros, 0)
 
     } catch (err) {
       console.error('[CargaMasiva] Error:', err)
       setEstado('error')
       setErrorMsg(err.message)
-    }
-  }
-
-  async function procesarDesdeChunk(jid, registros, desdeChunk) {
-    const chunks = []
-    for (let i = 0; i < registros.length; i += CHUNK_SIZE) {
-      chunks.push(registros.slice(i, i + CHUNK_SIZE))
-    }
-
-    let insertadosTotal = 0
-    let actualizadosTotal = 0
-    let erroresTotal = 0
-
-    for (let i = desdeChunk; i < chunks.length; i += PARALLEL) {
-      if (canceladoRef.current) break
-
-      const grupo = chunks.slice(i, Math.min(i + PARALLEL, chunks.length))
-
-      if (i === desdeChunk) {
-        console.log(`TAMAÑO JSON primer chunk: ${(JSON.stringify(grupo[0]).length / 1024 / 1024).toFixed(1)} MB (${grupo[0].length} registros)`)
-        console.log(`CHUNKS TOTALES: ${chunks.length}, PARALLEL: ${PARALLEL}, ROUNDS: ${Math.ceil(chunks.length / PARALLEL)}`)
-      }
-
-      const tChunk = performance.now()
-
-      const resultados = await Promise.all(
-        grupo.map(chunk =>
-          fetch(`${SUPABASE_URL}/rest/v1/rpc/bulk_upsert_clientes`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': SUPABASE_ANON,
-              'Authorization': `Bearer ${SUPABASE_ANON}`,
-              'Prefer': 'return=representation',
-            },
-            body: JSON.stringify({ registros: chunk }),
-          })
-            .then(async r => {
-              if (!r.ok) { const t = await r.text(); throw new Error(`Supabase ${r.status}: ${t.slice(0, 200)}`) }
-              return r.json()
-            })
-            .then(r => ({ cargados: (r.insertados || 0) + (r.actualizados || 0), actualizados: r.actualizados || 0, errores: r.errores || 0 }))
-            .catch(err => ({ cargados: 0, errores: chunk.length, primerError: err.message }))
-        )
-      )
-
-      console.log(`ROUND ${Math.floor(i / PARALLEL) + 1}: ${((performance.now() - tChunk) / 1000).toFixed(1)}s — ${grupo.length}x${grupo[0]?.length} registros`, resultados.map(r => `ok:${r.cargados||0} err:${r.errores||0} ${r.primerError||''}`))
-
-      for (const r of resultados) {
-        if (r.cancelado) { canceladoRef.current = true; break }
-        insertadosTotal += r.cargados || 0
-        actualizadosTotal += r.actualizados || 0
-        erroresTotal += r.errores || 0
-      }
-
-      const procesados = Math.min((i + PARALLEL) * CHUNK_SIZE, registros.length)
-      const pct = Math.round((procesados / registros.length) * 100)
-
-      setProgreso(pct)
-      setStats(prev => ({
-        ...prev,
-        procesados,
-        insertados: insertadosTotal,
-        actualizados: actualizadosTotal,
-        errores: erroresTotal,
-      }))
-
-      // Save progress locally
-      await actualizarChunkLocal(jid, i + PARALLEL, procesados)
-
-      // Update Supabase every few rounds
-      if (i % (PARALLEL * 2) === 0 || i + PARALLEL >= chunks.length) {
-        await supabase.from('carga_jobs').update({
-          procesados,
-          insertados: insertadosTotal,
-          actualizados: actualizadosTotal,
-          chunk_actual: i + PARALLEL,
-          updated_at: new Date().toISOString(),
-        }).eq('id', jid).catch(() => {})
-      }
-    }
-
-    // Mark complete
-    const finalEstado = canceladoRef.current ? 'cancelado' : 'completado'
-    await supabase.from('carga_jobs').update({
-      estado: finalEstado,
-      procesados: registros.length,
-      insertados: insertadosTotal,
-      actualizados: actualizadosTotal,
-    }).eq('id', jid).catch(() => {})
-
-    await eliminarJobLocal(jid)
-
-    if (!canceladoRef.current) {
-      setEstado('completado')
-      setProgreso(100)
-    } else {
-      setEstado('idle')
-      setProgreso(0)
     }
   }
 
