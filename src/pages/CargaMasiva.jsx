@@ -133,8 +133,14 @@ export default function CargaMasiva() {
   const [progreso, setProgreso] = useState(0)
   const [stats, setStats] = useState({ total: 0, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
   const [resultadosPorArchivo, setResultadosPorArchivo] = useState([])
+  const [informe, setInforme] = useState({
+    insertados: 0, actualizados: 0, duplicados_en_crm: 0, duplicados_internos: 0,
+    cups_actualizados: [], cups_duplicados_internos: [],
+  })
   const [errorMsg, setErrorMsg] = useState(null)
   const [expandDetalle, setExpandDetalle] = useState(false)
+  const [expandActualizados, setExpandActualizados] = useState(false)
+  const [expandDuplicados, setExpandDuplicados] = useState(false)
 
   // ── Mapear registro ──
 
@@ -190,6 +196,8 @@ export default function CargaMasiva() {
 
     const mapearRegistro = crearMapearRegistro(mapeoLocal)
     let insertados = 0, actualizados = 0, errores = 0
+    const cupsActualizados = []
+    const cupsDuplicadosInternos = []
     const cupsVistos = new Set()
 
     for (let rowStart = 1; rowStart <= totalFilas; rowStart += CHUNK_SIZE) {
@@ -251,6 +259,12 @@ export default function CargaMasiva() {
             console.log(`Chunk OK (${elapsed}s): ${batch.length} → ${r.insertados} nuevos, ${r.actualizados} act`)
             insertados += r.insertados || 0
             actualizados += r.actualizados || 0
+            if (r.cups_actualizados?.length > 0 && cupsActualizados.length < 200) {
+              cupsActualizados.push(...r.cups_actualizados)
+            }
+            if (r.cups_duplicados_internos?.length > 0 && cupsDuplicadosInternos.length < 200) {
+              cupsDuplicadosInternos.push(...r.cups_duplicados_internos)
+            }
           }
         } catch (err) {
           console.error('=== FETCH ERROR ===', err.name, err.message)
@@ -267,7 +281,7 @@ export default function CargaMasiva() {
     }
 
     cupsVistos.clear()
-    return { insertados, actualizados, errores, total: totalFilas }
+    return { insertados, actualizados, errores, total: totalFilas, cups_actualizados: cupsActualizados.slice(0, 200), cups_duplicados_internos: cupsDuplicadosInternos.slice(0, 200) }
   }
 
   // ── Handlers ──
@@ -352,6 +366,12 @@ export default function CargaMasiva() {
       })
       setResultadosPorArchivo([{ name: archivo.name, ...result }])
       setStats(result)
+      setInforme({
+        insertados: result.insertados, actualizados: result.actualizados,
+        duplicados_en_crm: result.actualizados, duplicados_internos: 0,
+        cups_actualizados: result.cups_actualizados || [],
+        cups_duplicados_internos: result.cups_duplicados_internos || [],
+      })
       setProgreso(100)
       setPaso(5)
     } catch (err) {
@@ -416,6 +436,14 @@ export default function CargaMasiva() {
 
     setResultadosPorArchivo(resultados)
     setStats({ total: totalFilas, procesados: totalFilas, insertados: totalInsertados, actualizados: totalActualizados, errores: totalErrores })
+    // Accumulate informe from all files
+    const allCupsAct = resultados.flatMap(r => r.cups_actualizados || []).slice(0, 200)
+    const allCupsDup = resultados.flatMap(r => r.cups_duplicados_internos || []).slice(0, 200)
+    setInforme({
+      insertados: totalInsertados, actualizados: totalActualizados,
+      duplicados_en_crm: totalActualizados, duplicados_internos: allCupsDup.length,
+      cups_actualizados: allCupsAct, cups_duplicados_internos: allCupsDup,
+    })
     setProgreso(100)
     setPaso(5)
   }
@@ -430,8 +458,11 @@ export default function CargaMasiva() {
     setProgreso(0)
     setStats({ total: 0, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
     setResultadosPorArchivo([])
+    setInforme({ insertados: 0, actualizados: 0, duplicados_en_crm: 0, duplicados_internos: 0, cups_actualizados: [], cups_duplicados_internos: [] })
     setErrorMsg(null)
     setExpandDetalle(false)
+    setExpandActualizados(false)
+    setExpandDuplicados(false)
     cancelRef.current = false
   }
 
