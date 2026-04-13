@@ -7,6 +7,16 @@
   [functions."bulk-insert"]
     timeout = 26
 
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
 [dev]
   command = "npm run dev"
   port = 8888
