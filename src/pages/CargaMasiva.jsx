@@ -310,14 +310,16 @@ export default function CargaMasiva() {
               console.error('ERROR SUPABASE BODY:', errorText)
               erroresTotal += batch.length
 
-              // Classify error
+              // Classify error with real Supabase message
               if (res.status === 404 || errorText.includes('Could not find')) {
                 setErroresClasificados(p => ({ ...p, funcion: p.funcion + batch.length }))
                 if (!errorMsg) setErrorMsg('FUNCIÓN SQL NO EXISTE — Ejecuta el script SQL en Supabase')
               } else if (errorText.includes('duplicate') || errorText.includes('unique') || res.status === 409) {
                 setErroresClasificados(p => ({ ...p, duplicado: p.duplicado + batch.length }))
+                if (!errorMsg) setErrorMsg('CUPS duplicado en CRM: ' + errorText.slice(0, 200))
               } else {
                 setErroresClasificados(p => ({ ...p, datos: p.datos + batch.length }))
+                if (!errorMsg) setErrorMsg('Supabase: ' + errorText.slice(0, 300))
               }
             } else {
               const r = await res.json()
@@ -571,7 +573,7 @@ export default function CargaMasiva() {
                 {erroresClasificados.datos > 0 && (
                   <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded p-2">
                     <span className="text-lg">⚠️</span>
-                    <p className="text-xs text-orange-700">{erroresClasificados.datos.toLocaleString()} registros con datos inválidos (CUPS malformado, formato incorrecto, etc.)</p>
+                    <p className="text-xs text-orange-700">{erroresClasificados.datos.toLocaleString()} registros rechazados por Supabase (ver consola para detalles)</p>
                   </div>
                 )}
                 {erroresClasificados.red > 0 && (

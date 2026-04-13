@@ -1,8 +1,11 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { Search, XCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import Button from '../components/UI/Button'
 import FichaTramitabilidad from '../components/Clientes/FichaTramitabilidad'
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 const ESTADOS_BLOQUEADOS = [
   'activado',
@@ -16,6 +19,17 @@ function esEstadoBloqueado(estado) {
   return ESTADOS_BLOQUEADOS.includes(estado.trim().toLowerCase())
 }
 
+async function querySupabase(path) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+    },
+  })
+  if (!res.ok) return []
+  return res.json()
+}
+
 export default function Buscar() {
   const { esAdmin, usuario } = useAuth()
   const [query, setQuery] = useState('')
@@ -24,32 +38,11 @@ export default function Buscar() {
   const [buscando, setBuscando] = useState(false)
   const [buscado, setBuscado] = useState(false)
   const [alerta, setAlerta] = useState(null)
-
   const inputRef = useRef(null)
 
-  // Warm up Netlify Function on mount
-  useEffect(() => {
-    fetch('/.netlify/functions/search-clients', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ termino: '_warmup' }),
-    }).catch(() => {})
-  }, [])
-
-  async function buscarUnaVez(termino) {
-    const res = await fetch('/.netlify/functions/search-clients', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ termino }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Error en búsqueda')
-    return Array.isArray(data) ? data : data.clientes || data.data || []
-  }
-
   async function buscar() {
-    const termino = (inputRef.current?.value || query).trim()
-    if (!termino || termino.length < 2) return
+    const raw = (inputRef.current?.value || query).trim()
+    if (!raw || raw.length < 2) return
 
     setBuscando(true)
     setBuscado(true)
@@ -58,12 +51,50 @@ export default function Buscar() {
     setResultados([])
 
     try {
-      let lista = await buscarUnaVez(termino)
+      // Normalize phone: strip +34 / 0034 / 34 prefix
+      let termino = raw
+      if (/^\+34/.test(termino)) termino = termino.slice(3)
+      else if (/^0034/.test(termino)) termino = termino.slice(4)
+      else if (/^34\d{9}$/.test(termino)) termino = termino.slice(2)
+      termino = termino.replace(/[\s\-().]/g, '')
 
-      // Retry once after 500ms if first attempt returned empty (cold start)
-      if (lista.length === 0) {
-        await new Promise(r => setTimeout(r, 500))
-        lista = await buscarUnaVez(termino)
+      const t = encodeURIComponent(termino)
+
+      // Fast query: indexed fields (dni, cups, nombre)
+      let lista = await querySupabase(
+        `clientes?or=(dni.ilike.*${t}*,cups.ilike.*${t}*,nombre.ilike.*${t}*)&limit=20`
+      )
+
+      // If no results and looks like a phone, search datos_extra text
+      if (lista.length === 0 && /^\d{6,}$/.test(termino)) {
+        // Search datos_extra cast as text — use textSearch approach
+        lista = await querySupabase(
+          `clientes?datos_extra->>telefono1=ilike.*${t}*&limit=20`
+        )
+        if (lista.length === 0) {
+          lista = await querySupabase(
+            `clientes?datos_extra->>Telefono1=ilike.*${t}*&limit=20`
+          )
+        }
+        if (lista.length === 0) {
+          lista = await querySupabase(
+            `clientes?datos_extra->>TELEFONO=ilike.*${t}*&limit=20`
+          )
+        }
+        if (lista.length === 0) {
+          // Fallback: try datos_extra as full text (slower but catches any field name)
+          lista = await querySupabase(
+            `clientes?datos_extra::text=ilike.*${t}*&limit=10`
+          )
+        }
+      }
+
+      // Also try original term if different from normalized
+      if (lista.length === 0 && termino !== raw.trim()) {
+        const t2 = encodeURIComponent(raw.trim())
+        lista = await querySupabase(
+          `clientes?or=(dni.ilike.*${t2}*,cups.ilike.*${t2}*,nombre.ilike.*${t2}*)&limit=20`
+        )
       }
 
       setResultados(lista)
@@ -80,16 +111,21 @@ export default function Buscar() {
         setSeleccionado(lista[0])
       }
 
-      // Log search
-      fetch('/.netlify/functions/log-search', {
+      // Log search (non-blocking)
+      fetch(`${SUPABASE_URL}/rest/v1/busquedas_log`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Prefer': 'return=minimal',
+        },
         body: JSON.stringify({
           usuario_id: usuario?.id,
           usuario_nombre: usuario?.nombre,
           usuario_email: usuario?.email,
           oficina: usuario?.oficina?.nombre || null,
-          termino_busqueda: termino,
+          termino_busqueda: raw,
           resultado_encontrado: lista.length > 0,
         }),
       }).catch(() => {})
