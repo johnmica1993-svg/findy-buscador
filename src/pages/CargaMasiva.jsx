@@ -153,8 +153,8 @@ function mapearRegistro(row, usuario) {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY
-const CHUNK_SIZE = 10000
-const PARALLEL = 4
+const CHUNK_SIZE = 20000
+const PARALLEL = 5
 
 // ─── Component ───
 
@@ -307,10 +307,14 @@ export default function CargaMasiva() {
               'Content-Type': 'application/json',
               'apikey': SUPABASE_ANON,
               'Authorization': `Bearer ${SUPABASE_ANON}`,
+              'Prefer': 'return=representation',
             },
             body: JSON.stringify({ registros: chunk }),
           })
-            .then(r => r.json())
+            .then(async r => {
+              if (!r.ok) { const t = await r.text(); throw new Error(`Supabase ${r.status}: ${t.slice(0, 200)}`) }
+              return r.json()
+            })
             .then(r => ({ cargados: (r.insertados || 0) + (r.actualizados || 0), actualizados: r.actualizados || 0, errores: r.errores || 0 }))
             .catch(err => ({ cargados: 0, errores: chunk.length, primerError: err.message }))
         )
