@@ -9,7 +9,7 @@ import Button from '../components/UI/Button'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
-const CHUNK_SIZE = 500
+const CHUNK_SIZE = 200
 
 const CAMPOS_SISTEMA = [
   'cups', 'dni', 'nombre', 'direccion', 'campana', 'estado',
