@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Upload, FileSpreadsheet, CheckCircle, XCircle, Loader2, Download } from 'lucide-react'
 import * as XLSX from 'xlsx'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/UI/Card'
 import Button from '../components/UI/Button'
@@ -154,6 +153,40 @@ function mapearRegistro(row, usuario) {
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_ANON_KEY
 const CHUNK_SIZE = 20000
+
+const supaHeaders = {
+  'Content-Type': 'application/json',
+  'apikey': SUPABASE_ANON,
+  'Authorization': `Bearer ${SUPABASE_ANON}`,
+}
+
+async function jobInsert(data) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/carga_jobs`, {
+      method: 'POST', headers: { ...supaHeaders, 'Prefer': 'return=minimal' },
+      body: JSON.stringify(data),
+    })
+  } catch {}
+}
+
+async function jobUpdate(id, data) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/carga_jobs?id=eq.${id}`, {
+      method: 'PATCH', headers: { ...supaHeaders, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ ...data, updated_at: new Date().toISOString() }),
+    })
+  } catch {}
+}
+
+async function jobGet(id) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/carga_jobs?id=eq.${id}&select=*`, {
+      headers: supaHeaders,
+    })
+    const arr = await res.json()
+    return arr?.[0] || null
+  } catch { return null }
+}
 const PARALLEL = 5
 
 // ─── Component ───
@@ -179,11 +212,7 @@ export default function CargaMasiva() {
       const jobLocal = await obtenerJobActivoLocal()
       if (!jobLocal) return
 
-      const { data: jobRemoto } = await supabase
-        .from('carga_jobs')
-        .select('*')
-        .eq('id', jobLocal.id)
-        .single()
+      const jobRemoto = await jobGet(jobLocal.id)
 
       if (jobRemoto && jobRemoto.estado === 'procesando') {
         // Job is still running — show its progress (user must re-upload to continue)
@@ -295,13 +324,13 @@ export default function CargaMasiva() {
 
         // Create job in Supabase on first file
         if (file === validFiles[0]) {
-          await supabase.from('carga_jobs').insert({
+          await jobInsert({
             id: jid,
             usuario_id: usuario?.id,
             estado: 'procesando',
             total: totalFilas,
             nombre_archivo: fileName,
-          }).catch(() => {})
+          })
         }
 
         // Process rows in batches — never hold more than CHUNK_SIZE rows in RAM
@@ -363,13 +392,12 @@ export default function CargaMasiva() {
 
           // Update job in Supabase periodically
           if (rowStart % (BATCH * 3) === 1 || rowEnd >= range.e.r) {
-            await supabase.from('carga_jobs').update({
+            await jobUpdate(jid, {
               total: totalFilas,
               procesados,
               insertados: insertadosTotal,
               actualizados: actualizadosTotal,
-              updated_at: new Date().toISOString(),
-            }).eq('id', jid).catch(() => {})
+            })
           }
 
           // Yield to event loop
@@ -381,13 +409,13 @@ export default function CargaMasiva() {
 
       // Mark job complete
       const finalEstado = canceladoRef.current ? 'cancelado' : 'completado'
-      await supabase.from('carga_jobs').update({
+      await jobUpdate(jid, {
         estado: finalEstado,
         total: totalFilas,
         procesados: totalFilas,
         insertados: insertadosTotal,
         actualizados: actualizadosTotal,
-      }).eq('id', jid).catch(() => {})
+      })
 
       await eliminarJobLocal(jid).catch(() => {})
 
@@ -409,7 +437,7 @@ export default function CargaMasiva() {
   async function handleCancelar() {
     canceladoRef.current = true
     if (jobId) {
-      await supabase.from('carga_jobs').update({ estado: 'cancelado' }).eq('id', jobId).catch(() => {})
+      await jobUpdate(jobId, { estado: 'cancelado' })
       await eliminarJobLocal(jobId).catch(() => {})
       // Cancel flag is set in carga_jobs above — in-flight requests will finish but results are ignored
     }
