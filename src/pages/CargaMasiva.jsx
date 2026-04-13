@@ -108,6 +108,7 @@ export default function CargaMasiva() {
     cups_actualizados: [], cups_duplicados_internos: [],
   })
   const [errorMsg, setErrorMsg] = useState(null)
+  const [erroresClasificados, setErroresClasificados] = useState({ funcion: 0, duplicado: 0, red: 0, datos: 0 })
   const [dragOver, setDragOver] = useState(false)
   const [expandActualizados, setExpandActualizados] = useState(false)
   const [expandDuplicados, setExpandDuplicados] = useState(false)
@@ -304,15 +305,25 @@ export default function CargaMasiva() {
             })
 
             if (!res.ok) {
-              const text = await res.text()
-              console.error('Supabase error:', text)
+              const errorText = await res.text()
+              console.error('ERROR SUPABASE STATUS:', res.status)
+              console.error('ERROR SUPABASE BODY:', errorText)
               erroresTotal += batch.length
+
+              // Classify error
+              if (res.status === 404 || errorText.includes('Could not find')) {
+                setErroresClasificados(p => ({ ...p, funcion: p.funcion + batch.length }))
+                if (!errorMsg) setErrorMsg('FUNCIÓN SQL NO EXISTE — Ejecuta el script SQL en Supabase')
+              } else if (errorText.includes('duplicate') || errorText.includes('unique') || res.status === 409) {
+                setErroresClasificados(p => ({ ...p, duplicado: p.duplicado + batch.length }))
+              } else {
+                setErroresClasificados(p => ({ ...p, datos: p.datos + batch.length }))
+              }
             } else {
               const r = await res.json()
               insertadosTotal += r.insertados || 0
               actualizadosTotal += r.actualizados || 0
 
-              // Accumulate informe
               setInforme(prev => ({
                 insertados: prev.insertados + (r.insertados || 0),
                 actualizados: prev.actualizados + (r.actualizados || 0),
@@ -325,6 +336,7 @@ export default function CargaMasiva() {
           } catch (err) {
             console.error('Fetch error:', err)
             erroresTotal += batch.length
+            setErroresClasificados(p => ({ ...p, red: p.red + batch.length }))
           }
         }
 
@@ -357,6 +369,7 @@ export default function CargaMasiva() {
     setProgreso(0)
     setStats({ total: 0, procesados: 0, insertados: 0, actualizados: 0, errores: 0 })
     setInforme({ insertados: 0, actualizados: 0, duplicados_en_crm: 0, duplicados_internos: 0, cups_actualizados: [], cups_duplicados_internos: [] })
+    setErroresClasificados({ funcion: 0, duplicado: 0, red: 0, datos: 0 })
     setErrorMsg(null)
     cancelRef.current = false
   }
@@ -538,8 +551,35 @@ export default function CargaMasiva() {
             </div>
 
             {stats.errores > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-center">
-                <p className="text-sm text-red-700 font-medium">{stats.errores.toLocaleString()} registros con error</p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 space-y-2">
+                <p className="text-sm text-red-700 font-medium text-center">{stats.errores.toLocaleString()} registros con error</p>
+                {erroresClasificados.funcion > 0 && (
+                  <div className="flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded p-2">
+                    <span className="text-lg">⚠️</span>
+                    <div>
+                      <p className="text-xs font-semibold text-yellow-800">Función SQL no existe en Supabase</p>
+                      <p className="text-[10px] text-yellow-700">Ve al SQL Editor de Supabase y ejecuta el script de creación de bulk_upsert_clientes</p>
+                    </div>
+                  </div>
+                )}
+                {erroresClasificados.duplicado > 0 && (
+                  <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded p-2">
+                    <span className="text-lg">ℹ️</span>
+                    <p className="text-xs text-blue-700">{erroresClasificados.duplicado.toLocaleString()} registros ya existen con el mismo CUPS y no pudieron actualizarse</p>
+                  </div>
+                )}
+                {erroresClasificados.datos > 0 && (
+                  <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded p-2">
+                    <span className="text-lg">⚠️</span>
+                    <p className="text-xs text-orange-700">{erroresClasificados.datos.toLocaleString()} registros con datos inválidos (CUPS malformado, formato incorrecto, etc.)</p>
+                  </div>
+                )}
+                {erroresClasificados.red > 0 && (
+                  <div className="flex items-start gap-2 bg-gray-50 border border-gray-200 rounded p-2">
+                    <span className="text-lg">🌐</span>
+                    <p className="text-xs text-gray-700">{erroresClasificados.red.toLocaleString()} registros fallaron por timeout o error de red</p>
+                  </div>
+                )}
               </div>
             )}
           </Card>
