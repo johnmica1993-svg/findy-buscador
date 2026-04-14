@@ -143,6 +143,7 @@ export default function CargaMasiva() {
   const [expandActualizados, setExpandActualizados] = useState(false)
   const [expandDuplicados, setExpandDuplicados] = useState(false)
   const [expandErrores, setExpandErrores] = useState(false)
+  const [expandNoCargados, setExpandNoCargados] = useState(false)
 
   // ── Mapear registro ──
 
@@ -202,19 +203,8 @@ export default function CargaMasiva() {
     const cupsDuplicadosInternos = []
     const erroresChunks = []
     let chunkIdx = 0
-    // Map for global dedup: cups → {reg, campos}
-    const cupsMejor = new Map()
-
-    const contarCampos = (r) => {
-      let n = 0
-      if (r.dni) n++
-      if (r.nombre) n++
-      if (r.direccion) n++
-      if (r.campana) n++
-      if (r.estado) n++
-      n += Object.values(r.datos_extra || {}).filter(v => v !== null && v !== '').length
-      return n
-    }
+    // Simple Set for cross-chunk dedup; SQL handles smart merge
+    const cupsVistos = new Set()
 
     for (let rowStart = 1; rowStart <= totalFilas; rowStart += CHUNK_SIZE) {
       if (cancelRef.current) break
@@ -236,17 +226,17 @@ export default function CargaMasiva() {
         const reg = mapearRegistro(obj)
         const cups = reg.cups?.trim()
         if (cups) {
-          const campos = contarCampos(reg)
-          const existente = cupsMejor.get(cups)
-          if (!existente || campos > existente.campos) {
-            cupsMejor.set(cups, { reg, campos })
+          if (!cupsVistos.has(cups)) {
+            cupsVistos.add(cups)
             batch.push(reg)
           }
-          // duplicate with fewer fields → skip silently
+          // duplicate in file → skip, SQL ON CONFLICT handles DB dupes
         } else {
           batch.push(reg)
         }
       }
+
+      console.log(`[Chunk ${chunkIdx}] rows ${rowStart}-${rowEnd}: ${batch.length} registros en batch`)
 
       if (batch.length > 0) {
         try {
@@ -492,6 +482,7 @@ export default function CargaMasiva() {
     setExpandDetalle(false)
     setExpandActualizados(false)
     setExpandDuplicados(false)
+    setExpandNoCargados(false)
     cancelRef.current = false
   }
 
@@ -722,21 +713,34 @@ export default function CargaMasiva() {
               </div>
             )}
 
-            {/* Expandable: Duplicados internos */}
+            {/* Expandable: No cargados / duplicados */}
             {informe.cups_duplicados_internos?.length > 0 && (
-              <div className="mb-4">
-                <button onClick={() => setExpandDuplicados(!expandDuplicados)}
-                  className="text-xs font-medium text-orange-700 hover:text-orange-900 mb-1">
-                  {expandDuplicados ? '▼' : '▶'} {informe.cups_duplicados_internos.length} CUPS duplicados en el archivo
+              <div className="mb-4 border border-orange-200 rounded-xl overflow-hidden">
+                <button onClick={() => setExpandNoCargados(!expandNoCargados)}
+                  className="w-full flex justify-between items-center p-3 bg-orange-50 hover:bg-orange-100 transition-colors">
+                  <span className="font-semibold text-orange-800 text-sm">
+                    Registros no cargados / saltados ({informe.cups_duplicados_internos.length})
+                  </span>
+                  <span className="text-orange-600">{expandNoCargados ? '▲' : '▼'}</span>
                 </button>
-                {expandDuplicados && (
-                  <div className="border border-orange-200 rounded-lg p-3 bg-white text-xs max-h-48 overflow-y-auto">
-                    {informe.cups_duplicados_internos.map((d, i) => (
-                      <div key={i} className="flex justify-between py-0.5 border-b border-gray-100">
-                        <span className="font-mono text-gray-700">{d.cups}</span>
-                        <span className="text-orange-500 font-semibold">{d.veces}x</span>
-                      </div>
-                    ))}
+                {expandNoCargados && (
+                  <div className="max-h-64 overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-orange-50 sticky top-0">
+                        <tr>
+                          <th className="text-left p-2 font-medium text-orange-700">CUPS</th>
+                          <th className="text-left p-2 font-medium text-orange-700">Razón</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {informe.cups_duplicados_internos.map((d, i) => (
+                          <tr key={i} className="border-t hover:bg-gray-50">
+                            <td className="p-2 font-mono text-gray-700">{d.cups}</td>
+                            <td className="p-2 text-gray-500">{d.razon || (d.veces ? `Aparece ${d.veces}x en el archivo` : 'Duplicado')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
