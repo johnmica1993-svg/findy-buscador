@@ -127,18 +127,19 @@ export default function Usuarios() {
     if (!pw) return
     setResetting(p => ({ ...p, [user.id]: true }))
     try {
-      // Change password in Auth + save to DB via Netlify Function
-      const res = await fetch('/.netlify/functions/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email, admin_reset: true }),
-      })
-      // We generated our own password, so also save it via save-password
-      await fetch('/.netlify/functions/save-password', {
+      // Save password in Auth + usuarios table via Netlify Function
+      const res = await fetch('/.netlify/functions/save-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user.id, password: pw }),
       })
+      const result = await res.json()
+      console.log('[save-password] Result:', result)
+
+      if (!res.ok) {
+        alert('Error guardando contraseña:\n' + (result.error || 'Error desconocido'))
+        return
+      }
 
       setUsuarios(prev => prev.map(u =>
         u.id === user.id ? { ...u, ultima_password_temporal: pw, password_generada_at: new Date().toISOString() } : u
