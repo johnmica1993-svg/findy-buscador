@@ -23,9 +23,10 @@ export default function Login() {
     try {
       await login(email, password)
     } catch (err) {
-      setError(err.message === 'Invalid login credentials'
+      const msg = typeof err === 'string' ? err : err?.message || JSON.stringify(err)
+      setError(msg === 'Invalid login credentials'
         ? 'Credenciales incorrectas. Verifica tu email y contraseña.'
-        : err.message)
+        : msg || 'Error al iniciar sesión')
     } finally {
       setLoading(false)
     }
