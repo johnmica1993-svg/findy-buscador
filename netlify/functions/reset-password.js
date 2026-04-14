@@ -151,6 +151,12 @@ export async function handler(event) {
 
     console.log(`[reset-password] Password updated for ${email}`)
 
+    // Save temp password in usuarios table for admin visibility
+    await supabase.from('usuarios').update({
+      ultima_password_temporal: tempPassword,
+      password_generada_at: new Date().toISOString(),
+    }).eq('email', email.toLowerCase())
+
     // --- Send email ---
     let emailSent = false
     let emailMethod = 'none'

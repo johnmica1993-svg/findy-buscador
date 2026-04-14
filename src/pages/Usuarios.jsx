@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, UserCheck, UserX, Trash2, AlertTriangle } from 'lucide-react'
+import { Plus, UserCheck, UserX, Trash2, AlertTriangle, Eye, EyeOff, RotateCcw } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Card from '../components/UI/Card'
 import Badge from '../components/UI/Badge'
@@ -16,6 +16,8 @@ export default function Usuarios() {
   const [form, setForm] = useState({ nombre: '', email: '', password: '', rol: 'COMERCIAL', oficina_id: '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [passwordVisible, setPasswordVisible] = useState({}) // userId → boolean
+  const [resetting, setResetting] = useState({}) // userId → boolean
 
   useEffect(() => { cargar() }, [])
 
@@ -58,6 +60,14 @@ export default function Usuarios() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Error al crear el usuario')
 
+      // Save the initial password in usuarios table
+      if (data.userId) {
+        await supabase.from('usuarios').update({
+          ultima_password_temporal: form.password,
+          password_generada_at: new Date().toISOString(),
+        }).eq('id', data.userId)
+      }
+
       setModalCrear(false)
       setForm({ nombre: '', email: '', password: '', rol: 'COMERCIAL', oficina_id: '' })
       cargar()
@@ -74,9 +84,7 @@ export default function Usuarios() {
   }
 
   async function eliminarUsuario(user) {
-    if (!confirm(`¿Estás seguro de eliminar al usuario "${user.nombre}" (${user.email})?\n\nEsta acción eliminará su cuenta por completo y no se puede deshacer.`)) {
-      return
-    }
+    if (!confirm(`¿Eliminar "${user.nombre}" (${user.email})?\n\nEsta acción no se puede deshacer.`)) return
 
     try {
       const res = await fetch('/.netlify/functions/delete-user', {
@@ -92,9 +100,38 @@ export default function Usuarios() {
     }
   }
 
+  async function resetearPassword(user) {
+    setResetting(prev => ({ ...prev, [user.id]: true }))
+    try {
+      const res = await fetch('/.netlify/functions/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      // Reload to show updated password
+      cargar()
+      setPasswordVisible(prev => ({ ...prev, [user.id]: true }))
+    } catch (err) {
+      alert('Error al resetear: ' + err.message)
+    } finally {
+      setResetting(prev => ({ ...prev, [user.id]: false }))
+    }
+  }
+
   async function cambiarOficina(userId, oficinaId) {
     await supabase.from('usuarios').update({ oficina_id: oficinaId || null }).eq('id', userId)
     cargar()
+  }
+
+  function togglePasswordVisible(userId) {
+    setPasswordVisible(prev => ({ ...prev, [userId]: !prev[userId] }))
+  }
+
+  function formatFecha(ts) {
+    if (!ts) return ''
+    return new Date(ts).toLocaleDateString('es-ES') + ' ' + new Date(ts).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
   }
 
   const ROL_COLORS = { ADMIN: 'blue', OFICINA: 'orange', COMERCIAL: 'gray' }
@@ -113,23 +150,24 @@ export default function Usuarios() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Nombre</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Email</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Rol</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Oficina</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Estado</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Acciones</th>
+                <th className="text-left px-3 py-3 font-medium text-gray-600">Nombre</th>
+                <th className="text-left px-3 py-3 font-medium text-gray-600">Email</th>
+                <th className="text-left px-3 py-3 font-medium text-gray-600">Rol</th>
+                <th className="text-left px-3 py-3 font-medium text-gray-600">Oficina</th>
+                <th className="text-left px-3 py-3 font-medium text-gray-600">Contraseña</th>
+                <th className="text-left px-3 py-3 font-medium text-gray-600">Estado</th>
+                <th className="text-left px-3 py-3 font-medium text-gray-600">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
-                <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">Cargando...</td></tr>
+                <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Cargando...</td></tr>
               ) : usuarios.map(u => (
                 <tr key={u.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{u.nombre}</td>
-                  <td className="px-4 py-3 text-gray-600">{u.email}</td>
-                  <td className="px-4 py-3"><Badge color={ROL_COLORS[u.rol]}>{u.rol}</Badge></td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3 font-medium">{u.nombre}</td>
+                  <td className="px-3 py-3 text-gray-600 text-xs">{u.email}</td>
+                  <td className="px-3 py-3"><Badge color={ROL_COLORS[u.rol]}>{u.rol}</Badge></td>
+                  <td className="px-3 py-3">
                     <select
                       value={u.oficina_id || ''}
                       onChange={e => cambiarOficina(u.id, e.target.value)}
@@ -141,18 +179,49 @@ export default function Usuarios() {
                       ))}
                     </select>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3">
+                    {u.ultima_password_temporal ? (
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <span className="font-mono text-xs">
+                            {passwordVisible[u.id] ? u.ultima_password_temporal : '••••••••'}
+                          </span>
+                          <button
+                            onClick={() => togglePasswordVisible(u.id)}
+                            className="p-0.5 rounded hover:bg-gray-200 text-gray-400"
+                            title={passwordVisible[u.id] ? 'Ocultar' : 'Mostrar'}
+                          >
+                            {passwordVisible[u.id] ? <EyeOff size={12} /> : <Eye size={12} />}
+                          </button>
+                        </div>
+                        {u.password_generada_at && (
+                          <p className="text-[10px] text-gray-400 mt-0.5">{formatFecha(u.password_generada_at)}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-3">
                     <Badge color={u.activo ? 'green' : 'red'}>{u.activo ? 'Activo' : 'Inactivo'}</Badge>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-3">
                     <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => resetearPassword(u)}
+                        disabled={resetting[u.id]}
+                        className="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 disabled:opacity-50"
+                        title="Resetear contraseña"
+                      >
+                        <RotateCcw size={14} className={resetting[u.id] ? 'animate-spin' : ''} />
+                      </button>
                       <Button variant="ghost" className="text-xs" onClick={() => toggleActivo(u)}>
                         {u.activo ? <><UserX size={14} /> Bloquear</> : <><UserCheck size={14} /> Activar</>}
                       </Button>
                       <button
                         onClick={() => eliminarUsuario(u)}
                         className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"
-                        title="Eliminar usuario"
+                        title="Eliminar"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -221,10 +290,7 @@ export default function Usuarios() {
 
           <div className="flex justify-end gap-3">
             <Button variant="secondary" type="button" onClick={() => setModalCrear(false)}>Cancelar</Button>
-            <Button
-              type="submit"
-              disabled={saving || (requiereOficina && oficinas.length === 0)}
-            >
+            <Button type="submit" disabled={saving || (requiereOficina && oficinas.length === 0)}>
               {saving ? 'Creando...' : 'Crear Usuario'}
             </Button>
           </div>
