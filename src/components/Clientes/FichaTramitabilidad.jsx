@@ -28,9 +28,13 @@ const KEYS_MOSTRADAS = new Set([
   'ciudad', 'Ciudad', 'CIUDAD',
   'codigo_postal', 'cp', 'CP', 'Código Postal', 'CODIGO POSTAL', 'codigo postal',
   'telefono', 'telefono_1', 'telefono1', 'tlf', 'movil',
-  'Telefono', 'Teléfono', 'TELEFONO', 'Telefono 1', 'Teléfono 1', 'TELEFONO 1', 'Movil', 'Móvil', 'MOVIL',
+  'Telefono', 'Teléfono', 'TELEFONO', 'Telefono 1', 'Teléfono 1', 'TELEFONO 1',
+  'Movil', 'Móvil', 'MOVIL', 'MOBILE', 'mobile',
+  'TELEFON 1', 'TELEFON 2',
+  'TLFN 1', 'TLFN 2', 'TLFN 3', 'tlfn 1', 'tlfn 2', 'tlfn 3',
+  'TLFN1', 'TLFN2', 'TLFN3', 'TEL', 'Tel', 'tel',
   'telefono_2', 'telefono2', 'tlf2',
-  'Telefono 2', 'Teléfono 2', 'TELEFONO 2',
+  'Telefono 2', 'Teléfono 2', 'TELEFONO 2', 'TELEFONO1', 'TELEFONO2',
   'email', 'correo', 'correo_electronico',
   'Email', 'EMAIL', 'Correo', 'CORREO', 'Correo Electronico', 'CORREO ELECTRONICO',
   'iban', 'cuenta_bancaria',
@@ -65,12 +69,18 @@ export default function FichaTramitabilidad({ cliente }) {
   const telefono1 = get(
     'telefono', 'telefono_1', 'telefono1', 'tlf', 'movil',
     'Telefono', 'Teléfono', 'TELEFONO', 'Telefono 1', 'Teléfono 1', 'TELEFONO 1',
-    'Movil', 'Móvil', 'MOVIL',
+    'TELEFONO1', 'TELEFON 1', 'TLFN 1', 'tlfn 1', 'TLFN1',
+    'TEL', 'Tel', 'tel', 'Movil', 'Móvil', 'MOVIL', 'MOBILE', 'mobile',
   )
 
   const telefono2 = get(
     'telefono_2', 'telefono2', 'tlf2',
-    'Telefono 2', 'Teléfono 2', 'TELEFONO 2',
+    'Telefono 2', 'Teléfono 2', 'TELEFONO 2', 'TELEFONO2',
+    'TELEFON 2', 'TLFN 2', 'tlfn 2', 'TLFN2',
+  )
+
+  const telefono3 = get(
+    'TLFN 3', 'tlfn 3', 'TLFN3',
   )
 
   const correo = get(
@@ -122,6 +132,7 @@ export default function FichaTramitabilidad({ cliente }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Dato icon={Phone} label="Teléfono 1" value={telefono1} />
           <Dato icon={Phone} label="Teléfono 2" value={telefono2} />
+          {telefono3 && <Dato icon={Phone} label="Teléfono 3" value={telefono3} />}
           <Dato icon={Mail} label="Correo electrónico" value={correo} />
           <Dato icon={CreditCard} label="IBAN" value={iban} />
         </div>
