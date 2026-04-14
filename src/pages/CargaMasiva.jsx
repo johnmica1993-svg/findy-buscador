@@ -202,7 +202,19 @@ export default function CargaMasiva() {
     const cupsDuplicadosInternos = []
     const erroresChunks = []
     let chunkIdx = 0
-    const cupsVistos = new Set()
+    // Map for global dedup: cups → {reg, campos}
+    const cupsMejor = new Map()
+
+    const contarCampos = (r) => {
+      let n = 0
+      if (r.dni) n++
+      if (r.nombre) n++
+      if (r.direccion) n++
+      if (r.campana) n++
+      if (r.estado) n++
+      n += Object.values(r.datos_extra || {}).filter(v => v !== null && v !== '').length
+      return n
+    }
 
     for (let rowStart = 1; rowStart <= totalFilas; rowStart += CHUNK_SIZE) {
       if (cancelRef.current) break
@@ -224,7 +236,13 @@ export default function CargaMasiva() {
         const reg = mapearRegistro(obj)
         const cups = reg.cups?.trim()
         if (cups) {
-          if (!cupsVistos.has(cups)) { cupsVistos.add(cups); batch.push(reg) }
+          const campos = contarCampos(reg)
+          const existente = cupsMejor.get(cups)
+          if (!existente || campos > existente.campos) {
+            cupsMejor.set(cups, { reg, campos })
+            batch.push(reg)
+          }
+          // duplicate with fewer fields → skip silently
         } else {
           batch.push(reg)
         }
