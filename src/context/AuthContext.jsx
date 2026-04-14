@@ -34,13 +34,18 @@ export function AuthProvider({ children }) {
 
   async function cargarUsuario(userId) {
     try {
+      // Simple select without join to avoid column errors
       const { data, error } = await supabase
         .from('usuarios')
-        .select('*, oficina:oficinas(*)')
+        .select('*')
         .eq('id', userId)
         .single()
 
-      if (error) throw error
+      if (error || !data) {
+        console.error('Error cargando usuario:', error)
+        setLoading(false)
+        return
+      }
 
       if (!data.activo) {
         await supabase.auth.signOut()
@@ -48,14 +53,33 @@ export function AuthProvider({ children }) {
         return
       }
 
-      if ((data.rol === 'OFICINA' || data.rol === 'COMERCIAL') && data.oficina) {
-        const result = await verificarIP(data.oficina)
-        if (!result.allowed) {
-          await registrarIntentoBloqueado(data, result.ip)
-          setIpBloqueada(true)
-          setUsuario(data)
-          setLoading(false)
-          return
+      // Load oficina separately to avoid join issues
+      let oficina = null
+      if (data.oficina_id) {
+        try {
+          const { data: ofi } = await supabase
+            .from('oficinas')
+            .select('id,nombre,activa,codigo,ips_autorizadas')
+            .eq('id', data.oficina_id)
+            .single()
+          oficina = ofi
+        } catch {}
+      }
+      data.oficina = oficina
+
+      // Verify IP for non-admin roles (with timeout)
+      if ((data.rol === 'OFICINA' || data.rol === 'COMERCIAL') && oficina) {
+        try {
+          const result = await verificarIP(oficina)
+          if (!result.allowed) {
+            try { await registrarIntentoBloqueado(data, result.ip) } catch {}
+            setIpBloqueada(true)
+            setUsuario(data)
+            setLoading(false)
+            return
+          }
+        } catch {
+          // If IP check fails, allow access
         }
       }
 
@@ -71,12 +95,15 @@ export function AuthProvider({ children }) {
     try {
       const ipsPermitidas = new Set([
         ...(oficina.ips_autorizadas || []),
-        ...(oficina.ip_autorizada ? [oficina.ip_autorizada] : []),
-      ])
+      ].filter(Boolean))
 
       if (ipsPermitidas.size === 0) return { allowed: true, ip: null }
 
-      const res = await fetch('https://api.ipify.org?format=json')
+      // 3 second timeout
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 3000)
+      const res = await fetch('https://api.ipify.org?format=json', { signal: controller.signal })
+      clearTimeout(timeout)
       const { ip } = await res.json()
 
       return { allowed: ipsPermitidas.has(ip), ip }
