@@ -24,6 +24,7 @@ export default function Usuarios() {
   const [copiado, setCopiado] = useState({})
   const [editandoPw, setEditandoPw] = useState({})
   const [pwManual, setPwManual] = useState({})
+  const [pwPendiente, setPwPendiente] = useState({})
 
   useEffect(() => { cargar() }, [])
 
@@ -115,28 +116,34 @@ export default function Usuarios() {
     }
   }
 
-  async function resetearPassword(user) {
+  function resetearPassword(user) {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+    const pw = Array.from({ length: 10 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+    setPwPendiente(p => ({ ...p, [user.id]: pw }))
+  }
+
+  async function confirmarGuardar(user) {
+    const pw = pwPendiente[user.id]
+    if (!pw) return
     setResetting(p => ({ ...p, [user.id]: true }))
     try {
-      // Use Netlify Function which has service role key
+      // Change password in Auth + save to DB via Netlify Function
       const res = await fetch('/.netlify/functions/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user.email, admin_reset: true }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al resetear')
+      // We generated our own password, so also save it via save-password
+      await fetch('/.netlify/functions/save-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, password: pw }),
+      })
 
-      const newPassword = data.tempPassword
-      if (newPassword) {
-        // The Netlify Function already saved it to the DB, update UI
-        setUsuarios(prev => prev.map(u =>
-          u.id === user.id ? { ...u, ultima_password_temporal: newPassword, password_generada_at: new Date().toISOString() } : u
-        ))
-        setPwVisible(p => ({ ...p, [user.id]: true }))
-      } else {
-        cargar()
-      }
+      setUsuarios(prev => prev.map(u =>
+        u.id === user.id ? { ...u, ultima_password_temporal: pw, password_generada_at: new Date().toISOString() } : u
+      ))
+      setPwPendiente(p => { const n = { ...p }; delete n[user.id]; return n })
     } catch (err) {
       alert('Error: ' + err.message)
     } finally {
@@ -231,7 +238,27 @@ export default function Usuarios() {
                     </select>
                   </td>
                   <td className="px-3 py-3 min-w-[210px]">
-                    {u.ultima_password_temporal ? (
+                    {pwPendiente[u.id] ? (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1 bg-yellow-50 border border-yellow-300 rounded px-2 py-1">
+                          <span className="font-mono text-xs flex-1 font-bold text-yellow-800">{pwPendiente[u.id]}</span>
+                          <button onClick={() => copiarPassword(u.id, pwPendiente[u.id])}
+                            className={`p-0.5 rounded transition-colors ${copiado[u.id] ? 'text-green-500' : 'text-gray-400 hover:text-green-600'}`}>
+                            <Copy size={12} />
+                          </button>
+                        </div>
+                        {copiado[u.id] && <p className="text-[10px] text-green-500 font-medium">Copiada</p>}
+                        <p className="text-[10px] text-yellow-600">No guardada aún</p>
+                        <div className="flex gap-1">
+                          <button onClick={() => confirmarGuardar(u)} disabled={resetting[u.id]}
+                            className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 font-medium disabled:opacity-50">
+                            {resetting[u.id] ? '...' : 'Guardar'}
+                          </button>
+                          <button onClick={() => setPwPendiente(p => { const n = { ...p }; delete n[u.id]; return n })}
+                            className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded hover:bg-gray-300">Descartar</button>
+                        </div>
+                      </div>
+                    ) : u.ultima_password_temporal ? (
                       <div className="space-y-1">
                         <div className="flex items-center gap-1 bg-gray-50 border rounded px-2 py-1">
                           <span className="font-mono text-xs flex-1 select-all">
