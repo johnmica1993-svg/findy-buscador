@@ -71,13 +71,12 @@ export default function Usuarios() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Error al crear')
 
-      // Save initial password via admin token
+      // Save initial password via Netlify Function (has service role key)
       if (data.userId) {
-        const token = await getToken()
-        await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${data.userId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}`, 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ ultima_password_temporal: form.password, password_generada_at: new Date().toISOString() }),
+        await fetch('/.netlify/functions/save-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: data.userId, password: form.password }),
         })
       }
 
@@ -147,11 +146,10 @@ export default function Usuarios() {
 
   async function borrarPassword(user) {
     if (!confirm('¿Borrar la contraseña guardada?')) return
-    const token = await getToken()
-    await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${user.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}`, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ ultima_password_temporal: null, password_generada_at: null }),
+    await fetch('/.netlify/functions/save-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: user.id, password: '' }),
     })
     setUsuarios(prev => prev.map(u =>
       u.id === user.id ? { ...u, ultima_password_temporal: null, password_generada_at: null } : u
@@ -178,13 +176,12 @@ export default function Usuarios() {
     const pw = pwManual[user.id]?.trim()
     if (!pw) return
     try {
-      const token = await getToken()
-      // Save to usuarios table only (Auth change via reset button)
-      await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${user.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}`, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ ultima_password_temporal: pw, password_generada_at: new Date().toISOString() }),
+      const res = await fetch('/.netlify/functions/save-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, password: pw }),
       })
+      if (!res.ok) throw new Error((await res.json()).error)
       setUsuarios(prev => prev.map(u => u.id === user.id ? { ...u, ultima_password_temporal: pw, password_generada_at: new Date().toISOString() } : u))
       setEditandoPw(p => ({ ...p, [user.id]: false }))
       setPwManual(p => ({ ...p, [user.id]: '' }))
