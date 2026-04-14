@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, UserCheck, UserX, Trash2, AlertTriangle, Eye, EyeOff, RotateCcw, Copy } from 'lucide-react'
+import { Plus, UserCheck, UserX, Trash2, AlertTriangle, Eye, EyeOff, RotateCcw, Copy, X as XIcon } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Card from '../components/UI/Card'
 import Badge from '../components/UI/Badge'
@@ -7,6 +7,9 @@ import Button from '../components/UI/Button'
 import Input from '../components/UI/Input'
 import Select from '../components/UI/Select'
 import Modal from '../components/UI/Modal'
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState([])
@@ -21,15 +24,29 @@ export default function Usuarios() {
 
   useEffect(() => { cargar() }, [])
 
+  async function getToken() {
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token || SUPABASE_KEY
+  }
+
   async function cargar() {
     setLoading(true)
-    const [{ data: users }, { data: ofis }] = await Promise.all([
-      supabase.from('usuarios').select('*, oficina:oficinas(nombre)').order('created_at', { ascending: false }),
-      supabase.from('oficinas').select('id, nombre').eq('activa', true),
-    ])
-    setUsuarios(users || [])
-    setOficinas(ofis || [])
-    setLoading(false)
+    try {
+      const token = await getToken()
+      // Fetch with admin token to get all fields including password columns
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/usuarios?select=*,oficina:oficinas(nombre)&order=created_at.desc`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}` },
+      })
+      const users = await res.json()
+
+      const { data: ofis } = await supabase.from('oficinas').select('id, nombre').eq('activa', true)
+      setUsuarios(Array.isArray(users) ? users : [])
+      setOficinas(ofis || [])
+    } catch (err) {
+      console.error('Error cargando usuarios:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const requiereOficina = form.rol === 'OFICINA' || form.rol === 'COMERCIAL'
@@ -49,14 +66,16 @@ export default function Usuarios() {
         body: JSON.stringify({ nombre: form.nombre, email: form.email, password: form.password, rol: form.rol, oficina_id: form.oficina_id || null }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Error al crear el usuario')
+      if (!res.ok) throw new Error(data.error || 'Error al crear')
 
-      // Save initial password
+      // Save initial password via admin token
       if (data.userId) {
-        await supabase.from('usuarios').update({
-          ultima_password_temporal: form.password,
-          password_generada_at: new Date().toISOString(),
-        }).eq('id', data.userId)
+        const token = await getToken()
+        await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${data.userId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}`, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ ultima_password_temporal: form.password, password_generada_at: new Date().toISOString() }),
+        })
       }
 
       setModalCrear(false)
@@ -70,12 +89,17 @@ export default function Usuarios() {
   }
 
   async function toggleActivo(user) {
-    await supabase.from('usuarios').update({ activo: !user.activo }).eq('id', user.id)
+    const token = await getToken()
+    await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${user.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ activo: !user.activo }),
+    })
     cargar()
   }
 
   async function eliminarUsuario(user) {
-    if (!confirm(`¿Eliminar "${user.nombre}" (${user.email})?\nEsta acción no se puede deshacer.`)) return
+    if (!confirm(`¿Eliminar "${user.nombre}" (${user.email})?\nNo se puede deshacer.`)) return
     try {
       const res = await fetch('/.netlify/functions/delete-user', {
         method: 'POST',
@@ -92,6 +116,7 @@ export default function Usuarios() {
   async function resetearPassword(user) {
     setResetting(p => ({ ...p, [user.id]: true }))
     try {
+      // Use Netlify Function which has service role key
       const res = await fetch('/.netlify/functions/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -100,12 +125,11 @@ export default function Usuarios() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Error al resetear')
 
-      if (data.tempPassword) {
-        // Update UI immediately
+      const newPassword = data.tempPassword
+      if (newPassword) {
+        // The Netlify Function already saved it to the DB, update UI
         setUsuarios(prev => prev.map(u =>
-          u.id === user.id
-            ? { ...u, ultima_password_temporal: data.tempPassword, password_generada_at: new Date().toISOString() }
-            : u
+          u.id === user.id ? { ...u, ultima_password_temporal: newPassword, password_generada_at: new Date().toISOString() } : u
         ))
         setPwVisible(p => ({ ...p, [user.id]: true }))
       } else {
@@ -118,13 +142,27 @@ export default function Usuarios() {
     }
   }
 
-  async function cambiarOficina(userId, oficinaId) {
-    await supabase.from('usuarios').update({ oficina_id: oficinaId || null }).eq('id', userId)
-    cargar()
+  async function borrarPassword(user) {
+    if (!confirm('¿Borrar la contraseña guardada?')) return
+    const token = await getToken()
+    await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${user.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ ultima_password_temporal: null, password_generada_at: null }),
+    })
+    setUsuarios(prev => prev.map(u =>
+      u.id === user.id ? { ...u, ultima_password_temporal: null, password_generada_at: null } : u
+    ))
   }
 
-  function copiarPassword(pw) {
-    navigator.clipboard.writeText(pw).catch(() => {})
+  async function cambiarOficina(userId, oficinaId) {
+    const token = await getToken()
+    await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${userId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}`, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ oficina_id: oficinaId || null }),
+    })
+    cargar()
   }
 
   const ROL_COLORS = { ADMIN: 'blue', OFICINA: 'orange', COMERCIAL: 'gray' }
@@ -167,31 +205,34 @@ export default function Usuarios() {
                       {oficinas.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
                     </select>
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="px-3 py-3 min-w-[200px]">
                     {u.ultima_password_temporal ? (
-                      <div>
-                        <div className="flex items-center gap-1">
-                          <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1 bg-gray-50 border rounded px-2 py-1">
+                          <span className="font-mono text-xs flex-1 select-all">
                             {pwVisible[u.id] ? u.ultima_password_temporal : '••••••••••'}
                           </span>
                           <button onClick={() => setPwVisible(p => ({ ...p, [u.id]: !p[u.id] }))}
                             className="p-0.5 rounded hover:bg-gray-200 text-gray-400" title={pwVisible[u.id] ? 'Ocultar' : 'Mostrar'}>
                             {pwVisible[u.id] ? <EyeOff size={12} /> : <Eye size={12} />}
                           </button>
-                          <button onClick={() => copiarPassword(u.ultima_password_temporal)}
+                          <button onClick={() => { navigator.clipboard.writeText(u.ultima_password_temporal) }}
                             className="p-0.5 rounded hover:bg-gray-200 text-gray-400" title="Copiar">
                             <Copy size={12} />
                           </button>
+                          <button onClick={() => borrarPassword(u)}
+                            className="p-0.5 rounded hover:bg-red-100 text-gray-400 hover:text-red-500" title="Borrar">
+                            <XIcon size={12} />
+                          </button>
                         </div>
                         {u.password_generada_at && (
-                          <p className="text-[10px] text-gray-400 mt-0.5">
-                            {new Date(u.password_generada_at).toLocaleDateString('es-ES')}{' '}
-                            {new Date(u.password_generada_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                          <p className="text-[10px] text-gray-400">
+                            {new Date(u.password_generada_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </p>
                         )}
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-300">—</span>
+                      <span className="text-xs text-gray-300 italic">Sin contraseña guardada</span>
                     )}
                   </td>
                   <td className="px-3 py-3">
@@ -204,7 +245,7 @@ export default function Usuarios() {
                         <RotateCcw size={14} className={resetting[u.id] ? 'animate-spin' : ''} />
                       </button>
                       <Button variant="ghost" className="text-xs" onClick={() => toggleActivo(u)}>
-                        {u.activo ? <><UserX size={14} /> Bloquear</> : <><UserCheck size={14} /> Activar</>}
+                        {u.activo ? <><UserX size={14} /></> : <><UserCheck size={14} /></>}
                       </Button>
                       <button onClick={() => eliminarUsuario(u)}
                         className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600" title="Eliminar">
@@ -234,7 +275,7 @@ export default function Usuarios() {
             </div>
           ) : (
             <Select label="Oficina *" value={form.oficina_id} onChange={e => setForm(f => ({ ...f, oficina_id: e.target.value }))}
-              options={[{ value: '', label: '— Seleccionar oficina —' }, ...oficinas.map(o => ({ value: o.id, label: o.nombre }))]} />
+              options={[{ value: '', label: '— Seleccionar —' }, ...oficinas.map(o => ({ value: o.id, label: o.nombre }))]} />
           ))}
           {form.rol === 'ADMIN' && (
             <Select label="Oficina (opcional)" value={form.oficina_id} onChange={e => setForm(f => ({ ...f, oficina_id: e.target.value }))}
