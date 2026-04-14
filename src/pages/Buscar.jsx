@@ -19,16 +19,7 @@ function esEstadoBloqueado(estado) {
   return ESTADOS_BLOQUEADOS.includes(estado.trim().toLowerCase())
 }
 
-async function querySupabase(path) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-    },
-  })
-  if (!res.ok) return []
-  return res.json()
-}
+// Search uses RPC buscar_clientes_admin directly
 
 export default function Buscar() {
   const { esAdmin, usuario } = useAuth()
@@ -51,50 +42,33 @@ export default function Buscar() {
     setResultados([])
 
     try {
-      // Normalize phone: strip +34 / 0034 / 34 prefix
+      // Normalize input
       let termino = raw
-      if (/^\+34/.test(termino)) termino = termino.slice(3)
+      termino = termino.replace(/^[Dd][Nn][Ii]\s*:?\s*/, '')
+      if (termino.startsWith('+34')) termino = termino.slice(3)
       else if (/^0034/.test(termino)) termino = termino.slice(4)
-      else if (/^34\d{9}$/.test(termino)) termino = termino.slice(2)
-      termino = termino.replace(/[\s\-().]/g, '')
+      else if (/^34[6789]/.test(termino) && termino.length >= 11) termino = termino.slice(2)
+      termino = termino.replace(/[\s\-().]/g, '').trim()
 
-      const t = encodeURIComponent(termino)
+      if (!termino || termino.length < 2) { setBuscando(false); return }
 
-      // Fast query: indexed fields (dni, cups, nombre)
-      let lista = await querySupabase(
-        `clientes?or=(dni.ilike.*${t}*,cups.ilike.*${t}*,nombre.ilike.*${t}*)&limit=20`
-      )
+      // Single RPC call — SQL handles indexed fields + datos_extra fallback
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/buscar_clientes_admin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+        },
+        body: JSON.stringify({ termino }),
+      })
 
-      // If no results and looks like a phone, search datos_extra text
-      if (lista.length === 0 && /^\d{6,}$/.test(termino)) {
-        // Search datos_extra cast as text — use textSearch approach
-        lista = await querySupabase(
-          `clientes?datos_extra->>telefono1=ilike.*${t}*&limit=20`
-        )
-        if (lista.length === 0) {
-          lista = await querySupabase(
-            `clientes?datos_extra->>Telefono1=ilike.*${t}*&limit=20`
-          )
-        }
-        if (lista.length === 0) {
-          lista = await querySupabase(
-            `clientes?datos_extra->>TELEFONO=ilike.*${t}*&limit=20`
-          )
-        }
-        if (lista.length === 0) {
-          // Fallback: try datos_extra as full text (slower but catches any field name)
-          lista = await querySupabase(
-            `clientes?datos_extra::text=ilike.*${t}*&limit=10`
-          )
-        }
-      }
-
-      // Also try original term if different from normalized
-      if (lista.length === 0 && termino !== raw.trim()) {
-        const t2 = encodeURIComponent(raw.trim())
-        lista = await querySupabase(
-          `clientes?or=(dni.ilike.*${t2}*,cups.ilike.*${t2}*,nombre.ilike.*${t2}*)&limit=20`
-        )
+      let lista = []
+      if (res.ok) {
+        lista = await res.json()
+        if (!Array.isArray(lista)) lista = []
+      } else {
+        console.error('Search error:', res.status, await res.text())
       }
 
       setResultados(lista)
