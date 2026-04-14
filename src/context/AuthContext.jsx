@@ -44,9 +44,9 @@ export function AuthProvider({ children }) {
         return
       }
 
-      // Verify IP for OFICINA and COMERCIAL roles via Netlify Function
+      // Verify IP for OFICINA and COMERCIAL roles
       if ((data.rol === 'OFICINA' || data.rol === 'COMERCIAL') && data.oficina) {
-        const ipAllowed = await verificarIP(userId)
+        const ipAllowed = await verificarIP(data.oficina)
         if (!ipAllowed) {
           setIpBloqueada(true)
           setUsuario(data)
@@ -63,17 +63,24 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function verificarIP(userId) {
+  async function verificarIP(oficina) {
     try {
-      const res = await fetch('/.netlify/functions/verify-ip', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId }),
-      })
-      const data = await res.json()
-      return data.allowed
+      // Collect all authorized IPs
+      const ipsPermitidas = new Set([
+        ...(oficina.ips_autorizadas || []),
+        ...(oficina.ip_autorizada ? [oficina.ip_autorizada] : []),
+      ])
+
+      // No IPs configured → allow access
+      if (ipsPermitidas.size === 0) return true
+
+      // Get current IP
+      const res = await fetch('https://api.ipify.org?format=json')
+      const { ip } = await res.json()
+
+      return ipsPermitidas.has(ip)
     } catch {
-      // If function is not available (local dev without netlify), allow access
+      // If can't determine IP → allow access
       return true
     }
   }

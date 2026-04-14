@@ -1,0 +1,1 @@
+ALTER TABLE oficinas ADD COLUMN IF NOT EXISTS ips_autorizadas TEXT[] DEFAULT NULL;
