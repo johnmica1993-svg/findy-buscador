@@ -8,6 +8,24 @@ function formatFecha(f) {
   return new Date(f).toLocaleDateString('es-ES')
 }
 
+function limpiarDisplay(val) {
+  if (!val) return null
+  let v = String(val)
+  v = v.replace(/<[^>]+>/g, ' ')
+  v = v.replace(/Persona\s+[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s\-]+$/i, '')
+  v = v.replace(/^(NIF|NIE|DNI|CIF)\s*:?\s*/i, '')
+  v = v.replace(/\.0$/, '')
+  return v.trim() || null
+}
+
+function limpiarTelDisplay(val) {
+  if (!val) return null
+  let v = String(val).replace(/\.0$/, '').trim()
+  if (v.startsWith('+34')) v = v.slice(3)
+  else if (/^34[6789]/.test(v) && v.length >= 11) v = v.slice(2)
+  return v || null
+}
+
 const CAMPANA_LABELS = {
   ENDESA: 'Endesa',
   FACTOR_ENERGIA: 'Factor Energía',
@@ -99,8 +117,8 @@ export default function FichaTramitabilidad({ cliente }) {
     for (const [key, val] of Object.entries(extras)) {
       const kl = key.toLowerCase().replace(/\s/g, '')
       if (kl.includes('tel') || kl.includes('tlfn') || kl.includes('mov') || kl.includes('phone')) {
-        const num = String(val || '').replace(/\.0$/, '').trim()
-        if (num && num !== '0' && num !== 'null' && num.length > 3) {
+        const num = limpiarTelDisplay(val)
+        if (num && num !== '0' && num.length > 3) {
           telefonos.push({ campo: key, numero: num })
         }
       }
@@ -143,8 +161,8 @@ export default function FichaTramitabilidad({ cliente }) {
         <h4 className="text-sm font-semibold text-gray-700 mb-4">Datos principales</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Dato icon={Hash} label="CUPS" value={cliente.cups} />
-          <Dato icon={FileText} label="DNI / NIF" value={cliente.dni} />
-          <Dato icon={User} label="Nombre completo" value={nombreCompleto} />
+          <Dato icon={FileText} label="DNI / NIF" value={limpiarDisplay(cliente.dni)} />
+          <Dato icon={User} label="Nombre completo" value={limpiarDisplay(nombreCompleto)} />
         </div>
       </Card>
 

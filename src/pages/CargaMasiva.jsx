@@ -103,6 +103,25 @@ function str(v) {
   return s || null
 }
 
+function limpiarCampo(val) {
+  if (val === null || val === undefined) return null
+  let v = String(val).trim()
+  v = v.replace(/<[^>]+>/g, ' ')
+  v = v.replace(/Persona\s+[A-Za-záéíóúÁÉÍÓÚüÜñÑ\s\-]+$/i, '')
+  v = v.replace(/^(NIF|NIE|DNI|CIF)\s*:?\s*/i, '')
+  v = v.replace(/\.0$/, '')
+  return v.trim() || null
+}
+
+function limpiarTelefono(val) {
+  if (!val) return null
+  let v = String(val).replace(/\.0$/, '').trim()
+  if (v.startsWith('+34')) v = v.slice(3)
+  else if (/^34[6789]/.test(v) && v.length >= 11) v = v.slice(2)
+  v = v.replace(/[\s\-().]/g, '')
+  return v || null
+}
+
 function formatSize(bytes) {
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
@@ -153,14 +172,19 @@ export default function CargaMasiva() {
       for (const [header, campo] of Object.entries(mapeoLocal)) {
         if (campo === '[ignorar]') continue
         const raw = row[header]
-        const val = str(raw)
         if (CAMPOS_BD.has(campo)) {
           if (campo === 'dni') reg.dni = limpiarDni(raw)
           else if (campo.startsWith('fecha')) reg[campo] = parseFecha(raw)
-          else if (campo === 'campana') reg.campana = val ? val.toUpperCase().replace('Ñ', 'N') : null
-          else reg[campo] = val
+          else if (campo === 'campana') { const v = limpiarCampo(raw); reg.campana = v ? v.toUpperCase().replace('Ñ', 'N') : null }
+          else if (campo === 'nombre') reg[campo] = limpiarCampo(raw)
+          else if (campo === 'direccion') reg[campo] = limpiarCampo(raw)
+          else reg[campo] = str(raw)
         } else {
-          if (val) reg.datos_extra[campo] = val
+          // datos_extra: clean phones, clean other fields
+          const campoLow = campo.toLowerCase().replace(/\s/g, '')
+          const isTel = campoLow.includes('tel') || campoLow.includes('tlfn') || campoLow.includes('mov') || campoLow.includes('phone')
+          const cleaned = isTel ? limpiarTelefono(raw) : limpiarCampo(raw)
+          if (cleaned) reg.datos_extra[campo] = cleaned
         }
       }
       const ap1 = reg.datos_extra.Apellido1
