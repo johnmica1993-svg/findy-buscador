@@ -662,27 +662,44 @@ export default function CargaMasiva() {
               </div>
             </div>
 
-            {/* Expandable: Detalle actualizados */}
+            {/* Expandable: Detalle actualizados con ANTES/DESPUÉS */}
             {expandActualizados && informe.detalle_actualizados?.length > 0 && (
               <div className="mb-4 border border-blue-200 rounded-lg overflow-hidden">
-                <table className="w-full text-xs">
-                  <thead className="bg-blue-50">
-                    <tr>
-                      <th className="text-left p-2 font-medium text-blue-700">CUPS</th>
-                      <th className="text-left p-2 font-medium text-blue-700">Campos actualizados</th>
-                    </tr>
-                  </thead>
-                  <tbody className="max-h-48 overflow-y-auto">
-                    {informe.detalle_actualizados.map((item, i) => (
-                      <tr key={i} className="border-t border-blue-100 hover:bg-blue-50">
-                        <td className="p-2 font-mono text-gray-700">{item.cups}</td>
-                        <td className="p-2 text-gray-600">{item.cambios || 'datos_extra'}</td>
+                <div className="max-h-64 overflow-y-auto">
+                  <table className="w-full text-xs">
+                    <thead className="bg-blue-50 sticky top-0">
+                      <tr>
+                        <th className="text-left p-2 font-semibold text-blue-700">CUPS</th>
+                        <th className="text-left p-2 font-semibold text-blue-700">Campo</th>
+                        <th className="text-left p-2 font-semibold text-red-500">Antes</th>
+                        <th className="text-left p-2 font-semibold text-green-600">Después</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {informe.detalle_actualizados.map((item, i) => {
+                        const campos = Object.entries(item.diff || {})
+                        if (campos.length === 0) {
+                          return (
+                            <tr key={i} className="border-t hover:bg-gray-50">
+                              <td className="p-2 font-mono text-gray-700">{item.cups}</td>
+                              <td className="p-2 text-gray-400" colSpan={3}>datos_extra actualizado</td>
+                            </tr>
+                          )
+                        }
+                        return campos.map(([campo, val], j) => (
+                          <tr key={`${i}-${j}`} className="border-t hover:bg-gray-50">
+                            {j === 0 && <td className="p-2 font-mono text-gray-700" rowSpan={campos.length}>{item.cups}</td>}
+                            <td className="p-2 font-semibold capitalize text-gray-600">{campo}</td>
+                            <td className="p-2 text-red-500 line-through">{val.antes || <span className="text-gray-300 no-underline">(vacío)</span>}</td>
+                            <td className="p-2 text-green-600 font-semibold">{val.despues || <span className="text-gray-300">(vacío)</span>}</td>
+                          </tr>
+                        ))
+                      })}
+                    </tbody>
+                  </table>
+                </div>
                 {stats.actualizados > informe.detalle_actualizados.length && (
-                  <p className="text-xs text-gray-400 p-2 bg-blue-50">...y {stats.actualizados - informe.detalle_actualizados.length} más</p>
+                  <p className="text-xs text-gray-400 p-2 border-t bg-blue-50">...y {stats.actualizados - informe.detalle_actualizados.length} más (descarga el CSV para ver todos)</p>
                 )}
               </div>
             )}
@@ -756,9 +773,13 @@ export default function CargaMasiva() {
                 <button
                   onClick={() => {
                     const filas = [
-                      'CUPS,TIPO,CAMBIOS',
-                      ...(informe.detalle_actualizados || []).map(d => `${d.cups},ACTUALIZADO,${d.cambios || 'datos_extra'}`),
-                      ...(informe.cups_duplicados_internos || []).map(d => `${d.cups},DUPLICADO_INTERNO,${d.veces}x`),
+                      'CUPS,TIPO,CAMPO,ANTES,DESPUES',
+                      ...(informe.detalle_actualizados || []).flatMap(d => {
+                        const campos = Object.entries(d.diff || {})
+                        if (campos.length === 0) return [`${d.cups},ACTUALIZADO,datos_extra,,`]
+                        return campos.map(([campo, val]) => `${d.cups},ACTUALIZADO,${campo},${val.antes || ''},${val.despues || ''}`)
+                      }),
+                      ...(informe.cups_duplicados_internos || []).map(d => `${d.cups},DUPLICADO_INTERNO,,${d.veces}x,`),
                     ]
                     const blob = new Blob([filas.join('\n')], { type: 'text/csv' })
                     const url = URL.createObjectURL(blob)
