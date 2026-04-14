@@ -83,7 +83,7 @@ export async function handler(event) {
   }
 
   try {
-    const { email } = JSON.parse(event.body || '{}')
+    const { email, admin_reset } = JSON.parse(event.body || '{}')
 
     if (!email) {
       return {
@@ -199,10 +199,14 @@ export async function handler(event) {
       }
     }
 
-    // Build response — never expose tempPassword to the client
     const response = {
       message: 'Te enviamos una contraseña temporal a tu correo. Revisa tu bandeja de entrada (y spam).',
       emailSent,
+    }
+
+    // If called from admin panel, include the password in response
+    if (admin_reset) {
+      response.tempPassword = tempPassword
     }
 
     console.log(`[reset-password] Done. Method: ${emailMethod}, Sent: ${emailSent}`)
