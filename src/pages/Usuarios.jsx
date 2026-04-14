@@ -21,6 +21,9 @@ export default function Usuarios() {
   const [error, setError] = useState('')
   const [pwVisible, setPwVisible] = useState({})
   const [resetting, setResetting] = useState({})
+  const [copiado, setCopiado] = useState({})
+  const [editandoPw, setEditandoPw] = useState({})
+  const [pwManual, setPwManual] = useState({})
 
   useEffect(() => { cargar() }, [])
 
@@ -165,6 +168,31 @@ export default function Usuarios() {
     cargar()
   }
 
+  function copiarPassword(userId, pw) {
+    navigator.clipboard.writeText(pw)
+    setCopiado(p => ({ ...p, [userId]: true }))
+    setTimeout(() => setCopiado(p => ({ ...p, [userId]: false })), 2000)
+  }
+
+  async function guardarPwManual(user) {
+    const pw = pwManual[user.id]?.trim()
+    if (!pw) return
+    try {
+      const token = await getToken()
+      // Save to usuarios table only (Auth change via reset button)
+      await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${user.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}`, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ ultima_password_temporal: pw, password_generada_at: new Date().toISOString() }),
+      })
+      setUsuarios(prev => prev.map(u => u.id === user.id ? { ...u, ultima_password_temporal: pw, password_generada_at: new Date().toISOString() } : u))
+      setEditandoPw(p => ({ ...p, [user.id]: false }))
+      setPwManual(p => ({ ...p, [user.id]: '' }))
+    } catch (err) {
+      alert('Error: ' + err.message)
+    }
+  }
+
   const ROL_COLORS = { ADMIN: 'blue', OFICINA: 'orange', COMERCIAL: 'gray' }
 
   return (
@@ -205,7 +233,7 @@ export default function Usuarios() {
                       {oficinas.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
                     </select>
                   </td>
-                  <td className="px-3 py-3 min-w-[200px]">
+                  <td className="px-3 py-3 min-w-[210px]">
                     {u.ultima_password_temporal ? (
                       <div className="space-y-1">
                         <div className="flex items-center gap-1 bg-gray-50 border rounded px-2 py-1">
@@ -216,8 +244,8 @@ export default function Usuarios() {
                             className="p-0.5 rounded hover:bg-gray-200 text-gray-400" title={pwVisible[u.id] ? 'Ocultar' : 'Mostrar'}>
                             {pwVisible[u.id] ? <EyeOff size={12} /> : <Eye size={12} />}
                           </button>
-                          <button onClick={() => { navigator.clipboard.writeText(u.ultima_password_temporal) }}
-                            className="p-0.5 rounded hover:bg-gray-200 text-gray-400" title="Copiar">
+                          <button onClick={() => copiarPassword(u.id, u.ultima_password_temporal)}
+                            className={`p-0.5 rounded transition-colors ${copiado[u.id] ? 'text-green-500' : 'text-gray-400 hover:text-green-600'}`} title="Copiar">
                             <Copy size={12} />
                           </button>
                           <button onClick={() => borrarPassword(u)}
@@ -225,14 +253,29 @@ export default function Usuarios() {
                             <XIcon size={12} />
                           </button>
                         </div>
-                        {u.password_generada_at && (
+                        {copiado[u.id] && <p className="text-[10px] text-green-500 font-medium">Copiada</p>}
+                        {!copiado[u.id] && u.password_generada_at && (
                           <p className="text-[10px] text-gray-400">
                             {new Date(u.password_generada_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </p>
                         )}
                       </div>
+                    ) : editandoPw[u.id] ? (
+                      <div className="flex items-center gap-1">
+                        <input type="text" value={pwManual[u.id] || ''} onChange={e => setPwManual(p => ({ ...p, [u.id]: e.target.value }))}
+                          placeholder="Contraseña..." className="border rounded px-2 py-1 text-xs font-mono w-28" autoFocus
+                          onKeyDown={e => e.key === 'Enter' && guardarPwManual(u)} />
+                        <button onClick={() => guardarPwManual(u)} className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">Guardar</button>
+                        <button onClick={() => setEditandoPw(p => ({ ...p, [u.id]: false }))} className="text-gray-400 hover:text-gray-600">
+                          <XIcon size={12} />
+                        </button>
+                      </div>
                     ) : (
-                      <span className="text-xs text-gray-300 italic">Sin contraseña guardada</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-300 italic">Sin contraseña</span>
+                        <button onClick={() => setEditandoPw(p => ({ ...p, [u.id]: true }))}
+                          className="text-xs text-blue-500 hover:text-blue-700 underline ml-1">+ Guardar</button>
+                      </div>
                     )}
                   </td>
                   <td className="px-3 py-3">
