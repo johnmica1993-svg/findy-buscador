@@ -98,6 +98,22 @@ export function AuthProvider({ children }) {
 
     setIpBloqueadaInfo({ ip, ciudad, pais })
 
+    // Save to alertas_admin for real-time notifications
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/alertas_admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          tipo: 'ip_bloqueada',
+          usuario_id: userData.id,
+          usuario_nombre: userData.nombre,
+          usuario_email: userData.email,
+          oficina: userData.oficina?.nombre || null,
+          ip, ciudad, pais,
+        }),
+      })
+    } catch {}
+
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/intentos_acceso_bloqueado`, {
         method: 'POST',
