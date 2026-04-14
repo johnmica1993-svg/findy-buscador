@@ -222,6 +222,9 @@ export default function CargaMasiva() {
     }
 
     const mapearRegistro = crearMapearRegistro(mapeoLocal)
+    console.log(`[procesarUnArchivo] ${file.name}: ${totalFilas} filas, ${colHeaders.length} cols`)
+    console.log(`[procesarUnArchivo] Headers:`, colHeaders)
+    console.log(`[procesarUnArchivo] Mapeo:`, JSON.stringify(mapeoLocal).slice(0, 500))
     let insertados = 0, actualizados = 0, errores = 0
     const detalleActualizados = []
     const cupsDuplicadosInternos = []
@@ -260,6 +263,9 @@ export default function CargaMasiva() {
         }
       }
 
+      if (chunkIdx === 0 && batch.length > 0) {
+        console.log(`[procesarUnArchivo] Primer registro mapeado:`, JSON.stringify(batch[0]))
+      }
       console.log(`[Chunk ${chunkIdx}] rows ${rowStart}-${rowEnd}: ${batch.length} registros en batch`)
 
       if (batch.length > 0) {
