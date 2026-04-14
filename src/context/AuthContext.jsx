@@ -67,21 +67,19 @@ export function AuthProvider({ children }) {
       }
       data.oficina = oficina
 
-      // Verify IP for non-admin roles (with timeout)
-      if ((data.rol === 'OFICINA' || data.rol === 'COMERCIAL') && oficina) {
-        try {
-          const result = await verificarIP(oficina)
-          if (!result.allowed) {
-            try { await registrarIntentoBloqueado(data, result.ip) } catch {}
-            setIpBloqueada(true)
-            setUsuario(data)
-            setLoading(false)
-            return
-          }
-        } catch {
-          // If IP check fails, allow access
-        }
-      }
+      // TEMPORALMENTE DESACTIVADO — problema de recursos Supabase
+      // if ((data.rol === 'OFICINA' || data.rol === 'COMERCIAL') && oficina) {
+      //   try {
+      //     const result = await verificarIP(oficina)
+      //     if (!result.allowed) {
+      //       try { await registrarIntentoBloqueado(data, result.ip) } catch {}
+      //       setIpBloqueada(true)
+      //       setUsuario(data)
+      //       setLoading(false)
+      //       return
+      //     }
+      //   } catch {}
+      // }
 
       setUsuario(data)
     } catch (err) {
