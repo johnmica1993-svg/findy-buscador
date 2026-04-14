@@ -92,7 +92,6 @@ export default function Oficinas() {
           },
           body: JSON.stringify({
             ips_autorizadas: ips.length > 0 ? ips : null,
-            ip_autorizada: ips[0] || null,
           }),
         }
       )
@@ -103,7 +102,7 @@ export default function Oficinas() {
         alert('Error al guardar: ' + err)
       } else {
         setOficinas(prev => prev.map(o =>
-          o.id === modalIP.id ? { ...o, ips_autorizadas: ips.length > 0 ? ips : null, ip_autorizada: ips[0] || null } : o
+          o.id === modalIP.id ? { ...o, ips_autorizadas: ips.length > 0 ? ips : null } : o
         ))
         setModalIP(null)
       }
