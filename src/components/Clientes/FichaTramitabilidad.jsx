@@ -91,11 +91,33 @@ export default function FichaTramitabilidad({ cliente }) {
   const iban = get('iban', 'cuenta_bancaria', 'IBAN', 'Iban', 'Cuenta Bancaria', 'CUENTA BANCARIA')
 
   const ciudad = get('ciudad', 'Ciudad', 'CIUDAD')
-
   const codigoPostal = get('codigo_postal', 'cp', 'CP', 'Código Postal', 'CODIGO POSTAL', 'codigo postal')
 
+  // Flexible phone extraction from datos_extra
+  const telefonos = []
+  if (extras) {
+    for (const [key, val] of Object.entries(extras)) {
+      const kl = key.toLowerCase().replace(/\s/g, '')
+      if (kl.includes('tel') || kl.includes('tlfn') || kl.includes('mov') || kl.includes('phone')) {
+        const num = String(val || '').replace(/\.0$/, '').trim()
+        if (num && num !== '0' && num !== 'null' && num.length > 3) {
+          telefonos.push({ campo: key, numero: num })
+        }
+      }
+    }
+  }
+  // Merge with explicitly found phones
+  if (telefono1 && !telefonos.some(t => t.numero === telefono1)) telefonos.unshift({ campo: 'Teléfono 1', numero: telefono1 })
+  if (telefono2 && !telefonos.some(t => t.numero === telefono2)) telefonos.push({ campo: 'Teléfono 2', numero: telefono2 })
+  if (telefono3 && !telefonos.some(t => t.numero === telefono3)) telefonos.push({ campo: 'Teléfono 3', numero: telefono3 })
+
+  // Flexible location from datos_extra
+  const poblacion = get('municipio', 'Municipio', 'MUNICIPIO', 'poblacion', 'Poblacion', 'POBLACION', 'localidad', 'Localidad', 'LOCALIDAD')
+  const provincia = get('provincia', 'Provincia', 'PROVINCIA')
+
   // Extra fields not already shown
-  const extrasRestantes = Object.entries(extras).filter(([key]) => !KEYS_MOSTRADAS.has(key))
+  const telefonoKeys = new Set(telefonos.map(t => t.campo))
+  const extrasRestantes = Object.entries(extras).filter(([key]) => !KEYS_MOSTRADAS.has(key) && !telefonoKeys.has(key))
 
   return (
     <div className="space-y-4">
@@ -130,9 +152,13 @@ export default function FichaTramitabilidad({ cliente }) {
       <Card className="p-5">
         <h4 className="text-sm font-semibold text-gray-700 mb-4">Contacto</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Dato icon={Phone} label="Teléfono 1" value={telefono1} />
-          <Dato icon={Phone} label="Teléfono 2" value={telefono2} />
-          {telefono3 && <Dato icon={Phone} label="Teléfono 3" value={telefono3} />}
+          {telefonos.length > 0 ? (
+            telefonos.map((t, i) => (
+              <Dato key={i} icon={Phone} label={t.campo} value={t.numero} />
+            ))
+          ) : (
+            <Dato icon={Phone} label="Teléfono" value={null} />
+          )}
           <Dato icon={Mail} label="Correo electrónico" value={correo} />
           <Dato icon={CreditCard} label="IBAN" value={iban} />
         </div>
@@ -143,8 +169,9 @@ export default function FichaTramitabilidad({ cliente }) {
         <h4 className="text-sm font-semibold text-gray-700 mb-4">Dirección</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Dato icon={MapPin} label="Dirección" value={cliente.direccion} className="sm:col-span-2 lg:col-span-2" />
-          <Dato icon={Building} label="Ciudad" value={ciudad} />
+          <Dato icon={Building} label={poblacion ? 'Municipio' : 'Ciudad'} value={poblacion || ciudad} />
           <Dato icon={MapPin} label="Código postal" value={codigoPostal} />
+          {provincia && <Dato icon={MapPin} label="Provincia" value={provincia} />}
         </div>
       </Card>
 

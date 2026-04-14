@@ -168,10 +168,14 @@ export default function Buscar() {
                 className="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-50 transition-colors text-left"
               >
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{c.nombre || 'Sin nombre'}</p>
-                  <p className="text-xs text-gray-500">CUPS: {c.cups} · DNI: {c.dni || '—'}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {c.nombre || c.datos_extra?.TITULAR || c.datos_extra?.Titular || 'Sin nombre'}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    DNI: {c.dni || '—'} · CUPS: {c.cups || '—'}
+                  </p>
                 </div>
-                <span className="text-xs text-gray-400">{c.campana}</span>
+                <span className="text-xs text-gray-400">{c.estado || c.campana || ''}</span>
               </button>
             ))}
           </div>
