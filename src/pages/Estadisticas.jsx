@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { BarChart3, Users, Search, CheckCircle, XCircle, Filter } from 'lucide-react'
+import { BarChart3, Users, Search, CheckCircle, XCircle, Filter, ShieldAlert } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 import Card from '../components/UI/Card'
 import Button from '../components/UI/Button'
 import Input from '../components/UI/Input'
@@ -9,8 +10,9 @@ export default function Estadisticas() {
   const [loading, setLoading] = useState(true)
   const [filtroFecha, setFiltroFecha] = useState('')
   const [filtroUsuario, setFiltroUsuario] = useState('')
+  const [intentosBloqueados, setIntentosBloqueados] = useState([])
 
-  useEffect(() => { cargar() }, [])
+  useEffect(() => { cargar(); cargarIntentos() }, [])
 
   async function cargar(fecha, usuarioId) {
     setLoading(true)
@@ -30,6 +32,17 @@ export default function Estadisticas() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function cargarIntentos() {
+    try {
+      const { data } = await supabase
+        .from('intentos_acceso_bloqueado')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50)
+      setIntentosBloqueados(data || [])
+    } catch {}
   }
 
   function aplicarFiltros() {
@@ -195,6 +208,45 @@ export default function Estadisticas() {
           </table>
         </div>
       </Card>
+
+      {/* Intentos de acceso bloqueados */}
+      {intentosBloqueados.length > 0 && (
+        <Card className="overflow-hidden mt-6">
+          <div className="p-4 bg-red-50 border-b border-red-200">
+            <h3 className="text-sm font-semibold text-red-800 flex items-center gap-2">
+              <ShieldAlert size={16} /> Intentos de acceso bloqueados ({intentosBloqueados.length})
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="text-left px-4 py-2 font-medium text-gray-600">Fecha</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-600">Usuario</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-600">Email</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-600">Oficina</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-600">IP</th>
+                  <th className="text-left px-4 py-2 font-medium text-gray-600">Ubicación</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {intentosBloqueados.map(i => (
+                  <tr key={i.id} className="hover:bg-red-50">
+                    <td className="px-4 py-2 text-xs text-gray-500 whitespace-nowrap">
+                      {i.created_at ? new Date(i.created_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                    </td>
+                    <td className="px-4 py-2 font-medium text-gray-700">{i.usuario_nombre || '—'}</td>
+                    <td className="px-4 py-2 text-xs text-gray-600">{i.usuario_email || '—'}</td>
+                    <td className="px-4 py-2 text-xs text-gray-500">{i.oficina || '—'}</td>
+                    <td className="px-4 py-2 font-mono text-xs text-red-600 font-bold">{i.ip_intentada}</td>
+                    <td className="px-4 py-2 text-xs text-gray-500">{i.ciudad}, {i.pais}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </div>
   )
 }
