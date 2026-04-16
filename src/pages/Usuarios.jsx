@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, UserCheck, UserX, Trash2, AlertTriangle, Eye, EyeOff, RotateCcw, Copy, X as XIcon } from 'lucide-react'
+import { Plus, UserCheck, UserX, Trash2, AlertTriangle, Eye, EyeOff, RotateCcw, Copy, X as XIcon, Download } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import { supabase } from '../lib/supabase'
 import Card from '../components/UI/Card'
 import Badge from '../components/UI/Badge'
@@ -204,9 +205,28 @@ export default function Usuarios() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Usuarios</h2>
-        <Button onClick={() => { setError(''); setModalCrear(true) }}>
-          <Plus size={16} /> Nuevo Usuario
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => {
+            const rows = usuarios.map(u => ({
+              Nombre: u.nombre,
+              Email: u.email,
+              Rol: u.rol,
+              Oficina: u.oficina?.nombre || '—',
+              Estado: u.activo ? 'Activo' : 'Inactivo',
+              Contraseña: u.ultima_password_temporal || '',
+            })).sort((a, b) => a.Oficina.localeCompare(b.Oficina))
+            const ws = XLSX.utils.json_to_sheet(rows)
+            ws['!cols'] = [{ wch: 20 }, { wch: 35 }, { wch: 12 }, { wch: 18 }, { wch: 10 }, { wch: 15 }]
+            const wb = XLSX.utils.book_new()
+            XLSX.utils.book_append_sheet(wb, ws, 'Usuarios')
+            XLSX.writeFile(wb, `usuarios_findy_${new Date().toISOString().slice(0, 10)}.xlsx`)
+          }}>
+            <Download size={16} /> Exportar Excel
+          </Button>
+          <Button onClick={() => { setError(''); setModalCrear(true) }}>
+            <Plus size={16} /> Nuevo Usuario
+          </Button>
+        </div>
       </div>
 
       <Card className="overflow-hidden">
