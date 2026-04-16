@@ -36,12 +36,16 @@ export default function Dashboard() {
       const SUPA_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token || SUPA_KEY
-      const h = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${token}`, 'Prefer': 'count=exact' }
+      const h = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${token}` }
 
-      // Count total (HEAD request with count)
-      const totalRes = await fetch(`${SUPA_URL}/rest/v1/clientes?select=id&limit=0`, { headers: h })
-      const totalMatch = totalRes.headers.get('content-range')?.match(/\/(\d+)/)
-      const total = totalMatch ? parseInt(totalMatch[1]) : 0
+      // Count total via RPC (instant, uses pg_class estimate)
+      let total = 0
+      try {
+        const countRes = await fetch(`${SUPA_URL}/rest/v1/rpc/contar_clientes`, {
+          method: 'POST', headers: { ...h, 'Content-Type': 'application/json' }, body: '{}'
+        })
+        if (countRes.ok) total = await countRes.json()
+      } catch {}
 
       // Count by estado
       const hoy = new Date()

@@ -20,16 +20,20 @@ export async function handler(event) {
       { auth: { autoRefreshToken: false, persistSession: false } },
     )
 
-    // Total clientes — use REST API with service role to avoid timeout
+    // Total clientes — use pg_class estimate (instant, no full scan)
     let totalClientes = 0
     try {
       const countRes = await fetch(
-        `${process.env.VITE_SUPABASE_URL}/rest/v1/clientes?select=id&limit=0`,
-        { headers: { 'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`, 'Prefer': 'count=exact' } }
+        `${process.env.VITE_SUPABASE_URL}/rest/v1/rpc/contar_clientes`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` },
+          body: '{}'
+        }
       )
-      const range = countRes.headers.get('content-range')
-      const m = range?.match(/\/(\d+)/)
-      totalClientes = m ? parseInt(m[1]) : 0
+      if (countRes.ok) {
+        totalClientes = await countRes.json()
+      }
     } catch {}
 
     // All logs
