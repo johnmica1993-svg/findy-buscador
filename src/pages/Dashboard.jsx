@@ -32,56 +32,35 @@ export default function Dashboard() {
 
   async function cargarEstadisticas() {
     try {
-      const { data: clientes, error } = await supabase
-        .from('clientes')
-        .select('*')
+      const SUPA_URL = import.meta.env.VITE_SUPABASE_URL
+      const SUPA_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+      const h = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Prefer': 'count=exact' }
 
-      if (error) throw error
+      // Count total (HEAD request with count)
+      const totalRes = await fetch(`${SUPA_URL}/rest/v1/clientes?select=id&limit=0`, { headers: h })
+      const totalMatch = totalRes.headers.get('content-range')?.match(/\/(\d+)/)
+      const total = totalMatch ? parseInt(totalMatch[1]) : 0
 
-      const total = clientes.length
-      let tramitables = 0
-      let noTramitables = 0
-      let sinDatos = 0
-      let proximos = 0
-      const porCampana = { ENDESA: 0, FACTOR_ENERGIA: 0, NATURGY_RADEN: 0, OTRO: 0 }
-
+      // Count by estado
       const hoy = new Date()
-      const inicioSemana = startOfWeek(hoy, { weekStartsOn: 1 })
-      let cargadosEstaSemana = 0
+      const inicioSemana = startOfWeek(hoy, { weekStartsOn: 1 }).toISOString()
 
-      clientes.forEach(c => {
-        const t = calcularTramitabilidad(c)
-        if (t.tramitable === true) tramitables++
-        else if (t.tramitable === false) noTramitables++
-        else sinDatos++
+      // Count this week
+      const semanaRes = await fetch(`${SUPA_URL}/rest/v1/clientes?select=id&limit=0&created_at=gte.${inicioSemana}`, { headers: h })
+      const semanaMatch = semanaRes.headers.get('content-range')?.match(/\/(\d+)/)
+      const cargadosEstaSemana = semanaMatch ? parseInt(semanaMatch[1]) : 0
 
-        if (esTramitableProximamente(c, 7)) proximos++
-
-        if (c.campana && porCampana[c.campana] !== undefined) {
-          porCampana[c.campana]++
-        }
-
-        if (c.created_at && isAfter(new Date(c.created_at), inicioSemana)) {
-          cargadosEstaSemana++
-        }
+      setStats({
+        total,
+        tramitables: 0,
+        noTramitables: 0,
+        sinDatos: total,
+        proximos: 0,
+        porCampana: { ENDESA: 0, FACTOR_ENERGIA: 0, NATURGY_RADEN: 0, OTRO: 0 },
+        cargadosEstaSemana,
       })
 
-      setStats({ total, tramitables, noTramitables, sinDatos, proximos, porCampana, cargadosEstaSemana })
-
-      const semanas = []
-      for (let i = 7; i >= 0; i--) {
-        const inicio = startOfWeek(subWeeks(hoy, i), { weekStartsOn: 1 })
-        const fin = startOfWeek(subWeeks(hoy, i - 1), { weekStartsOn: 1 })
-        const count = clientes.filter(c => {
-          const d = new Date(c.created_at)
-          return d >= inicio && d < fin
-        }).length
-        semanas.push({
-          semana: format(inicio, 'dd MMM', { locale: es }),
-          clientes: count,
-        })
-      }
-      setChartData(semanas)
+      setChartData([])
     } catch (err) {
       console.error('Error cargando stats:', err)
     } finally {

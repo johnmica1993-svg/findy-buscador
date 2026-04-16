@@ -20,10 +20,17 @@ export async function handler(event) {
       { auth: { autoRefreshToken: false, persistSession: false } },
     )
 
-    // Total clientes
-    const { count: totalClientes } = await supabase
-      .from('clientes')
-      .select('id', { count: 'exact', head: true })
+    // Total clientes — use REST API with service role to avoid timeout
+    let totalClientes = 0
+    try {
+      const countRes = await fetch(
+        `${process.env.VITE_SUPABASE_URL}/rest/v1/clientes?select=id&limit=0`,
+        { headers: { 'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`, 'Prefer': 'count=exact' } }
+      )
+      const range = countRes.headers.get('content-range')
+      const m = range?.match(/\/(\d+)/)
+      totalClientes = m ? parseInt(m[1]) : 0
+    } catch {}
 
     // All logs
     let logsQuery = supabase

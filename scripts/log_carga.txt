@@ -1,0 +1,1489 @@
+/Users/john/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+/Users/john/Library/Python/3.9/lib/python/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed
+  warn(msg)
+/Users/john/Library/Python/3.9/lib/python/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed
+  warn(msg)
+/Users/john/Library/Python/3.9/lib/python/site-packages/openpyxl/worksheet/_reader.py:313: UserWarning: Failed to load a conditional formatting rule. It will be discarded. Cause: expected <class 'openpyxl.worksheet.cell_range.MultiCellRange'>
+  warn(msg)
+/Users/john/Library/Python/3.9/lib/python/site-packages/openpyxl/worksheet/_reader.py:313: UserWarning: Failed to load a conditional formatting rule. It will be discarded. Cause: expected <class 'openpyxl.worksheet.cell_range.MultiCellRange'>
+  warn(msg)
+============================================================
+FINDY — Procesador Rápido (8 threads)
+============================================================
+
+📂 2059 archivos Excel encontrados
+
+⚙️  Leyendo con 8 threads en paralelo...
+  ✓ BASE COSMOS PRUEBA 1000 CLIENTES OFI 736 17-09-24 PARTE 1.xlsx: 928 registros
+  ✓ ALUMBRA ENERGIA 22-10-25 300 CLIENTES CUENTAS 22-10-25 PARTE 9.xlsx: 379 registros
+  ✓ REPSOL OFI EXTERNO 10K PARTE 3 08-10-24.xlsx: 9,999 registros
+  ✓ REPSOL OFI 365 10K PARTE 2 08-10-24.xlsx: 9,999 registros
+  ✓ REPSOL OFI 736 10K PARTE 1 08-10-24.xlsx: 9,999 registros
+  ✓ 50KJORGEH.xlsx: 25,878 registros
+  ✓ 106K ENERGIA DUAL CON CUENTA.xlsx: 50,000 registros
+  ✓ BBDD COLOMBI PARTE 3 20K 06-12-23.xlsx: 20,000 registros
+  ✓ BBDD COLOMBI PARTE 4 20K 06-12-23.xlsx: 20,000 registros
+  ✓ JESUS LIMA 10K 07-01-25 PARTE 3.xlsx: 9,999 registros
+  ✓ 113.000 K 15 - OCT.xlsx: 50,000 registros
+  ✓ 100k luz y gas.xlsx: 49,999 registros
+  ✓ BBDD COLOMBI PARTE 5 20K 06-12-23.xlsx: 20,000 registros
+  ✓ JESUS LIMA 10K 07-01-25 PARTE 4.xlsx: 9,999 registros
+  ✓ Cartera.xlsx: 37,925 registros
+  ✓ JESUS LIMA 10K 07-01-25 PARTE 5.xlsx: 9,999 registros
+  ✓ JESUS LIMA 10K 07-01-25 PARTE 6.xlsx: 9,999 registros
+  ✓ JESUS LIMA 7K 07-01-25 PARTE 1.xlsx: 7,386 registros
+  ✓ JESUS LIMA 7K 07-01-25 PARTE 2.xlsx: 6,999 registros
+  ✓ muestra 1 energia.xlsx: 99 registros
+  ✓ 114k 15 OCT.xlsx: 50,000 registros
+  ✓ JESUS LIMA 10K 07-01-25 PARTE 7.xlsx: 15,763 registros
+  ✓ NATURGY IBERDROLA enrgia cusp iban 14K.xlsx: 14,385 registros
+  ✓ BBDD ANGEL 30K PARTE 1 14-06-24.xlsx: 29,999 registros
+  ✓ BBDD ANGEL 30K PARTE 2 14-06-24.xlsx: 29,999 registros
+  ✓ BASE COMPLETA JHON 200k (002).xlsx: 50,000 registros
+  ✓ BBDD ANGEL 30K PARTE 3 14-06-24.xlsx: 29,999 registros
+  ✓ BBDD ANGEL 30K PARTE 4 14-06-24.xlsx: 29,999 registros
+  ✓ BBDD ANGEL 30K PARTE 5 14-06-24.xlsx: 34,999 registros
+  ✓ BASE ELIZABETH CUENTAS 18K OFI EXTERNO 08-09-24 PARTE 6.xlsx: 18,557 registros
+  ✓ bbdd ANGEL 18-06-24 parte 1 25K.xlsx: 24,999 registros
+  ✓ bbdd 376k colombi en NETO para CARGAR.xlsx: 50,000 registros
+  ✓ BASE ELIZABETH CUENTAS 24K OFI EXTERNO 08-09-24 PARTE 3.xlsx: 23,972 registros
+  ✓ BASE ELIZABETH CUENTAS 5K OFI EXTERNO 08-09-24 PARTE 7.xlsx: 5,601 registros
+  ✓ BBDD ANGEL 44K PARTE 6 14-06-24.xlsx: 44,349 registros
+  ✓ jhon pbr.xlsx: 50,000 registros
+  ✓ BASE NUEVA LIZ 12K OFI EXTERNO 07-09-24 PARTE 3.xlsx: 12,388 registros
+  ✓ BASE ELIZABETH CUENTAS 30K OFI 365 08-09-24 PARTE 2.xlsx: 29,999 registros
+  ✓ BASE ELIZABETH CUENTAS 30K OFI 736 08-09-24 PARTE 1.xlsx: 29,999 registros
+  ✓ BBDDD LIZ 5K CUENTAS 20-08-24 PARTE 2.xlsx: 4,000 registros
+  ✓ BASE NUEVA LIZ 20K OFI 365 07-09-24 PARTE 2.xlsx: 19,999 registros
+  ✓ BBDDD LIZ 10K CUENTAS 20-08-24 PARTE 1.xlsx: 9,999 registros
+  ✓ BASE NUEVA LIZ 20K OFI 736 07-09-24 PARTE 1.xlsx: 19,999 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 1(PARA POWERBRANDS).xlsx: 9,999 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 1.xlsx: 9,999 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 2.xlsx: 9,999 registros
+  ✓ BASE ELIZABETH CUENTAS 50K OFI 365 08-09-24 PARTE 5.xlsx: 49,998 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 3.xlsx: 9,999 registros
+  ✓ BASE ELIZABETH CUENTAS 50K OFI 736 08-09-24 PARTE 4.xlsx: 50,000 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 4.xlsx: 9,999 registros
+  ✓ ELIZ 5K 9-05-25 PARTE 1.xlsx: 5,272 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 5.xlsx: 10,183 registros
+  ✓ ELIZ 5K 9-05-25 PARTE 2.xlsx: 4,999 registros
+  ✓ BBDDD LIZ 16K CUENTAS 20-08-24 PARTE 3.xlsx: 16,800 registros
+  ✓ LIZABETH 10K PARTE 2 28-05-25.xlsx: 9,999 registros
+  ✓ LIZABETH 10K PARTE 1 28-05-25.xlsx: 10,056 registros
+  📊 100/2059 archivos → 1,195,892 registros acumulados
+  ✓ LIZABETH 10K PARTE 3 28-05-25.xlsx: 9,999 registros
+  ✓ ----izquieda.xlsx: 1,000 registros
+  ✓ 1. PHONE HOUSE 5K 05-11-25 PARTE 1.xlsx: 5,001 registros
+  ✓ LIZABETH 10K PARTE 4 28-05-25.xlsx: 9,999 registros
+  ✓ LIZABETH 10K PARTE 5 28-05-25.xlsx: 9,999 registros
+  ✓ 1. PHONE HOUSE 5K 05-11-25 PARTE 2.xlsx: 5,001 registros
+  ✓ MEDELLIN 02-06-25 10K PARTE 1.xlsx: 9,998 registros
+  ✓ MEDELLIN 02-06-25 10K PARTE 2.xlsx: 9,998 registros
+  ✓ 1. PHONE HOUSE 5K 05-11-25 PARTE 4.xlsx: 5,001 registros
+  ✓ MEDELLIN 02-06-25 10K PARTE 3.xlsx: 9,998 registros
+  ✓ 1. PHONE HOUSE 5K 05-11-25 PARTE 3.xlsx: 5,001 registros
+  ✓ 1000 #1.xlsx: 1,000 registros
+  ✓ 1. PHONE HOUSE 5K 05-11-25 PARTE 5.xlsx: 5,001 registros
+  ✓ 1000 PRUEBA JHON.xlsx: 1,058 registros
+  ✓ 1000 CLIENTES PRUEBA LIZ 22-04-25.xlsx: 1,058 registros
+  ✓ 1. PHONE HOUSE 5K 05-11-25 PARTE 6.xlsx: 5,001 registros
+  ✓ 1000.(2).xlsx: 998 registros
+  ✓ 1000.(3).xlsx: 1,000 registros
+  ✓ 1000k.xlsx: 999 registros
+  ✓ MEDELLIN 02-06-25 10K PARTE 4.xlsx: 10,796 registros
+  ✓ 100K LIZ SIN CARGAR.xlsx: 49,999 registros
+  ✓ 100K ENERGIA.xlsx: 50,000 registros
+  ✓ 100.010K.xlsx: 50,000 registros
+  ✓ 106K ENERGIA DUAL CON CUENTA.xlsx: 50,000 registros
+  ✓ 109K ENERGIA.xlsx: 50,000 registros
+  ✓ 109k (1).xlsx: 50,000 registros
+  ✓ 10K GAS Y LUZ.xlsx: 10,735 registros
+  ✓ 10k (1).xlsx: 9,999 registros
+  ✓ 10k (2).xlsx: 10,271 registros
+  ✓ 10k (3).xlsx: 10,271 registros
+  ✓ 109K ENERGIA RECLAMOS.xlsx: 50,000 registros
+  ✓ 10k duales.xlsx: 10,005 registros
+  ✓ 10kjhon.xlsx: 10,057 registros
+  ✓ 10k.xlsx: 9,999 registros
+  ✓ 109k.xlsx: 50,000 registros
+  ✓ 10kmuestra3.xlsx: 10,134 registros
+  ✓ 110K LIZ SIN CARGAR.xlsx: 49,999 registros
+  ✓ 111K ANGEL_limpio.xlsx: 50,000 registros
+  ✓ 111K ENERGIA.xlsx: 50,000 registros
+  ✓ 12000(CARGADA).xlsx: 11,805 registros
+  ✓ 113K.xlsx: 50,000 registros
+  ✓ 13,7.K(CARGADA).xlsx: 13,760 registros
+  ✓ 108k.xlsx: 50,000 registros
+  ✓ 119.421k.xlsx: 50,000 registros
+  ✓ 14000(CARGADA).xlsx: 13,901 registros
+  ✓ 120K 15 NOV.xlsx: 31,726 registros
+  ✓ 125k POR CARGAR PARA POWER 03-09-25.xlsx: 50,000 registros
+  ✓ 15.k(CARGADO).xlsx: 14,925 registros
+  ✓ 130k_john_281024.xlsx: 50,000 registros
+  ✓ 140k POR CARGAR PARA POWER 28-07-25.xlsx: 50,000 registros
+  ✓ 145k POR CARGAR PARA POWER.xlsx: 50,000 registros
+  ✓ 150K SIN CARGAR.xlsx: 50,000 registros
+  ✓ 140K ENERGIA.xlsx: 50,000 registros
+  ✓ 15k bbdd powerbrands 20-03-25 parte 2.xlsx: 15,000 registros
+  ✓ 17200 CARGADA.xlsx: 17,199 registros
+  ✓ 150kJUN18.xlsx: 50,000 registros
+  ✓ 155k POR CARGAR PARA POWER.xlsx: 50,000 registros
+  ✓ 159K OCT - 23.xlsx: 50,000 registros
+  ✓ 1900(CARGADA).xlsx: 1,960 registros
+  ✓ 105k con cuenta.xlsx: 50,000 registros
+  ✓ 160k POR CARGAR PARA POWER.xlsx: 50,000 registros
+  ✓ 100k (1).xlsx: 50,000 registros
+  ✓ 1Q.02 ENERGY GOLD (1).xlsx: 281 registros
+  ✓ 1Q.02 ENERGY GOLD.xlsx: 281 registros
+  ✓ 1Qº DIC. ENERGY GOLD.xlsx: 66 registros
+  ✓ 100k.xlsx: 50,000 registros
+  ✓ 178K ENERGIA 23-10.xlsx: 50,000 registros
+  ✓ 19K ENERGIA 31.01 (1).xlsx: 19,475 registros
+  ✓ 20000 1 (1).xlsx: 20,000 registros
+  ✓ 20000 1.xlsx: 20,000 registros
+  ✓ 180K.xlsx: 50,000 registros
+  ✓ 19k 25102022.xlsx: 19,000 registros
+  ✓ 192k.xlsx: 50,000 registros
+  ✓ 20240911_ventasKAIZEN.xlsx: 3,770 registros
+  ✓ 178K ENERGIA RECLAMOS.xlsx: 50,000 registros
+  ✓ 20240913_ventasSILVANERGIA_SL_ENGEL.xlsx: 7,993 registros
+  ✓ 20241015_ENGELCENTER02.xlsx: 89 registros
+  ✓ 20241015_ventasENGELCENTER04.xlsx: 2,163 registros
+  ✓ 20241015_ventasENGELCENTER05.xlsx: 733 registros
+  ✓ 20240925_ventasENGELCENTER03.xlsx: 7,993 registros
+  ✓ 20241016_ventasENGELCENTER03.xlsx: 1,866 registros
+  ✓ 20241025_ENGELCENTER02.xlsx: 171 registros
+  ✓ 20241016_ventasENGELCENTER04.xlsx: 2,119 registros
+  ✓ 20K SIN CARGAR.xlsx: 20,003 registros
+  ✓ 200K (2).xlsx: 50,000 registros
+  ✓ 200K JHON.xlsx: 50,000 registros
+  ✓ 200K (4).xlsx: 50,000 registros
+  ✓ 200K (1).xlsx: 50,000 registros
+  📊 200/2059 archivos → 3,381,546 registros acumulados
+  ✓ 200K.xlsx: 50,000 registros
+  ✓ 20k.xlsx: 20,000 registros
+  ✓ 20k.. (1).xlsx: 20,000 registros
+  ✓ 20k...xlsx: 20,000 registros
+  ✓ 20k energia2.xlsx: 20,250 registros
+  ✓ 20k energia.xlsx: 19,999 registros
+  ✓ 200K-1.xlsx: 50,000 registros
+  ✓ 21K.xlsx: 21,399 registros
+  ✓ 2Q.01 ENERGY GOLD.xlsx: 28 registros
+  ✓ 29.12.2023 ..xlsx: 1,736 registros
+  ✓ 2k.xlsx: 2,158 registros
+  ✓ 209K ENERGIA RECLAMOS.xlsx: 50,000 registros
+  ✓ 30k john.xls: 29,998 registros
+  ✓ 23 - OCT - 183K ENERGIA.xlsx: 50,000 registros
+  ✓ 232K ALEX.xlsx: 50,000 registros
+  ✓ 3500 K 20112024.xlsx: 3,500 registros
+  ✓ 34,13k(CARGADO).xlsx: 34,128 registros
+  ✓ 34.k(CARGADO).xlsx: 34,128 registros
+  ✓ 37k junio.xlsx: 37,925 registros
+  ✓ 3k (1).xlsx: 3,000 registros
+  ✓ 3k (2).xlsx: 3,000 registros
+  ✓ 3k.xlsx: 3,000 registros
+  ✓ 3k (3).xlsx: 3,000 registros
+  ✓ 37k con cuenta.xlsx: 30,343 registros
+  ✓ 230K ENERGIA RECLAMOS.xlsx: 50,000 registros
+  ✓ 4100(cargada).xlsx: 4,113 registros
+  ✓ 40k (1).xlsx: 16,800 registros
+  ✓ 500CLIENTES PHONE HOUSE 15-09-25 PARTE 2.xlsx: 499 registros
+  ✓ 500leadsprueba.xlsx: 531 registros
+  ✓ 40.xlsx: 40,890 registros
+  ✓ 40k.xlsx: 16,800 registros
+  ✓ 49100(CARGADA).xlsx: 49,099 registros
+  ✓ 50K ANGEL 18-06.xls: 49,999 registros
+  ✓ 250K ENERGIA AAAAAAAA RECLAMOS.xlsx: 50,000 registros
+  ✓ 30,7.K(CARGADO).xlsx: 30,734 registros
+  ✓ 50K BBDD 06_06 (1).xlsx: 50,000 registros
+  ✓ 50K -191124.xlsx: 50,000 registros
+  ✓ 50K BBDD 06_06.xlsx: 50,000 registros
+  ✓ 50K 2904.xlsx: 50,000 registros
+  ✓ 50K ENERGIA.xlsx: 50,000 registros
+  ✓ 50K II (1).xlsx: 50,000 registros
+  ✓ 50K II.xlsx: 50,000 registros
+  ✓ 50K V.xlsx: 50,000 registros
+  ✓ 50K IV.xlsx: 50,000 registros
+  ✓ 50KJORGEH FALTA.xlsx: 25,878 registros
+  ✓ 50k (4TOLOTE).xlsx: 50,000 registros
+  ✓ 50k III.xlsx: 42,416 registros
+  ✓ 50K218dic.xlsx: 50,000 registros
+  ✓ 50k 218dic.xlsx: 50,000 registros
+  ✓ 38.k(CARGADO).xlsx: 38,241 registros
+  ✓ 50k con cuenta.xlsx: 50,000 registros
+  ✓ 50k para cargar base angel.xlsx: 49,999 registros
+  ✓ 50k telecomunicaciones.xlsx: 39,439 registros
+  ✓ 50k.xlsx: 50,000 registros
+  ✓ 50k 20032024.xlsx: 49,965 registros
+  ✓ 50k duales Cat(1) (1).xlsx: 49,861 registros
+  ✓ 50k duales Cat(1).xlsx: 49,861 registros
+  ✓ 50kJHON.xlsx: 50,000 registros
+  ✓ 50k_2511_bcn.xlsx: 50,000 registros
+  ✓ 54K.xlsx: 50,000 registros
+  ✓ 55K ENERGIA DUAL CON CUENTA POR CARGAR BASE BUENA.xlsx: 50,000 registros
+  ✓ 5k prueba 25-06-25.xlsx: 4,999 registros
+  ✓ 5k Energia BASE NATURGY.xlsx: 5,085 registros
+  ✓ 600 lineas.xlsx: 649 registros
+  ✓ 600CLIENTES PHONE HOUSE 15-09-25.xlsx: 593 registros
+  ✓ 55k para cargar base angel.xlsx: 49,999 registros
+  ✓ 56k ENERGIA.xlsx: 50,000 registros
+  ✓ 59.814K (1).xlsx: 50,000 registros
+  ✓ 59.814K.xlsx: 50,000 registros
+  ✓ 6000.xlsx: 30,343 registros
+  ✓ 60K (3).xlsx: 50,000 registros
+  ✓ 60K.xlsx: 50,000 registros
+  ✓ 59k_findeoctubre.xlsx: 50,000 registros
+  ✓ 60k (1).xlsx: 50,000 registros
+  ✓ 60k bbdd powerbrands 20-03-25.xlsx: 50,000 registros
+  ✓ 70 CLIENTES RECLAMACIONES ENERGIA PRUEBA.xlsx: 68 registros
+  ✓ 60k (2).xlsx: 50,000 registros
+  ✓ 62.5.xlsx: 50,000 registros
+  ✓ 64k.xlsx: 50,000 registros
+  ✓ 70k_231024_jhon.xls: 49,999 registros
+  ✓ 61k18dic.xlsx: 50,000 registros
+  ✓ 70K ENERGIA RECLAMOS 06-10-25.xlsx: 50,000 registros
+  ✓ 70K duplicado angel.xlsx: 50,000 registros
+  ✓ 8000. (CARGADA).xlsx: 7,839 registros
+  ✓ 8000.xlsx: 7,998 registros
+  ✓ 71.xlsx: 50,000 registros
+  ✓ 73k.xlsx: 50,000 registros
+  ✓ 78k.xlsx: 50,000 registros
+  ✓ 8901CUPS (2).xlsx: 8,900 registros
+  ✓ ALEX BBDD_MUESTRA CONTRATO.xlsx: 492 registros
+  ✓ ALUMBRA ENERGIA 22-10-25 300 CLIENTES CUENTAS 22-10-25 PARTE 9.xlsx: 379 registros
+  ✓ ANGEL 10K OFI 365 04-11-24 PARTE 2.xlsx: 9,999 registros
+  📊 300/2059 archivos → 6,521,605 registros acumulados
+  ✓ ANGEL 10K OFI 365 23-10-24 PARTE 2.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 365 23-10-24 PARTE 5.xlsx: 9,998 registros
+  ✓ ANGEL 10K OFI 365 24-10-24 PARTE 1.xlsx: 11,122 registros
+  ✓ 80K .xlsx: 50,000 registros
+  ✓ 90K SIN CARGAR.xlsx: 50,000 registros
+  ✓ 80k(3).xlsx: 50,000 registros
+  ✓ ANGEL 10K OFI 365 26-10-24 PARTE 3.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 365 30-10-24 PARTE 10.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 365 26-10-24 PARTE 4.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 365 30-10-24 PARTE 12.xlsx: 10,023 registros
+  ✓ ANGEL 10K OFI 365 30-10-24 PARTE 11.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 365 30-10-24 PARTE 8.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 736 04-11-24 PARTE 1.xlsx: 10,103 registros
+  ✓ ANGEL 10K OFI 365 30-10-24 PARTE 9.xlsx: 10,345 registros
+  ✓ ANGEL 10K OFI 736 04-11-24 PARTE 3.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 736 23-10-24 PARTE 1.xlsx: 10,002 registros
+  ✓ ANGEL 10K OFI 736 23-10-24 PARTE 4.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 736 26-10-24 PARTE 1.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 736 24-10-24 PARTE 2.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 736 26-10-24 PARTE 2.xlsx: 9,998 registros
+  ✓ ANGEL 10K OFI 736 30-10-24 PARTE 3.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 736 30-10-24 PARTE 4.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI 736 30-10-24 PARTE 5.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI EXTERNO 04-11-24 PARTE 4.xlsx: 5,661 registros
+  ✓ ANGEL 10K OFI 736 30-10-24 PARTE 6.xlsx: 10,003 registros
+  ✓ ANGEL 10K OFI 736 30-10-24 PARTE 7.xlsx: 9,999 registros
+  ✓ ANGEL 10K OFI EXTERNO 23-10-24 PARTE 3.xlsx: 9,997 registros
+  ✓ ANGEL 5K OFI 365 22-10-24 PARTE 2.xlsx: 4,999 registros
+  ✓ ANGEL 10K OFI EXTERNO 26-10-24 PARTE 5.xlsx: 10,541 registros
+  ✓ ANGEL 5K OFI 736 22-10-24 PARTE 1.xlsx: 4,999 registros
+  ✓ ANGEL 5K OFI 365 PRUEBA 25-10-24 PARTE 2.xlsx: 4,999 registros
+  ✓ ANGEL 14K OFI 736 30-10-24 PARTE 1.xlsx: 14,431 registros
+  ✓ ANGEL 15K OFI 365 30-10-24 PARTE 2.xlsx: 14,698 registros
+  ✓ ANGEL 5K OFI 736 PRUEBA 25-10-24 PARTE 1.xlsx: 4,999 registros
+  ✓ ANGEL 5K OFI EXTERNO 22-10-24 PARTE 3.xlsx: 4,999 registros
+  ✓ ANGEL 5K OFI EXTERNO PRUEBA 25-10-24 PARTE 3.xlsx: 5,000 registros
+  ✓ ANGEL NUEVA 10K OFI 365 03-12-24 PARTE 2.xlsx: 10,004 registros
+  ✓ ANGEL NUEVA 10K OFI 736 03-12-24 PARTE 1.xlsx: 9,999 registros
+  ✓ ANGEL NUEVA 10K OFI 365 29-11-24 PARTE 2.xlsx: 9,999 registros
+  ✓ ARGA FIJOS.xlsx: 1,000 registros
+  ✓ ANGEL NUEVA 10K OFI 736 29-11-24 PARTE 1.xlsx: 9,999 registros
+  ✓ ANGEL NUEVA 10K OFI EXTERNO 29-11-24 PARTE 3.xlsx: 9,999 registros
+  ✓ BAJAS 2024 WEKIWI TOTALES.xlsx: 1,660 registros
+  ✓ BARNA PRUEBA 2.5K 26-06-25 PARTE 1.xlsx: 2,501 registros
+  ✓ BARNA PRUEBA 2.5K 26-06-25 PARTE 2.xlsx: 2,499 registros
+  ✓ Alicantes 17k.xlsx: 17,887 registros
+  ✓ BARRANQUILLA 10K 30-06-25 PARTE 1.xlsx: 9,516 registros
+  ✓ BARRANQUILLA 2K 30-06-25 PARTE 1.xlsx: 2,643 registros
+  ✓ BARRANQUILLA 2K 30-06-25 PARTE 2.xlsx: 1,999 registros
+  ✓ BARRANQUILLA 10K 30-06-25 PARTE 2.xlsx: 9,516 registros
+  ✓ BASE  2.xlsx: 10,028 registros
+  ✓ 66k (1).xlsx: 50,000 registros
+  ✓ BASE #1  50.000 (1).xlsx: 50,000 registros
+  ✓ ARACELLIHURTADO (1).xlsx: 29,767 registros
+  ✓ 66k.xlsx: 50,000 registros
+  ✓ ARACELLIHURTADO.xlsx: 29,767 registros
+  ✓ BASE #1  50.000.xlsx: 50,000 registros
+  ✓ BASE 17K POR CARGADO.xlsx: 17,912 registros
+  ✓ BASE 25 k banco.xlsx: 25,173 registros
+  ✓ BASE ANGEL 20K OFI EXTERNO 18-11-24 PARTE 3.xlsx: 19,812 registros
+  ✓ BASE ANGEL 30K OFI 365 18-11-24 PARTE 2.xlsx: 30,000 registros
+  ✓ BASE 24K FALTA.xlsx: 27,584 registros
+  ✓ BASE CEPSA SIN CUPS 13K 28-03-25 PARTE 3.xlsx: 13,047 registros
+  ✓ BASE CEPSA SIN CUPS 13K 28-03-25 PARTE 4.xlsx: 12,401 registros
+  ✓ BASE CEPSA SIN CUPS 15K 28-03-25 PARTE 2.xlsx: 15,874 registros
+  ✓ BASE ANGEL 30K OFI 736 18-11-24 PARTE 1.xlsx: 30,000 registros
+  ✓ BASE COLOMBI 23K 25-05-24 PARTE 3 .xlsx: 23,066 registros
+  ✓ BASE 99.000 ACTUAL (1).xlsx: 49,998 registros
+  ✓ BASE 99.000 ACTUAL.xlsx: 49,998 registros
+  ✓ BASE ESPECIAL PARA VIOLETA 20K ENERGIA.xlsx: 20,019 registros
+  ✓ BASE ENGEL PODO 36K POR CARGAR.xlsx: 48,304 registros
+  ✓ BASE ENERGIA 50K IBAN jhon.xlsx: 34,982 registros
+/Users/john/Library/Python/3.9/lib/python/site-packages/openpyxl/styles/stylesheet.py:237: UserWarning: Workbook contains no default style, apply openpyxl's default
+  warn("Workbook contains no default style, apply openpyxl's default")
+/Users/john/Library/Python/3.9/lib/python/site-packages/openpyxl/styles/stylesheet.py:237: UserWarning: Workbook contains no default style, apply openpyxl's default
+  warn("Workbook contains no default style, apply openpyxl's default")
+/Users/john/Library/Python/3.9/lib/python/site-packages/openpyxl/worksheet/_reader.py:223: UserWarning: Cell AD3347 is marked as a date but the serial value 6653707 is outside the limits for dates. The cell will be treated as an error.
+  warn(msg)
+/Users/john/Library/Python/3.9/lib/python/site-packages/openpyxl/worksheet/_reader.py:223: UserWarning: Cell AD4775 is marked as a date but the serial value 6653707 is outside the limits for dates. The cell will be treated as an error.
+  warn(msg)
+  ✓ BASE MADRID 17K.xlsx: 17,823 registros
+  ✓ BASE MADRID 9K.xlsx: 8,999 registros
+  ✓ BASE PARA POWER 20K.xlsx: 20,000 registros
+  ✓ BASE MADRID 33K.xlsx: 33,730 registros
+  ✓ BASE POWER 10K 19-02-25 (1).xlsx: 10,597 registros
+  ✓ BASE POWER 5K 03-07-25 PARTE 1.xlsx: 4,999 registros
+  ✓ BASE MADRID.xlsx: 33,730 registros
+  ✓ BASE PRUEBA 1K 31-07-25.xlsx: 999 registros
+  ✓ BASE POWER 10K 19-02-25.xlsx: 10,597 registros
+  ✓ BASE POWER 5K 03-07-25 PARTE 2.xlsx: 4,999 registros
+  ✓ BASE PRUEBA 5K ANGEL OFI 365 21-10-24 PARTE 2.xlsx: 4,999 registros
+  ✓ BASE PRUEBA JOSE CARRERA 200 CLIENTES.xlsx: 200 registros
+  ✓ BASE PRUEBA 5K ANGEL OFI 736 21-10-24 PARTE 1.xlsx: 4,999 registros
+  ✓ BASE PRUEBA 5K ANGEL OFI EXTERNO 21-10-24 PARTE 3.xlsx: 4,999 registros
+  ✓ BASE REPOSICION 20-02-25 POWER 10K.xlsx: 9,999 registros
+  ✓ 242200 clientes.xlsx: 50,000 registros
+  ✓ BASE SIN MADRID ANGEL 21K POR CARGAR.xlsx: 21,121 registros
+  ✓ BASE FINAL 1.xlsx: 50,000 registros
+  ✓ BASE LIMPIA 345K CEPSA.xlsx: 50,000 registros
+  ✓ BBDD (1).xlsx: 500 registros
+  ✓ BBDD 13.07.xlsx: 5,000 registros
+  ✓ BASE SIN MADRID ANGEL 41K POR CARGAR.xlsx: 41,118 registros
+  ✓ BBDD 15.07.2020.xlsx: 2,000 registros
+  ✓ BBDD EDU.xlsx: 1,000 registros
+  📊 400/2059 archivos → 8,157,869 registros acumulados
+  ✓ BASE BRUTO UN MILLON.xlsx: 50,000 registros
+  ✓ BBDD MADRID TOLEDO 2-8 raul.xlsx: 6,000 registros
+  ✓ BASES SIN CUPS ANGEL 23K.xlsx: 23,695 registros
+  ✓ BASE LIMPIA 450K CEPSA.xlsx: 50,000 registros
+  ✓ BASE SIN MADRID ANGEL 56K POR CARGAR.xlsx: 49,999 registros
+  ✓ BBDD RUBEN (1).xlsx: 528 registros
+  ✓ BBDD TANIA 30.03.xlsx: 4,000 registros
+  ✓ BASE UNIFICADA 20-25-10 TODOS.xlsx: 50,000 registros
+  ✓ BBDD.xlsx: 500 registros
+  ✓ BBDD RUBEN.xlsx: 7,998 registros
+  ✓ BDD MADRID ALEX 2000 CLIENTES.xlsx: 1,999 registros
+  ✓ BASE SIN MADRID.xlsx: 49,999 registros
+  ✓ BBDD POWERBRANDS 20K 10-03-25.xlsx: 19,999 registros
+  ✓ BLAI 10.07.xlsx: 5,000 registros
+  ✓ BOGOTA LIZ OFI 365 10K PARTE 2 18-12-24.xlsx: 9,999 registros
+  ✓ BOGOTA LIZ OFI 736 10K PARTE 1 18-12-24.xlsx: 9,999 registros
+  ✓ BOGOTA LIZ OFI EXTERNO 10K PARTE 3 18-12-24.xlsx: 9,999 registros
+  ✓ BOGOTA LIZ OFI LIMA EXT 10K PARTE 5 18-12-24.xlsx: 16,697 registros
+  ✓ BRUTO 1Q JUNIO.xlsx: 188 registros
+  ✓ BOGOTA LIZ OFI NUEVO CHIMB 10K PARTE 4 18-12-24.xlsx: 9,999 registros
+  ✓ BBDD INCIDENCIAS 150K NETO 30-04-24.xlsx: 50,000 registros
+  ✓ BBDD NUEVA COLOMBI PARA CARGAR 24-05-24.xlsx: 50,000 registros
+  ✓ Base 10k correcta (1).xlsx: 9,999 registros
+  ✓ Base 10k correcta.xlsx: 9,999 registros
+  ✓ Base_Energia_1 al 5.000.xlsx: 4,999 registros
+  ✓ Base angel repetida 21k.xlsx: 20,997 registros
+  ✓ Base datos 30 mil con CUPS Zona valencia (1) (1).xlsx: 30,000 registros
+  ✓ Base datos 30 mil.xlsx: 30,000 registros
+  ✓ BEBE_tmG_27-11-2024 (1).xlsx: 49,999 registros
+  ✓ BEBE_tmG_27-11-2024.xlsx: 49,999 registros
+  ✓ CALI 3K 10-06-25 PARTE 2.xlsx: 3,248 registros
+  ✓ CALI 3K 10-06-25 parte 5.xlsx: 3,368 registros
+  ✓ CALI 4K 10-06-25 PARTE 3.xlsx: 4,059 registros
+  ✓ CALI 8K 10-06-25 parte 4.xlsx: 6,187 registros
+  ✓ COLVACAL 20.07.2020.xlsx: 998 registros
+  ✓ COMPAÑIA CLIENTES 5K 26-06-25 PARTE 1.xlsx: 4,999 registros
+  ✓ Bot_extraction_tmG 21112024 (1).xlsx: 20,759 registros
+  ✓ BBDD INCIDENCIAS 150K PARTE 2 30-04-24.xlsx: 50,000 registros
+  ✓ COMPAÑIA CLIENTES 5K 26-06-25 PARTE 2.xlsx: 4,999 registros
+  ✓ CONTRATOS PENTS POWER BRANDS (1).xlsx: 54 registros
+  ✓ COMPAÑIA CLIENTES 5K 26-06-25 PARTE 3.xlsx: 4,999 registros
+  ✓ CONTRATOS PENTS POWER BRANDS.xlsx: 54 registros
+  ✓ Bot_extraction_tmG 21112024.xlsx: 20,759 registros
+  ✓ COMPAÑIA CLIENTES 5K 26-06-25 PARTE 4.xlsx: 4,998 registros
+  ✓ COSMOS FILTRADA LIZ 10K 22-04-25 PARTE 1.xlsx: 9,999 registros
+  ✓ COSMOS FILTRADA LIZ 10K 22-04-25 PARTE 2.xlsx: 9,999 registros
+  ✓ BBDD276k.xlsx: 50,000 registros
+  ✓ DIA BASE SIN CUPS 2K 18-06-25 PARTE 1.xlsx: 2,140 registros
+  ✓ COSMOS FILTRADA LIZ 10K 22-04-25 PARTE 3.xlsx: 9,999 registros
+  ✓ COSMOS FILTRADA LIZ 10K 22-04-25 PARTE 4.xlsx: 9,999 registros
+  ✓ Contratos fuera de CRM 21 MAYO.xlsx: 130 registros
+  ✓ DIA BASE SIN CUPS 2K 18-06-25 PARTE 2.xlsx: 1,999 registros
+  ✓ Bot_Extraction_tmG 23112024 (1).xlsx: 50,000 registros
+  ✓ Bot_Extraction_tmG 23112024 (2).xlsx: 50,000 registros
+  ✓ COSMOS FILTRADA LIZ 10K 22-04-25 PARTE 5.xlsx: 8,946 registros
+  ✓ ENERGY GOLD 2ºQ. 06.xlsx: 744 registros
+  ✓ ELIZABETH NEW 5K 30-04-35 PARTE 3.xlsx: 5,249 registros
+  ✓ ELIZABETH NEW 5K 30-04-35 PARTE 1.xlsx: 5,000 registros
+  ✓ ELIZABETH NEW 5K 30-04-35 PARTE 2.xlsx: 5,000 registros
+  ✓ DUALES 20-06.xlsx: 10,000 registros
+  ✓ ENERGY GOLD.xlsx: 783 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 1K CLIENTES 22-10-25 PARTE 6.xlsx: 1,167 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 1.7K CLIENTES 22-10-25 PARTE 7.xlsx: 1,747 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 700 CLIENTES 22-10-25 PARTE 2.xlsx: 733 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 1.7K 22-10-25 PARTE 1.xlsx: 1,866 registros
+  ✓ ELIZABETH NEW 5K 30-04-35 PARTE 4.xlsx: 5,000 registros
+  ✓ ESTRUCTURA FENINTEGRAL.xlsx: 79 registros
+  ✓ EQUIPO FLOR - ABRIL 2024.xlsx: 59 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 2K CLIENTES 22-10-25 PARTE 3.xlsx: 2,163 registros
+  ✓ Bot_Extraction_tmG 23112024.xlsx: 50,000 registros
+  ✓ EXALTERNA REPSOL 10K 09-06-25 PARTE 3.xlsx: 9,999 registros
+  ✓ EXALTERNA REPSOL 10K 09-06-25 PARTE 4.xlsx: 9,999 registros
+  ✓ EXALTERNA REPSOL 10K 09-06-25 PARTE 2.xlsx: 9,999 registros
+  ✓ EXALTERNA REPSOL 10K 09-06-25 PARTE 5.xlsx: 9,999 registros
+  ✓ EXALTERNA REPSOL 10K 09-06-25 PARTE 6.xlsx: 9,999 registros
+  ✓ EXALTERNA REPSOL 10K 09-06-25 PARTE 1.xlsx: 9,999 registros
+  ✓ EXALTERNA REPSOL 10K 09-06-25 PARTE 7.xlsx: 9,999 registros
+  ✓ EXAMEN LIZ 19-06-25 2K PARTE 2.xlsx: 2,294 registros
+  ✓ EXAMEN LIZ 19-06-25 2K PARTE 1.xlsx: 2,471 registros
+  ✓ EXAMEN LIZ 19-06-25 5K PARTE 5.xlsx: 5,135 registros
+  ✓ EXAMEN LIZ 19-06-25 5K PARTE 4.xlsx: 4,999 registros
+  ✓ EXAMEN LIZ 19-06-25 5K PARTE 3.xlsx: 5,000 registros
+  ✓ FENINTEGRAL 2Q.JUNIO.xlsx: 443 registros
+  ✓ FENINTEGRAL 1Q. JUNIO - FENINTEGRAL.xlsx: 278 registros
+  ✓ EXAMEN LIZ 19-06-25 5K PARTE 6.xlsx: 4,999 registros
+  ✓ FENINTEGRAL ABRIL.xlsx: 1,145 registros
+  ✓ EXALTERNA REPSOL 12K 09-06-25 PARTE 8.xlsx: 12,148 registros
+  ✓ FENINTEGRAL ENERO.xlsx: 4,132 registros
+  ✓ FILTRADO REPSOL 10K PARTE 1 02-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 10 02-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 11 04-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 12 04-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 13 04-04-25.xlsx: 9,999 registros
+  📊 500/2059 archivos → 9,425,773 registros acumulados
+  ✓ FILTRADO REPSOL 10K PARTE 14 04-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 15 04-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 16 04-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 18 04-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 17 04-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 19 04-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 2 02-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 20 04-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 21 04-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 3 02-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 4 02-04-25.xlsx: 9,999 registros
+  ✓ Extract_16_01_2024.xlsx: 50,000 registros
+  ✓ FILTRADO REPSOL 10K PARTE 22 04-04-25.xlsx: 14,042 registros
+  ✓ FILTRADO REPSOL 10K PARTE 5 02-04-25.xlsx: 9,999 registros
+  ✓ GRANADA_19k.xls: 19,145 registros
+  ✓ GUSTAVO 27.07.xlsx: 2,000 registros
+  ✓ ILIAS 1000 CLIENTES 20-05-25 PARTE 2.xlsx: 999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 6 02-04-25.xlsx: 9,999 registros
+  ✓ ILIAS 500 CLIENTES 20-05-25 PARTE 1.xlsx: 583 registros
+  ✓ FILTRADO REPSOL 10K PARTE 7 02-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 8 02-04-25.xlsx: 9,999 registros
+  ✓ FILTRADO REPSOL 10K PARTE 9 02-04-25.xlsx: 9,999 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 11.xlsx: 5,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 1.xlsx: 5,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 10.xlsx: 5,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 12.xlsx: 5,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 2.xlsx: 5,000 registros
+  ✓ EXTRAIDO 031224_tmG_DARWIN (1).xlsx: 50,000 registros
+  ✓ EXTRAIDO 031224_tmG_DARWIN.xlsx: 50,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 3.xlsx: 5,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 5.xlsx: 5,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 13.xlsx: 8,260 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 6.xlsx: 5,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 4.xlsx: 5,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 7.xlsx: 5,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 8.xlsx: 5,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 01-09-25 PARTE 9.xlsx: 5,000 registros
+  ✓ INCIDENCIAS ENDESA 5K 25-08-25 PARTE 2.xlsx: 4,999 registros
+  ✓ INCIDENCIAS ENDESA 5K 25-08-25 PARTE 1.xlsx: 4,999 registros
+  ✓ INCIDENCIAS ENDESA 5K 13-09-25 PARTE 2.xlsx: 4,999 registros
+  ✓ INCIDENCIAS ENDESA 5K 13-09-25 PARTE 1.xlsx: 4,999 registros
+  ✓ JHON MUESTRA.xlsx: 1,000 registros
+  ✓ IVAN 21.07.xlsx: 2,000 registros
+  ✓ IZQUIERDA----.xlsx: 1,999 registros
+  ✓ JOHN.xlsx: 41 registros
+  ✓ JENNI 21.07.xlsx: 1,000 registros
+  ✓ JISUS PRUEBA 3K 04-03-25.xlsx: 3,000 registros
+  ✓ INCIDENCIAS ENDESA 8K 01-09-25 PARTE 13.xlsx: 8,260 registros
+  ✓ LIMA NUEVA OFI 365 10K 03-12-24 PARTE 5.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI 365 10K 03-12-24 PARTE 6.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI 365 10K 03-12-24 PARTE 4.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI 365 10K 25-11-24 PARTE 2.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI 736 10K 03-12-24 PARTE 1.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI 365 10K 25-11-24 PARTE 8.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI 365 10K 25-11-24 PARTE 5.xlsx: 10,086 registros
+  ✓ LIMA NUEVA OFI 736 10K 03-12-24 PARTE 2.xlsx: 9,999 registros
+  ✓ JAEN NUEVO (1).xlsx: 22,005 registros
+  ✓ LIMA NUEVA OFI 736 10K 03-12-24 PARTE 3.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI 736 10K 25-11-24 PARTE 1.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI 736 10K 25-11-24 PARTE 4.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI EXTERNO 10K 03-12-24 PARTE 7.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI EXTERNO 10K 03-12-24 PARTE 8.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI EXTERNO 10K 03-12-24 PARTE 9.xlsx: 10,018 registros
+  ✓ LIMA NUEVA OFI 736 10K 25-11-24 PARTE 7.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI EXTERNO 10K 25-11-24 PARTE 3.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI EXTERNO 10K 25-11-24 PARTE 10.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI EXTERNO 10K 25-11-24 PARTE 6.xlsx: 9,999 registros
+  ✓ LINCE JESUS OFI 365 10K 19-12-24 PARTE 4.xlsx: 9,999 registros
+  ✓ LINCE JESUS OFI 365 10K 19-12-24 PARTE 6.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI EXTERNO 8K 25-11-24 PARTE 11.xlsx: 8,630 registros
+  ✓ LINCE JESUS OFI 365 10K 19-12-24 PARTE 5.xlsx: 9,999 registros
+  ✓ LIMA NUEVA OFI EXTERNO 10K 25-11-24 PARTE 9.xlsx: 9,999 registros
+  ✓ LINCE JESUS OFI 736 10K 19-12-24 PARTE 1.xlsx: 9,999 registros
+  ✓ LINCE JESUS OFI 736 10K 19-12-24 PARTE 2.xlsx: 9,999 registros
+  ✓ LINCE JESUS OFI 736 10K 19-12-24 PARTE 3.xlsx: 9,999 registros
+  ✓ LINCE JESUS OFI EXTERNO 10K 19-12-24 PARTE 10.xlsx: 9,999 registros
+  ✓ LINCE JESUS OFI NVO CHIMB 10K 19-12-24 PARTE 8.xlsx: 9,999 registros
+  ✓ LINCE JESUS OFI EXTERNO 10K 19-12-24 PARTE 9.xlsx: 9,999 registros
+  ✓ LINCE JESUS OFI NVO CHIMB 10K 19-12-24 PARTE 7.xlsx: 9,999 registros
+  ✓ LIZ PRUEBA 5K OFI 365 15-11-24 PARTE 2.xlsx: 4,999 registros
+  ✓ LISTA DE  CLIENTES EDP 2 .xlsx: 15,602 registros
+  ✓ LIZ PRUEBA 5K OFI EXTERNO 15-11-24 PARTE 3.xlsx: 4,999 registros
+  ✓ LIZ PRUEBA 5K OFI 736 15-11-24 PARTE 1.xlsx: 5,773 registros
+  ✓ Libro (12) (3) (1).xlsx: 101 registros
+  ✓ Libro (12) (3).xlsx: 101 registros
+  📊 600/2059 archivos → 10,230,369 registros acumulados
+  ✓ LIZ PRUEBA 10K 11-11-24 OFI 365 PARTE 2.xlsx: 9,998 registros
+  ✓ LIZ PRUEBA 10K 11-11-24 OFI EXTERNO PARTE 3.xlsx: 9,999 registros
+  ✓ LIZ PRUEBA 10K 11-11-24 OFI 736 PARTE 1.xlsx: 9,999 registros
+  ✓ MANIZALES 24-06-25 10K PARTE 1.xlsx: 8,824 registros
+  ✓ MANIZALES 24-06-25 10K PARTE 2.xlsx: 8,783 registros
+  ✓ MUESTRA 7 LOTES 25 NOV.xlsx: 99 registros
+  ✓ MUESTRA ALEX (1).xlsx: 1,499 registros
+  ✓ MUESTRA ALEX.xlsx: 1,499 registros
+  ✓ MANIZALES 24-06-25 10K PARTE 3.xlsx: 9,948 registros
+  ✓ MANIZALES 24-06-25 10K PARTE 4.xlsx: 9,999 registros
+  ✓ NEW LIZBETH 06-03-25 PARTE 10K PARTE 1.xlsx: 9,998 registros
+  ✓ LISTA DE  CLIENTES EDP.xlsx: 15,602 registros
+  ✓ NATURGY IBERDROLA enrgia cusp iban 14K.xlsx: 14,385 registros
+  ✓ NEW LIZBETH 06-03-25 PARTE 10K PARTE 4.xlsx: 9,998 registros
+  ✓ NEW LIZBETH 06-03-25 PARTE 10K PARTE 2.xlsx: 9,998 registros
+  ✓ PHONE HOUSE 5K 29-09-25 PARTE 1.xlsx: 5,024 registros
+  ✓ PHONE HOUSE 5K 29-09-25 PARTE 2.xlsx: 5,024 registros
+  ✓ NEW LIZBETH 06-03-25 PARTE 10K PARTE 5.xlsx: 10,016 registros
+  ✓ PHONE HOUSE 5K 29-09-25 PARTE 3.xlsx: 5,020 registros
+  ✓ NEW LIZBETH 06-03-25 PARTE 3 10K.xlsx: 9,998 registros
+  ✓ PHONE HOUSE 5K 29-09-25 PARTE 4.xlsx: 5,020 registros
+  ✓ PHONE HOUSE 5K PRUEBA RUPORT.xlsx: 4,994 registros
+  ✓ PHONE HOUSE NUEVA 5K 06-10-25 PARTE 2.xlsx: 4,998 registros
+  ✓ PHONE HOUSE NUEVA 5K 06-10-25 PARTE 1.xlsx: 4,998 registros
+  ✓ PHONE HOUSE NUEVA 5K 06-10-25 PARTE 3.xlsx: 4,998 registros
+  ✓ PHONE HOUSE NUEVA 5K 06-10-25 PARTE 4.xlsx: 4,998 registros
+  ✓ PHONE HOUSE NUEVA 5K 06-10-25 PARTE 5.xlsx: 4,998 registros
+  ✓ PODO Y ENGEL ENERGIA 21-10-25 3.5K PARTE 10.xlsx: 3,304 registros
+  ✓ PHONE HOUSE NUEVA 5K 06-10-25 PARTE 6.xlsx: 4,998 registros
+  ✓ PODO Y ENGEL ENERGIA 21-10-25 5K PARTE 1.xlsx: 5,000 registros
+  ✓ PODO Y ENGEL ENERGIA 21-10-25 5K PARTE 2.xlsx: 5,000 registros
+  ✓ PODO Y ENGEL ENERGIA 21-10-25 5K PARTE 3.xlsx: 5,000 registros
+  ✓ PODO Y ENGEL ENERGIA 21-10-25 5K PARTE 5.xlsx: 5,000 registros
+  ✓ PODO Y ENGEL ENERGIA 21-10-25 5K PARTE 4.xlsx: 5,000 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 1K CLIENTES 22-10-25 PARTE 10.xlsx: 1,054 registros
+  ✓ PODO Y ENGEL ENERGIA 21-10-25 5K PARTE 7.xlsx: 5,000 registros
+  ✓ PODO Y ENGEL ENERGIA 21-10-25 5K PARTE 6.xlsx: 5,000 registros
+  ✓ PODO Y ENGEL ENERGIA 21-10-25 5K PARTE 8.xlsx: 5,000 registros
+  ✓ PODO Y ENGEL ENERGIA 21-10-25 5K PARTE 9.xlsx: 5,000 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 3.7K CLIENTES 22-10-25 PARTE 8.xlsx: 3,770 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 4K CLIENTES 22-10-25 PARTE 4.xlsx: 3,993 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 4K CLIENTES 22-10-25 PARTE 11.xlsx: 4,331 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 4K CLIENTES 22-10-25 PARTE 5.xlsx: 4,000 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 5K SOLO CUPS 22-10-25 PARTE 12.xlsx: 5,653 registros
+  ✓ POWER 5K 18-06-25 PARTE 1.xlsx: 4,999 registros
+  ✓ POWER 5K 18-06-25 PARTE 2.xlsx: 4,999 registros
+  ✓ POWER 5K 18-06-25 PARTE 3.xlsx: 4,999 registros
+  ✓ POWER BRANDS, S.L. 2ª QUINCENA MAYO 2024 fenin.xlsx: 1,344 registros
+  ✓ PRUEBA 100 REGISTR0S ENERGIA.xlsx: 169 registros
+  ✓ POWER 5K 18-06-25 PARTE 4.xlsx: 4,999 registros
+  ✓ PRUEBA 1000 REGISTROS colombi 22-10-24.xlsx: 999 registros
+  ✓ PRUEBA 1000 REGISTROS.xlsx: 999 registros
+  ✓ PRUEBA 300 29-08-25.xlsx: 299 registros
+  ✓ POWERBRANDS BASE CEPSA SIN CUPS 7K 28-03-25 PARTE 1.xlsx: 7,384 registros
+  ✓ PRUEBA 1K.xlsx: 1,119 registros
+  ✓ PRUEBA 300 CUPS 29-08-25.xlsx: 298 registros
+  ✓ PRUEBA JHON 2.xlsx: 1,000 registros
+  ✓ PRUEBA MARTA TOP 1K 05-06.25.xlsx: 1,006 registros
+  ✓ PRUEBA-12may.xlsx: 978 registros
+  ✓ PTE. ACTV POWERBRANDS 1 (1).xlsx: 96 registros
+  ✓ PTE. ACTV POWERBRANDS 1.xlsx: 96 registros
+  ✓ PYMES.xlsx: 99 registros
+  ✓ Pau Pruebas.xlsx: 999 registros
+/Users/john/Library/Python/3.9/lib/python/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed
+  warn(msg)
+/Users/john/Library/Python/3.9/lib/python/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed
+  warn(msg)
+  ✓ QUEJAS  CLIENTES 5K 29-08-25 PARTE 1.xlsx: 5,000 registros
+  ✓ QUEJAS  CLIENTES 5K 29-08-25 PARTE 2.xlsx: 5,000 registros
+  ✓ QUEJAS  CLIENTES 5K 29-08-25 PARTE 4.xlsx: 5,000 registros
+  ✓ QUEJAS  CLIENTES 5K 29-08-25 PARTE 3.xlsx: 5,000 registros
+  ✓ QUEJAS  CLIENTES 5K 29-08-25 PARTE 5.xlsx: 5,000 registros
+  ✓ POR CARGAR 52K ALEX.xlsx: 50,000 registros
+  ✓ QUEJAS  CLIENTES 5K 29-08-25 PARTE 6.xlsx: 5,000 registros
+  ✓ RAMIREZ BASE NUEVA 10K  01-04-25 PARTE 1.xlsx: 9,297 registros
+  ✓ RAUL FACTOR ENERGY 01-07-25 (1).xls: 150 registros
+  ✓ RAUL FACTOR ENERGY 01-07-25.xls: 150 registros
+  📊 700/2059 archivos → 10,633,664 registros acumulados
+  ✓ RAUL FACTOR ENERGY 10-07-25.xls: 111 registros
+  ✓ RAUL FACTOR ENERGY 17-07-25.xlsx: 161 registros
+  ✓ RAUL FACTOR ENERGY 24.07.2025.xlsx: 128 registros
+  ✓ RAMIREZ BASE NUEVA 10K  01-04-25 PARTE 2.xlsx: 9,999 registros
+  ✓ RAMIREZ BASE NUEVA 9K  01-04-25 PARTE 3.xlsx: 9,345 registros
+  ✓ RAMIREZ BASE NUEVA 9K  01-04-25 PARTE 4.xlsx: 9,000 registros
+  ✓ RECLAMACIONES CLIENTES 5K 06-10-25 PARTE 1.xlsx: 4,999 registros
+  ✓ RECLAMACIONES CLIENTES 5K 06-10-25 PARTE 2.xlsx: 4,999 registros
+  ✓ RECLAMACIONES CLIENTES 5K 06-10-25 PARTE 3.xlsx: 4,999 registros
+  ✓ POR CARGAR 132K ALEX.xlsx: 50,000 registros
+  ✓ RECLAMACIONES CLIENTES 5K 06-10-25 PARTE 4.xlsx: 4,999 registros
+  ✓ RECLAMACIONES CLIENTES 5K 06-10-25 PARTE 5.xlsx: 4,999 registros
+  ✓ RECLAMACIONES CLIENTES 5K 06-10-25 PARTE 6.xlsx: 4,999 registros
+  ✓ RECLAMACIONES CLIENTES 5K 06-10-25 PARTE 7.xlsx: 4,999 registros
+  ✓ NATURGY REGULADO 19 Z.xlsx: 49,999 registros
+  ✓ RECLAMACIONES CLIENTES 5K 06-10-25 PARTE 8.xlsx: 4,999 registros
+  ✓ RECLAMACIONES CLIENTES 5K 27-08-25 PARTE 1.xlsx: 4,999 registros
+  ✓ RESTO BBDD.xlsx: 127 registros
+  ✓ RECLAMACIONES CLIENTES 5K 27-08-25 PARTE 2.xlsx: 4,999 registros
+  ✓ TROYA 24-06-25 2.5K PARTE 1.xls: 2,468 registros
+  ✓ RECLAMACIONES CLIENTES 5K 27-08-25 PARTE 3.xlsx: 4,999 registros
+  ✓ RECLAMACIONES CLIENTES 5K 27-08-25 PARTE 4.xlsx: 4,999 registros
+  ✓ RECLAMACIONES CLIENTES 5K 27-08-25 PARTE 5.xlsx: 4,999 registros
+  ✓ RECLAMACIONES CLIENTES 5K 27-08-25 PARTE 6.xlsx: 4,999 registros
+  ✓ TROYA 24-06-25 5K PARTE 2.xlsx: 4,999 registros
+  ✓ TROYA 24-06-25 5K PARTE 3.xlsx: 4,999 registros
+  ✓ TROYA 24-06-25 5K PARTE 4.xlsx: 4,999 registros
+  ✓ TROYA 24-06-25 5K PARTE 6.xlsx: 4,999 registros
+  ✓ TROYA 24-06-25 5K PARTE 5.xlsx: 4,999 registros
+  ✓ USUARIOS NODO-JOHN.xlsx: 36 registros
+  ✓ TROYA 24-06-25 5K PARTE 7.xlsx: 4,999 registros
+  ✓ TROYA 24-06-25 5K PARTE 8.xlsx: 4,999 registros
+  ✓ TROYANO 6K 01-07-25 PARTE 1.xlsx: 5,994 registros
+  ✓ TROYANO 6K 01-07-25 PARTE 2.xlsx: 6,910 registros
+  ✓ TROYA 24-06-25 9K PARTE 9.xlsx: 9,340 registros
+  ✓ WTC BASE 13-03-25 10K PARTE 2.xlsx: 9,999 registros
+  ✓ WTC BASE 13-03-25 10K PARTE 3.xlsx: 9,999 registros
+  ✓ WTC BASE 13-03-25 10K PARTE 1.xlsx: 9,999 registros
+  ✓ WTC BASE 13-03-25 10K PARTE 4.xlsx: 9,999 registros
+  ✓ WTC BASE 21-03-25 10K PARTE 1.xlsx: 9,999 registros
+  ✓ WTC BASE 21-03-25 10K PARTE 2.xlsx: 9,999 registros
+  ✓ WTC BASE 21-03-25 10K PARTE 3.xlsx: 9,999 registros
+  ✓ WTC BASE 21-03-25 10K PARTE 4.xlsx: 9,999 registros
+  ✓ YUSTE 10K OFI 365 18-12-24 PARTE 3.xlsx: 9,999 registros
+  ✓ WTC BASE 21-03-25 10K PARTE 5.xlsx: 15,764 registros
+  ✓ YUSTE 10K OFI 365 18-12-24 PARTE 4.xlsx: 9,999 registros
+  ✓ YUSTE 10K OFI 365 19-12-24 PARTE 2.xlsx: 9,999 registros
+  ✓ YUSTE 10K OFI 736 18-12-24 PARTE 1.xlsx: 9,999 registros
+  ✓ YUSTE 10K OFI 736 18-12-24 PARTE 2.xlsx: 9,999 registros
+  ✓ YUSTE 10K OFI 736 19-12-24 PARTE 1.xlsx: 9,656 registros
+  ✓ YUSTE ANGEL TOP 5K 02-04-25 PARTE 1.xlsx: 4,999 registros
+  ✓ YUSTE 10K OFI EXTERNO 18-12-24 PARTE 5.xlsx: 9,999 registros
+  ✓ YUSTE 10K OFI EXTERNO 18-12-24 PARTE 6.xlsx: 9,999 registros
+  ✓ YUSTE ANGEL TOP 5K 02-04-25 PARTE 2.xlsx: 4,999 registros
+  ✓ YUSTE 10K OFI NUEVO CH 18-12-24 PARTE 7.xlsx: 9,999 registros
+  ✓ arga s.l (1).xlsx: 460 registros
+  ✓ arga s.l.xlsx: 460 registros
+  ✓ YUSTE ANGEL TOP 5K 02-04-25 PARTE 3.xlsx: 4,999 registros
+  ✓ YUSTE ANGEL TOP 5K 02-04-25 PARTE 4.xlsx: 5,003 registros
+  ✓ YUSTE 10K OFI NUEVO CH 18-12-24 PARTE 8.xlsx: 9,999 registros
+  ✓ base madrid 6K.xlsx: 5,774 registros
+  ✓ base power 5k 03-09-25 parte 1.xlsx: 4,999 registros
+  ✓ base duplicada.xlsx: 50,000 registros
+  ✓ base power 5k 03-09-25 parte 2.xlsx: 4,999 registros
+  ✓ base power 5k 03-09-25 parte 3.xlsx: 4,999 registros
+  ✓ base prueba David lopez 200 clientes.xlsx: 199 registros
+  ✓ base prueba brayan 200 clientes.xlsx: 199 registros
+  ✓ base prueba ivan arroyo 200 clientes.xlsx: 199 registros
+  ✓ base prueba junior 200 clientes.xlsx: 199 registros
+  ✓ base prueba natalhy 200 clientes.xlsx: 204 registros
+  ✓ base power 5k 28-07-25.xlsx: 5,000 registros
+  ✓ base endesa.xlsx: 33,276 registros
+  ✓ base madrid 40k para vender.xlsx: 40,435 registros
+  ✓ base iberdrola.xlsx: 47,892 registros
+  ✓ bbdd ANGEL 18-06-24 parte 1 25K.xlsx: 24,999 registros
+  ✓ bbdd prueba brayan 2.xlsx: 249 registros
+  ✓ bbdd prueba david.xlsx: 249 registros
+  ✓ bbdd prueba ivana arroyo.xlsx: 249 registros
+  ✓ bbdd prueba junior.xlsx: 173 registros
+  ✓ bbdd prueba natalhy.xlsx: 199 registros
+  ✓ bbdd colombi limpia 12k 18-07-24(por cargar).xlsx: 12,484 registros
+  ✓ contratos (2).xlsx: 70 registros
+  ✓ contratos (1).xlsx: 778 registros
+  ✓ contratos (3).xlsx: 129 registros
+  ✓ contratos.xlsx: 332 registros
+  📊 800/2059 archivos → 11,346,869 registros acumulados
+  ✓ bbdd colombi 35k parte 2 29-01-24.xlsx: 34,999 registros
+  ✓ bbdd colombi 35k parte 1 29-01-24.xlsx: 36,599 registros
+  ✓ base_datos_ordenada_final.xlsx: 50,000 registros
+  ✓ export-2024-12-18 18_51_26.xls: 14,308 registros
+  ✓ dni duplicados.xlsx: 50,000 registros
+  ✓ en base que no estan en web sales.xlsx: 8,441 registros
+  ✓ bbdd 379k colombi en NETO para CARGAR.xlsx: 50,000 registros
+  ✓ exportedDataorders (11).xlsx: 14,925 registros
+  ✓ download06.02 (1).xlsx: 50,000 registros
+  ✓ exportedDataorders (24).xlsx: 14,228 registros
+  ✓ download06.02.xlsx: 50,000 registros
+_locate_stream(Workbook): seen
+    0  5 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 
+   20  4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 
+ 1580= 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 
+ 1600  4 4 4 4 4 4 4 4 4 4 4 4 4 4 4 3 2 2 2 2 
+ 1620  2 2 2 2 2 2 2 2 2 
+  ✓ exportedDataorders (106).xlsx: 50,000 registros
+  ✓ exportedDataorders (20).xlsx: 46,000 registros
+  ✓ exportedDataorders (2).xlsx: 50,000 registros
+  ✓ leads 10k enedesa (1).xlsx: 10,004 registros
+  ✓ leads 10k enedesa.xlsx: 10,004 registros
+  ✓ leads_4139.xlsx: 4,139 registros
+  ✓ extract (1).xlsx: 50,000 registros
+  ✓ extract.xlsx: 50,000 registros
+  ✓ muestra 1 energia.xlsx: 99 registros
+  ✓ muestra energia.xlsx: 99 registros
+  ✓ jhon18dic.xlsx: 49,998 registros
+  ✓ nuevas.xlsx: 5,653 registros
+  ✓ part2_tabulada_filtrado.xlsx: 50,000 registros
+  ✓ part3_tabulada_filtrado.xlsx: 50,000 registros
+  ✓ leads naturgy(CARGADO SOLO MADRID).xlsx: 49,999 registros
+  ✓ leads naturgy.xlsx: 49,999 registros
+  ✓ pedrejon.xlsx: 379 registros
+  ✓ prueba alex 500 clientes.xlsx: 507 registros
+  ✓ raul factor 02-07-24 (1).xls: 130 registros
+  ✓ raul factor 02-07-24.xls: 130 registros
+  ✓ raul factor 04-06-24 (1).xls: 90 registros
+  ✓ raul factor 04-06-24.xls: 90 registros
+  ✓ raul factor 11-06-24 (1).xls: 119 registros
+  ✓ raul factor 11-06-24 (2).xls: 119 registros
+  ✓ raul factor 11-06-24 (3).xls: 119 registros
+  ✓ raul factor 11-06-24.xls: 119 registros
+  ✓ raul factor 18-06-24 (1).xls: 113 registros
+  ✓ raul factor 18-06-24.xls: 113 registros
+  ✓ raul factor 23-07-24.xlsx: 172 registros
+  ✓ raul factor 25-06-24.xls: 120 registros
+  ✓ raul factor 30-07-24.xlsx: 192 registros
+  ✓ response.xlsx: 1 registros
+  ✓ NATURGY JULIO (1).xlsx: 49,994 registros
+  ✓ NATURGY JULIO.xlsx: 49,994 registros
+  ✓ REPSOL OFI 365 10K PARTE 2 08-10-24.xlsx: 9,999 registros
+  ✓ REPSOL OFI 736 10K PARTE 1 08-10-24.xlsx: 9,999 registros
+  ✓ REPSOL OFI EXTERNO 10K PARTE 3 08-10-24.xlsx: 9,999 registros
+  ✓ 10.000 (1).xlsx: 9,999 registros
+  ✓ parte1_tabulada (1)_filtrado.xlsx: 50,000 registros
+  ✓ 126.xlsx: 6,394 registros
+  ✓ parte4_tabulada_filtrado.xlsx: 50,000 registros
+  ✓ ALICANTE 3.xlsx: 10,002 registros
+  ✓ 10.000.xlsx: 9,999 registros
+  ✓ BASE 0007.xlsx: 4,999 registros
+  ✓ parte5_tabulada_filtrado.xlsx: 50,000 registros
+  ✓ BASE 001 MADRID.xlsx: 9,999 registros
+  ✓ BASE 002 MADRID.xlsx: 10,000 registros
+  ✓ BASE 1-10.xlsx: 9,999 registros
+  ✓ BASE 004.xlsx: 10,000 registros
+  ✓ BASE 003.xlsx: 10,000 registros
+  ✓ BASE 006.xlsx: 10,001 registros
+  ✓ BASE 10-20.xlsx: 10,000 registros
+  ✓ BASE 100-120.xlsx: 8,324 registros
+  ✓ BASE 20-30.xlsx: 10,001 registros
+  ✓ BASE 30-40.xlsx: 10,001 registros
+  ✓ BASE 2.xlsx: 10,000 registros
+  ✓ BASE 6.xlsx: 4,192 registros
+  ✓ BASE 40-50.xlsx: 10,000 registros
+  ✓ BASE 50-60.xlsx: 10,001 registros
+  ✓ BASE 60-70.xlsx: 10,000 registros
+  ✓ BASE 100 ALBACETE CARTAGENA.xlsx: 25,000 registros
+  ✓ BASE 70-80.xlsx: 10,000 registros
+  ✓ BASE 90-100.xlsx: 5,240 registros
+  📊 900/2059 archivos → 12,753,012 registros acumulados
+  ✓ BASE ANGEL 300K.xlsx: 338 registros
+  ✓ BASE 80-90.xlsx: 10,000 registros
+  ✓ BASE ALEX NUEVA.xlsx: 3,072 registros
+  ✓ BASE CANARIAS PRINCIPAL.xlsx: 1,835 registros
+  ✓ BASE DUALES 2.xlsx: 1,709 registros
+  ✓ BASE 35K ALBACETE CARTAGENA.xlsx: 33,540 registros
+  ✓ BASE DUALES 3.xlsx: 1,000 registros
+  ✓ BASE E T.xlsx: 1,388 registros
+  ✓ BASE DUALES.xlsx: 1,601 registros
+  ✓ BASE GN 2.xlsx: 409 registros
+  ✓ BASE GN.xlsx: 263 registros
+  ✓ BASE DE DATOS DE CARLOS SUR.xlsx: 16,191 registros
+  ✓ BASE ENDESA 1 (PLENITUDE).xlsx: 10,601 registros
+  ✓ BASE OFI TORREJON 2(PLENITUDE).xls: 15,600 registros
+  ✓ BASE OCM 1(plenitude).xlsx: 24,472 registros
+  ✓ BASE ALICANTE.xlsx: 32,926 registros
+  ✓ parte1_tabulada (1)_filtrado PARTE 1 356K.xlsx: 50,000 registros
+  ✓ BASE OFI TORREJON 2(PLENITUDE).xlsx: 15,600 registros
+  ✓ BASE ZARAGOZA 1(PLENITUDE).xlsx: 9,999 registros
+  ✓ BASE ZARAGOZA 2 (PLENITUDE).xlsx: 10,001 registros
+  ✓ BASES NUEVAS R.xlsx: 4,215 registros
+  ✓ BASE1.xlsx: 9,999 registros
+  ✓ BASE NORTE FILTRADA.xlsx: 31,102 registros
+  ✓ BASE4.xlsx: 10,434 registros
+  ✓ BASE3.xlsx: 10,000 registros
+  ✓ BBDD ALEX .xlsx: 498 registros
+  ✓ BBDD ALEX 500 REGISTROS.ok.xlsx: 498 registros
+  ✓ BBDD ALEX.xls: 998 registros
+  ✓ BBDD ALEX 500 REGISTROS.ok.xlsx.xlsx: 498 registros
+  ✓ BASE ANGEL MADRID ANDALUCIA 100K.xlsx: 50,000 registros
+  ✓ BBDD ALEXANDER.xlsx: 2,000 registros
+  ✓ BASE5.xlsx: 11,999 registros
+  ✓ BBDD Alex.xlsx: 134 registros
+  ✓ Base 005 BARCELONA.xls: 9,999 registros
+  ✓ CARTERA 001.xlsx: 9,998 registros
+  ✓ CAMPAÑA 1.xlsx: 9,999 registros
+  ✓ CAMPAÑA 2.xlsx: 10,001 registros
+  ✓ Base 005 BARCELONA.xlsx: 9,999 registros
+  ✓ CARTERA 006.xlsx: 1,147 registros
+  ✓ CARTERA 0019.xlsx: 10,000 registros
+  ✓ CARTERA 002.xlsx: 10,000 registros
+  ✓ CARTERA 005.xlsx: 8,855 registros
+  ✓ BDRJ0001.xlsx: 20,000 registros
+  ✓ CARTERA 010.xlsx: 1,835 registros
+  ✓ CARTERA 007.xlsx: 10,000 registros
+  ✓ CARTERA 008.xlsx: 10,000 registros
+  ✓ CARTERA 012.xlsx: 6,193 registros
+  ✓ CARTERA 011.xlsx: 9,998 registros
+  ✓ CARTERA 020.xlsx: 4,473 registros
+  ✓ CARTERA 013.xlsx: 9,793 registros
+  ✓ CARTERA 2 nueva .xlsx: 636 registros
+  ✓ CARTERA 015.xlsx: 10,000 registros
+  ✓ CARTERA 11.xlsx: 4,000 registros
+  ✓ CARTERA 016.xlsx: 10,407 registros
+  ✓ CARTERA 10.xlsx: 8,000 registros
+  ✓ CARTERA 2.xlsx: 6,619 registros
+  ✓ CARTERA 5.xlsx: 5,260 registros
+  ✓ CARTERA 7.xls: 7,972 registros
+  ✓ BBBD JOHN 100 MIL 18.xlsx: 50,000 registros
+  ✓ CARTERA 3.xlsx: 9,999 registros
+  ✓ CARTERA 4.xlsx: 10,000 registros
+  ✓ CARTERA 8.xlsx: 2,028 registros
+  ✓ CARTERA 6.xlsx: 10,001 registros
+  ✓ CARTERA004.xlsx: 5,260 registros
+  ✓ CONTRATOS EDP.xlsx: 1,077 registros
+  ✓ CARTERA 9.xlsx: 5,000 registros
+  ✓ BBD 100 MIL vendida carlos.xlsx: 50,000 registros
+  ✓ CARTERA009.xlsx: 6,156 registros
+  ✓ CARTERA003.xlsx: 10,000 registros
+  ✓ CARTERA12.xlsx: 6,515 registros
+  ✓ BBD 100 MIL DUALES(40K ANDALUCIA PLENITUDE).xlsx: 50,000 registros
+  ✓ ENELUZ 018.xlsx: 9,999 registros
+  ✓ ENELUZ 24-03 21 OF1.xlsx: 10,026 registros
+  ✓ ENELUZ 24-03-21 OF 2.xlsx: 10,230 registros
+  ✓ ENELUZ 017(CARGADA NATURGY).xlsx: 10,001 registros
+  ✓ ENELUZ 24-03-21 OF 3.xlsx: 8,279 registros
+  ✓ ENELUZ 30.xlsx: 10,341 registros
+  ✓ ENELUZ 31.xlsx: 10,387 registros
+  ✓ LISTA DE  CLIENTES EDP 2 (ENDESA).xlsx: 15,602 registros
+  ✓ LISTA DE  CLIENTES 26.05.021.xlsx: 15,600 registros
+  ✓ LOTE 2 OVIEDO.xlsx: 10,163 registros
+  ✓ LOTE 2.xlsx: 10,163 registros
+  ✓ LISTADO.xlsx: 10,434 registros
+  ✓ FENINTEGRAL.xlsx: 39,999 registros
+  ✓ LISTADO TOLEDO(ENDESA).xlsx: 40,433 registros
+  ✓ LISTADO (1).xlsx: 40,433 registros
+  ✓ LISTADO (2).xlsx: 40,433 registros
+  ✓ Listado_20k_Andalucia_Ferintegral_Roberto.xlsx: 20,000 registros
+  📊 1000/2059 archivos → 13,859,675 registros acumulados
+  ✓ LISTA DE  CLIENTES EDP.xlsx: 15,602 registros
+  ✓ Listado_20k_Barcelona_Ferintegral_Roberto.xlsx: 20,000 registros
+  ✓ Listado_20k_Toledo_Ferintegral_Roberto.xlsx: 20,000 registros
+  ✓ BASE 10-20.xlsx: 10,000 registros
+  ✓ Listado_30k_RANDOM_Antonio_Lledo - ENVIADO.xlsx: 30,000 registros
+  ✓ Listado_Carlos_Collantes_50000_SEGUNDOS_Jhon_Mila.xlsx: 10,001 registros
+  ✓ BASE 105-110.xlsx: 5,000 registros
+  ✓ Listado_30k_RANDOM_FENINTEGRAL_Antonio_Lledo.xlsx: 30,000 registros
+  ✓ BASE 100-110.xlsx: 10,001 registros
+  ✓ BASE 110-120.xlsx: 10,001 registros
+  ✓ BASE 130-140.xlsx: 10,000 registros
+  ✓ BASE 140-150.xlsx: 10,001 registros
+  ✓ BASE 150-160.xlsx: 10,001 registros
+  ✓ Listado_35k_ZARAGOZA-HUESCA-TERUEL_JhonMilla.xlsx: 35,000 registros
+  ✓ BASE 160-170.xlsx: 10,001 registros
+  ✓ Listado_35k_CACERES-SALAMANCA-ZAMORA_VALLADOLID_JhonMilla.xlsx: 35,000 registros
+  ✓ BASE 170-180.xlsx: 10,001 registros
+  ✓ BASE 180-190.xlsx: 10,001 registros
+  ✓ BASE 190-200.xlsx: 10,001 registros
+  ✓ BASE 220-225.xlsx: 4,022 registros
+  ✓ BASE 200-210.xlsx: 9,985 registros
+  ✓ BASE 210-220.xlsx: 10,000 registros
+  ✓ BASE 20-30.xlsx: 10,000 registros
+  ✓ BASE 30-40.xlsx: 10,000 registros
+  ✓ BASE 40-50.xlsx: 10,001 registros
+  ✓ BASE 50-60.xlsx: 10,001 registros
+  ✓ BASE 60-70.xlsx: 10,001 registros
+  ✓ BASE 80-90.xlsx: 10,001 registros
+  ✓ Listado_60k_BCNMAD_Fenintegral_CarlosCollantes.xlsx: 50,000 registros
+  ✓ BASE 70-80.xlsx: 10,001 registros
+  ✓ BASE 90-100.xlsx: 10,001 registros
+  ✓ base 120-130.xlsx: 10,001 registros
+  ✓ CLIENTES DE 1-10.xlsx: 9,999 registros
+  ✓ BASES NUEVAS DUALES.xlsx: 2,438 registros
+  ✓ ANDALUCIA ANGEL 10 MIL.xlsx: 9,999 registros
+  ✓ BASE MADRID JIRA 1.xlsx: 9,999 registros
+  ✓ PASE PRUEBA JORG.xlsx: 98 registros
+  ✓ BASE MADRID JIRA 2.xlsx: 10,001 registros
+  ✓ Alex.xlsx: 501 registros
+  ✓ CARTERA 9.xlsx: 5,000 registros
+  ✓ CAMPAÑA 3.xlsx: 10,001 registros
+  ✓ BASE ABRIL ENTERA .xlsx: 1,388 registros
+  ✓ Ruben G.xlsx: 1,000 registros
+  ✓ base isaac 6000 a 7000 granada.xlsx: 1,000 registros
+  ✓ isaac de 2000 a 3000 granada.xlsx: 1,000 registros
+  ✓ trigo mayo 0 a 500.xlsx: 499 registros
+  ✓ contratos audax.xlsx: 3,554 registros
+  ✓ BASE BARCELONA MADRID.xlsx: 50,000 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 1.7K 22-10-25 PARTE 1.xlsx: 1,866 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 1.7K CLIENTES 22-10-25 PARTE 7.xlsx: 1,747 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 1K CLIENTES 22-10-25 PARTE 6.xlsx: 1,167 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 2K CLIENTES 22-10-25 PARTE 3.xlsx: 2,163 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 700 CLIENTES 22-10-25 PARTE 2.xlsx: 733 registros
+  ✓ ALUMBRA ENERGIA 22-10-25 300 CLIENTES CUENTAS 22-10-25 PARTE 9.xlsx: 379 registros
+  ✓ resultado.final.xlsx: 50,000 registros
+  ✓ resultado.final.xlsx: 50,000 registros
+  ✓ BBDD ANGEL 30K PARTE 1 14-06-24.xlsx: 29,999 registros
+  ✓ BBDD ANGEL 30K PARTE 2 14-06-24.xlsx: 29,999 registros
+  ✓ todo.xlsx: 50,000 registros
+  ✓ todo.xlsx: 50,000 registros
+  ✓ BBDD ANGEL 30K PARTE 3 14-06-24.xlsx: 29,999 registros
+  ✓ BBDD ANGEL 30K PARTE 4 14-06-24.xlsx: 29,999 registros
+  ✓ bbdd ANGEL 18-06-24 parte 1 25K.xlsx: 24,999 registros
+  ✓ BBDD ANGEL 30K PARTE 5 14-06-24.xlsx: 34,999 registros
+  ✓ BASE ELIZABETH CUENTAS 18K OFI EXTERNO 08-09-24 PARTE 6.xlsx: 18,557 registros
+  ✓ BBDD ANGEL 44K PARTE 6 14-06-24.xlsx: 44,349 registros
+  ✓ psum.xlsx: 50,000 registros
+  ✓ BASE ELIZABETH CUENTAS 24K OFI EXTERNO 08-09-24 PARTE 3.xlsx: 23,972 registros
+  ✓ BASE ELIZABETH CUENTAS 5K OFI EXTERNO 08-09-24 PARTE 7.xlsx: 5,601 registros
+  ✓ BASE ELIZABETH CUENTAS 30K OFI 365 08-09-24 PARTE 2.xlsx: 29,999 registros
+  ✓ BBDD276k.xlsx: 50,000 registros
+  ✓ BASE ELIZABETH CUENTAS 30K OFI 736 08-09-24 PARTE 1.xlsx: 29,999 registros
+  ✓ BASE NUEVA LIZ 12K OFI EXTERNO 07-09-24 PARTE 3.xlsx: 12,388 registros
+  ✓ psum.xlsx: 50,000 registros
+  ✓ BBDDD LIZ 5K CUENTAS 20-08-24 PARTE 2.xlsx: 4,000 registros
+  ✓ BBDDD LIZ 10K CUENTAS 20-08-24 PARTE 1.xlsx: 9,999 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 1(PARA POWERBRANDS).xlsx: 9,999 registros
+  ✓ BASE NUEVA LIZ 20K OFI 365 07-09-24 PARTE 2.xlsx: 19,999 registros
+  ✓ BASE ELIZABETH CUENTAS 50K OFI 365 08-09-24 PARTE 5.xlsx: 49,998 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 1.xlsx: 9,999 registros
+  ✓ BASE NUEVA LIZ 20K OFI 736 07-09-24 PARTE 1.xlsx: 19,999 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 2.xlsx: 9,999 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 4.xlsx: 9,999 registros
+  ✓ ELIZ 5K 9-05-25 PARTE 1.xlsx: 5,272 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 3.xlsx: 9,999 registros
+  ✓ ELIZ 10K 12-05-25 PARTE 5.xlsx: 10,183 registros
+  ✓ BASE ELIZABETH CUENTAS 50K OFI 736 08-09-24 PARTE 4.xlsx: 50,000 registros
+  ✓ BBDDD LIZ 16K CUENTAS 20-08-24 PARTE 3.xlsx: 16,800 registros
+  ✓ ELIZ 5K 9-05-25 PARTE 2.xlsx: 4,999 registros
+  ✓ LIZABETH 10K PARTE 3 28-05-25.xlsx: 9,999 registros
+  ✓ LIZABETH 10K PARTE 1 28-05-25.xlsx: 10,056 registros
+  ✓ LIZABETH 10K PARTE 2 28-05-25.xlsx: 9,999 registros
+  ✓ LIZABETH 10K PARTE 4 28-05-25.xlsx: 9,999 registros
+  📊 1100/2059 archivos → 15,424,988 registros acumulados
+  ✓ LIZABETH 10K PARTE 5 28-05-25.xlsx: 9,999 registros
+  ✓ MEDELLIN 02-06-25 10K PARTE 1.xlsx: 9,998 registros
+  ✓ MEDELLIN 02-06-25 10K PARTE 2.xlsx: 9,998 registros
+  ✓ MEDELLIN 02-06-25 10K PARTE 3.xlsx: 9,998 registros
+  ✓ 126.xlsx: 6,394 registros
+  ✓ BASE 0007.xlsx: 4,999 registros
+  ✓ ALICANTE 3.xlsx: 10,002 registros
+  ✓ 10.000 (1).xlsx: 9,999 registros
+  ✓ 10.000.xlsx: 9,999 registros
+  ✓ BASE 001 MADRID.xlsx: 9,999 registros
+  ✓ BASE 002 MADRID.xlsx: 10,000 registros
+  ✓ MEDELLIN 02-06-25 10K PARTE 4.xlsx: 10,796 registros
+  ✓ BASE 003.xlsx: 10,000 registros
+  ✓ BASE 1-10.xlsx: 9,999 registros
+  ✓ BASE 004.xlsx: 10,000 registros
+  ✓ BASE 006.xlsx: 10,001 registros
+  ✓ BASE 10-20.xlsx: 10,000 registros
+  ✓ BASE 100-120.xlsx: 8,324 registros
+  ✓ BASE 2.xlsx: 10,000 registros
+  ✓ BASE 20-30.xlsx: 10,001 registros
+  ✓ BASE 30-40.xlsx: 10,001 registros
+  ✓ BASE 6.xlsx: 4,192 registros
+  ✓ BASE 40-50.xlsx: 10,000 registros
+  ✓ BASE 50-60.xlsx: 10,001 registros
+  ✓ BASE 60-70.xlsx: 10,000 registros
+  ✓ BASE 70-80.xlsx: 10,000 registros
+  ✓ BASE 90-100.xlsx: 5,240 registros
+  ✓ BASE ANGEL 300K.xlsx: 338 registros
+  ✓ BASE 80-90.xlsx: 10,000 registros
+  ✓ BASE 100 ALBACETE CARTAGENA.xlsx: 25,000 registros
+  ✓ BASE ALEX NUEVA.xlsx: 3,072 registros
+  ✓ BASE CANARIAS PRINCIPAL.xlsx: 1,835 registros
+  ✓ BASE DUALES 3.xlsx: 1,000 registros
+  ✓ BASE DUALES 2.xlsx: 1,709 registros
+  ✓ BASE E T.xlsx: 1,388 registros
+  ✓ BASE DUALES.xlsx: 1,601 registros
+  ✓ BASE 35K ALBACETE CARTAGENA.xlsx: 33,540 registros
+  ✓ BASE GN 2.xlsx: 409 registros
+  ✓ BASE GN.xlsx: 263 registros
+  ✓ BASE DE DATOS DE CARLOS SUR.xlsx: 16,191 registros
+  ✓ BASE ENDESA 1 (PLENITUDE).xlsx: 10,601 registros
+  ✓ BASE OFI TORREJON 2(PLENITUDE).xls: 15,600 registros
+  ✓ BASE OCM 1(plenitude).xlsx: 24,472 registros
+  ✓ BASE ZARAGOZA 1(PLENITUDE).xlsx: 9,999 registros
+  ✓ BASE ALICANTE.xlsx: 32,926 registros
+  ✓ BASE OFI TORREJON 2(PLENITUDE).xlsx: 15,600 registros
+  ✓ BASE ZARAGOZA 2 (PLENITUDE).xlsx: 10,001 registros
+  ✓ BASE1.xlsx: 9,999 registros
+  ✓ BASE3.xlsx: 10,000 registros
+  ✓ BASES NUEVAS R.xlsx: 4,215 registros
+  ✓ BASE4.xlsx: 10,434 registros
+  ✓ BBDD ALEX .xlsx: 498 registros
+  ✓ BASE NORTE FILTRADA.xlsx: 31,102 registros
+  ✓ BBDD ALEX 500 REGISTROS.ok.xlsx: 498 registros
+  ✓ BBDD ALEX.xls: 998 registros
+  ✓ BASE5.xlsx: 11,999 registros
+  ✓ BBDD ALEX 500 REGISTROS.ok.xlsx.xlsx: 498 registros
+  ✓ BBDD ALEXANDER.xlsx: 2,000 registros
+  ✓ Base 005 BARCELONA.xls: 9,999 registros
+  ✓ BASE ANGEL MADRID ANDALUCIA 100K.xlsx: 50,000 registros
+  ✓ BBDD Alex.xlsx: 134 registros
+  ✓ CARTERA 001.xlsx: 9,998 registros
+  ✓ CAMPAÑA 1.xlsx: 9,999 registros
+  ✓ CAMPAÑA 2.xlsx: 10,001 registros
+  ✓ Base 005 BARCELONA.xlsx: 9,999 registros
+  ✓ CARTERA 006.xlsx: 1,147 registros
+  ✓ CARTERA 0019.xlsx: 10,000 registros
+  ✓ CARTERA 002.xlsx: 10,000 registros
+  ✓ CARTERA 005.xlsx: 8,855 registros
+  ✓ BDRJ0001.xlsx: 20,000 registros
+  ✓ CARTERA 010.xlsx: 1,835 registros
+  ✓ CARTERA 007.xlsx: 10,000 registros
+  ✓ CARTERA 008.xlsx: 10,000 registros
+  ✓ CARTERA 012.xlsx: 6,193 registros
+  ✓ CARTERA 011.xlsx: 9,998 registros
+  ✓ CARTERA 020.xlsx: 4,473 registros
+  ✓ CARTERA 013.xlsx: 9,793 registros
+  ✓ CARTERA 015.xlsx: 10,000 registros
+  ✓ CARTERA 2 nueva .xlsx: 636 registros
+  ✓ CARTERA 11.xlsx: 4,000 registros
+  ✓ CARTERA 10.xlsx: 8,000 registros
+  ✓ CARTERA 016.xlsx: 10,407 registros
+  ✓ CARTERA 2.xlsx: 6,619 registros
+  ✓ CARTERA 5.xlsx: 5,260 registros
+  ✓ CARTERA 3.xlsx: 9,999 registros
+  ✓ CARTERA 7.xls: 7,972 registros
+  ✓ CARTERA 4.xlsx: 10,000 registros
+  ✓ CARTERA 8.xlsx: 2,028 registros
+  ✓ BBBD JOHN 100 MIL 18.xlsx: 50,000 registros
+  ✓ CARTERA 6.xlsx: 10,001 registros
+  ✓ CONTRATOS EDP.xlsx: 1,077 registros
+  📊 1200/2059 archivos → 16,311,137 registros acumulados
+  ✓ CARTERA004.xlsx: 5,260 registros
+  ✓ CARTERA 9.xlsx: 5,000 registros
+  ✓ BBD 100 MIL vendida carlos.xlsx: 50,000 registros
+  ✓ CARTERA12.xlsx: 6,515 registros
+  ✓ CARTERA003.xlsx: 10,000 registros
+  ✓ CARTERA009.xlsx: 6,156 registros
+  ✓ ENELUZ 018.xlsx: 9,999 registros
+  ✓ BBD 100 MIL DUALES(40K ANDALUCIA PLENITUDE).xlsx: 50,000 registros
+  ✓ ENELUZ 24-03 21 OF1.xlsx: 10,026 registros
+  ✓ ENELUZ 24-03-21 OF 3.xlsx: 8,279 registros
+  ✓ ENELUZ 017(CARGADA NATURGY).xlsx: 10,001 registros
+  ✓ ENELUZ 30.xlsx: 10,341 registros
+  ✓ ENELUZ 24-03-21 OF 2.xlsx: 10,230 registros
+  ✓ ENELUZ 31.xlsx: 10,387 registros
+  ✓ LISTA DE  CLIENTES EDP 2 (ENDESA).xlsx: 15,602 registros
+  ✓ LISTA DE  CLIENTES 26.05.021.xlsx: 15,600 registros
+  ✓ LOTE 2 OVIEDO.xlsx: 10,163 registros
+  ✓ LOTE 2.xlsx: 10,163 registros
+  ✓ LISTADO.xlsx: 10,434 registros
+  ✓ FENINTEGRAL.xlsx: 39,999 registros
+  ✓ LISTADO (1).xlsx: 40,433 registros
+  ✓ LISTADO TOLEDO(ENDESA).xlsx: 40,433 registros
+  ✓ LISTADO (2).xlsx: 40,433 registros
+  ✓ LISTA DE  CLIENTES EDP.xlsx: 15,602 registros
+  ✓ Listado_20k_Andalucia_Ferintegral_Roberto.xlsx: 20,000 registros
+  ✓ Listado_20k_Barcelona_Ferintegral_Roberto.xlsx: 20,000 registros
+  ✓ Listado_20k_Toledo_Ferintegral_Roberto.xlsx: 20,000 registros
+  ✓ BASE 10-20.xlsx: 10,000 registros
+  ✓ Listado_30k_RANDOM_Antonio_Lledo - ENVIADO.xlsx: 30,000 registros
+  ✓ BASE 105-110.xlsx: 5,000 registros
+  ✓ Listado_Carlos_Collantes_50000_SEGUNDOS_Jhon_Mila.xlsx: 10,001 registros
+  ✓ Listado_30k_RANDOM_FENINTEGRAL_Antonio_Lledo.xlsx: 30,000 registros
+  ✓ BASE 100-110.xlsx: 10,001 registros
+  ✓ BASE 110-120.xlsx: 10,001 registros
+  ✓ BASE 130-140.xlsx: 10,000 registros
+  ✓ BASE 140-150.xlsx: 10,001 registros
+  ✓ BASE 150-160.xlsx: 10,001 registros
+  ✓ BASE 160-170.xlsx: 10,001 registros
+  ✓ Listado_35k_ZARAGOZA-HUESCA-TERUEL_JhonMilla.xlsx: 35,000 registros
+  ✓ Listado_35k_CACERES-SALAMANCA-ZAMORA_VALLADOLID_JhonMilla.xlsx: 35,000 registros
+  ✓ BASE 170-180.xlsx: 10,001 registros
+  ✓ BASE 180-190.xlsx: 10,001 registros
+  ✓ BASE 190-200.xlsx: 10,001 registros
+  ✓ BASE 220-225.xlsx: 4,022 registros
+  ✓ BASE 20-30.xlsx: 10,000 registros
+  ✓ BASE 210-220.xlsx: 10,000 registros
+  ✓ BASE 200-210.xlsx: 9,985 registros
+  ✓ BASE 30-40.xlsx: 10,000 registros
+  ✓ BASE 40-50.xlsx: 10,001 registros
+  ✓ BASE 50-60.xlsx: 10,001 registros
+  ✓ BASE 60-70.xlsx: 10,001 registros
+  ✓ BASE 70-80.xlsx: 10,001 registros
+  ✓ BASE 80-90.xlsx: 10,001 registros
+  ✓ Listado_60k_BCNMAD_Fenintegral_CarlosCollantes.xlsx: 50,000 registros
+  ✓ BASE 90-100.xlsx: 10,001 registros
+  ✓ CLIENTES DE 1-10.xlsx: 9,999 registros
+  ✓ base 120-130.xlsx: 10,001 registros
+  ✓ BASES NUEVAS DUALES.xlsx: 2,438 registros
+  ✓ ANDALUCIA ANGEL 10 MIL.xlsx: 9,999 registros
+  ✓ BASE MADRID JIRA 1.xlsx: 9,999 registros
+  ✓ PASE PRUEBA JORG.xlsx: 98 registros
+  ✓ BASE MADRID JIRA 2.xlsx: 10,001 registros
+  ✓ Alex.xlsx: 501 registros
+  ✓ CARTERA 9.xlsx: 5,000 registros
+  ✓ CAMPAÑA 3.xlsx: 10,001 registros
+  ✓ Ruben G.xlsx: 1,000 registros
+  ✓ BASE ABRIL ENTERA .xlsx: 1,388 registros
+  ✓ base isaac 6000 a 7000 granada.xlsx: 1,000 registros
+  ✓ isaac de 2000 a 3000 granada.xlsx: 1,000 registros
+  ✓ trigo mayo 0 a 500.xlsx: 499 registros
+  ✓ contratos audax.xlsx: 3,554 registros
+  ✓ BASE BARCELONA MADRID.xlsx: 50,000 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 1.7K 22-10-25 PARTE 1.xlsx: 1,866 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 1.7K CLIENTES 22-10-25 PARTE 7.xlsx: 1,747 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 1K CLIENTES 22-10-25 PARTE 6.xlsx: 1,167 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 2K CLIENTES 22-10-25 PARTE 3.xlsx: 2,163 registros
+  ✓ ENGEL ENERGIA BAJAS 22-10-25 700 CLIENTES 22-10-25 PARTE 2.xlsx: 733 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 1K CLIENTES 22-10-25 PARTE 10.xlsx: 1,054 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 3.7K CLIENTES 22-10-25 PARTE 8.xlsx: 3,770 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 4K CLIENTES 22-10-25 PARTE 11.xlsx: 4,331 registros
+  ✓ resultado.final.xlsx: 50,000 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 4K CLIENTES 22-10-25 PARTE 5.xlsx: 4,000 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 4K CLIENTES 22-10-25 PARTE 4.xlsx: 3,993 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 5K SOLO CUPS 22-10-25 PARTE 12.xlsx: 5,653 registros
+  ✓ resultado.final.xlsx: 50,000 registros
+  ✓ BASE ALEX COLOMBI 18K 06-07-24 PARTE 3.xlsx: 18,676 registros
+  ✓ BASE ALEX COLOMBI 20K 08-07-24 PARTE 1.xlsx: 19,999 registros
+  ✓ todo.xlsx: 50,000 registros
+  ✓ todo.xlsx: 50,000 registros
+  ✓ BASE ALEX COLOMBI 20K 08-07-24 PARTE 2.xlsx: 19,999 registros
+  ✓ BASE ALEX COLOMBI 25K 05-07-24 PARTE 1.xlsx: 24,999 registros
+  📊 1300/2059 archivos → 17,651,843 registros acumulados
+  ✓ BASE ALEX COLOMBI 20K 08-07-24 PARTE 3.xlsx: 28,676 registros
+  ✓ BASE ALEX COLOMBI 25k 02-07-24 PARTE 1.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBI 25K 06-07-24 PARTE 1.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBI 25K 06-07-24 PARTE 2.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBI 25k 02-07-24 PARTE 2.xlsx: 24,999 registros
+  ✓ psum.xlsx: 50,000 registros
+  ✓ BASE ALEX COLOMBI 25k 02-07-24 PARTE 3.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBIA 18K 01-08-24 PARTE 3.xlsx: 6,611 registros
+  ✓ BASE ALEX COLOMBI 25k 02-07-24 PARTE 4.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBI 8k 02-07-24 PARTE 5.xlsx: 8,401 registros
+  ✓ BASE ALEX COLOMBI 27K 05-07-24 PARTE 2.xlsx: 28,508 registros
+  ✓ BBDD276k.xlsx: 50,000 registros
+  ✓ psum.xlsx: 50,000 registros
+  ✓ BASE ALEX COLOMBI 30K 09-07-24 PARTE 1.xlsx: 32,485 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 11.xlsx: 16,202 registros
+  ✓ BASE ALEX COLOMBI 30K 09-07-24 PARTE 2.xlsx: 29,999 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 1.xlsx: 22,006 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 10.xlsx: 24,999 registros
+  ✓ BASE COLOMBI 1.7K 18-07-24 PARTE 1.xlsx: 1,736 registros
+  ✓ BASE ALEX COLOMBIA 7K 01-08-24 PARTE 4.xlsx: 6,911 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 2.xlsx: 25,000 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 5.xlsx: 25,000 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 6.xlsx: 25,000 registros
+  ✓ BASE COLOMBI 2K 25-04-24  EXCLIENTE NATURGY PARTE 1.xlsx: 2,000 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 7.xlsx: 24,999 registros
+  ✓ BASE COLOMBI 2K 25-04-24  EXCLIENTE NATURGY PARTE 2.xlsx: 2,000 registros
+  ✓ BASE COLOMBI 2K 25-04-24  EXCLIENTE NATURGY PARTE 3.xlsx: 2,000 registros
+  ✓ BASE COLOMBI 15K 25-04-24  EXCLIENTE NATURGY PARTE 4.xlsx: 14,925 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 8.xlsx: 25,000 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 9.xlsx: 25,000 registros
+  ✓ BASE COLOMBI EXCLIENTES NATURGY  2K PARTE 1 30-04-24.xlsx: 2,000 registros
+  ✓ BASE COLOMBI EXCLIENTES NATURGY  2K PARTE 2 30-04-24.xlsx: 2,000 registros
+  ✓ BASE COLOMBI 25K 18-07-24 PARTE 3.xlsx: 24,999 registros
+  ✓ BASE COLOMBI 25K 18-07-24 PARTE 4.xlsx: 24,999 registros
+  ✓ BASE COLOMBI EXCLIENTES NATURGY  2K PARTE 3 30-04-24.xlsx: 2,000 registros
+  ✓ BASE COLOMBI EXCLIENTES NATURGY  2K PARTE 4 30-04-24.xlsx: 2,000 registros
+  ✓ BBDD 4K COLOMBI 17-02-24.xlsx: 4,113 registros
+  ✓ BBDD COLOMBI 1.8K 01-05-24 PARTE 4.xlsx: 1,843 registros
+  ✓ BBDD COLOMBI 1.8K 01-05-24 PARTE 5.xlsx: 1,999 registros
+  ✓ BASE COLOMBI 27K 18-07-24 PARTE 2.xlsx: 27,933 registros
+  ✓ BBDD COLOMBI 11K PARTE 3  16-02-24.xlsx: 11,805 registros
+  ✓ BASE COLOMBI 30K PARTE CUENTAS 1 31-01-24.xlsx: 29,999 registros
+  ✓ BBDD COLOMBI 13K PARTE 3 19-02-24.xlsx: 13,760 registros
+  ✓ BASE COLOMBI 38K PARTE CUENTAS 2 03-02-24.xlsx: 38,405 registros
+  ✓ BBDD COLOMBI 1K 01-05-24 PARTE 6.xlsx: 1,000 registros
+  ✓ BBDD COLOMBI 1900K 19-02-24.xlsx: 1,960 registros
+  ✓ BBDD COLOMBI 1K 01-05-24 PARTE 7.xlsx: 1,000 registros
+  ✓ BBDD COLOMBI 1k clientes  01-05-24 PARTE 10.xlsx: 1,000 registros
+  ✓ BBDD COLOMBI 07-06-24 20K.xlsx: 20,000 registros
+  ✓ BBDD COLOMBI 13K PARTE 5  16-02-24.xlsx: 13,901 registros
+  ✓ BBDD COLOMBI 22-04-24 2000 CLIENTES NATURGY PARTE 4.xlsx: 2,000 registros
+  ✓ BBDD COLOMBI 15K PARTE 2 19-02-24.xlsx: 14,925 registros
+  ✓ BBDD COLOMBI 22-04-24 400 CLIENTES ENDESA PARTE 3.xlsx: 460 registros
+  ✓ BASE COLOMBI 47K 25-04-24  EXCLIENTE NATURGY PARTE 5 CUENTAS.xlsx: 46,000 registros
+  ✓ BBDD COLOMBI 22-04-24 2000 CLIENTES NATURGY PARTE 5.xlsx: 2,000 registros
+  ✓ BBDD COLOMBI 22-04-24 500 CLIENTES PARTE 2.xlsx: 500 registros
+  ✓ BBDD COLOMBI 17K PARTE 2  16-02-24.xlsx: 17,199 registros
+  ✓ BBDD COLOMBI 2K 01-05-24 PARTE 1.xlsx: 2,000 registros
+  ✓ BBDD COLOMBI 22-04-24 10K CLIENTES CUENTA  NATURGY PARTE 7.xlsx: 10,000 registros
+  ✓ BBDD COLOMBI 2K 01-05-24 PARTE 2.xlsx: 2,000 registros
+  ✓ BBDD COLOMBI 2K 01-05-24 PARTE 3.xlsx: 2,000 registros
+  ✓ BBDD COLOMBI 22-04-24 14K CLIENTES CUENTA  NATURGY PARTE 6.xlsx: 14,228 registros
+  ✓ BBDD COLOMBI 400 clientes  01-05-24 PARTE 8.xlsx: 460 registros
+  ✓ BASE COLOMBI 47K CUENTAS PARTE 2 31-01-24.xlsx: 47,932 registros
+  ✓ BBDD COLOMBI 20K 26-05-24.xlsx: 20,000 registros
+  ✓ BBDD COLOMBI 22-04-24 8K PARTE 1.xlsx: 8,441 registros
+  ✓ BBDD COLOMBI 34,13K PARTE 5 19-02-24.xlsx: 34,128 registros
+  ✓ BBDD COLOMBI 34K PARTE 4 19-02-24.xlsx: 34,128 registros
+  ✓ BBDD COLOMBI 500 clientes  01-05-24 PARTE 9.xlsx: 500 registros
+  ✓ BBDD COLOMBI 38K PARTE 7 19-02-24.xlsx: 38,241 registros
+  ✓ BBDD COLOMBI 40K PARTE 3  17-04-24.xlsx: 39,999 registros
+  ✓ BBDD COLOMBI 40K PARTE 2  17-04-24.xlsx: 39,999 registros
+  ✓ BBDD COLOMBI 40K CUENTAS 31-01-24.xlsx: 40,890 registros
+  ✓ BBDD COLOMBI 40K PARTE 1  17-04-24.xlsx: 40,647 registros
+  ✓ BBDD COLOMBI 8K PARTE 4  16-02-24.xlsx: 7,839 registros
+  ✓ BBDD COLOMBI 40K PARTE 4  17-04-24.xlsx: 35,160 registros
+  ✓ bbdd 500 clientes colombi 22-02-24.xlsx: 499 registros
+  ✓ BBDD COLOMBI 50K PARTE 1 07-02-24.xlsx: 49,999 registros
+  ✓ BBDD COLOMBI 50K PARTE 2 07-02-24.xlsx: 49,999 registros
+  ✓ bbbd colombi 50K PARTE 1 12-02-24.xlsx: 49,999 registros
+  ✓ bbbd colombi 50K PARTE 3 12-02-24.xlsx: 49,999 registros
+  ✓ bbbd colombi 50K PARTE 4 12-02-24.xlsx: 42,029 registros
+  ✓ bbbd colombi 50K PARTE 2 12-02-24.xlsx: 49,999 registros
+  ✓ bbdd colombi 20k 30-05-24.xlsx: 20,000 registros
+  ✓ bbdd colombi 20k 11-06-24.xlsx: 20,000 registros
+  ✓ bbdd 50k colombi parte 1 16-02-24.xlsx: 49,099 registros
+  ✓ bbdd colombi 8k 17-01-24.xlsx: 7,998 registros
+  ✓ bbdd colombi 30k cuentas parte 1 9-02-24.xlsx: 30,000 registros
+  ✓ bbdd colombi 35K PARTE 1 03-02-24.xlsx: 34,999 registros
+  ✓ bbdd colombi limpia 12k 25-07-24.xlsx: 11,636 registros
+  ✓ bbdd colombi 30k 31-05-24 PARTE 1.xlsx: 29,999 registros
+  ✓ bbdd colombi 38k 21-02-24.xlsx: 38,241 registros
+  ✓ bbdd colombi 35k 31-05-24 PARTE 2.xlsx: 36,782 registros
+  ✓ BASE GIOVANNY 15K 10-07-24 PARTE 5.xlsx: 15,876 registros
+  ✓ BASE GIOVANNY 17K 10-07-24 PARTE 3.xlsx: 16,800 registros
+  ✓ bbdd colombi 48k cuentas parte 2 9-02-24.xlsx: 48,104 registros
+  ✓ BASE GIOVANNY 25K 10-07-24 PARTE 1.xlsx: 24,999 registros
+  ✓ BASE GIOVANNY 25K 10-07-24 PARTE 2.xlsx: 25,001 registros
+  ✓ BASE GIOVANNY 25K 10-07-24 PARTE 4.xlsx: 24,999 registros
+  ✓ BASE GIOVANNY CUENTAS LIMA 20K 15-08-24 PARTE 2.xlsx: 19,999 registros
+  📊 1400/2059 archivos → 19,804,742 registros acumulados
+  ✓ BASE GIOVANNY CUENTAS LIMA 20K 15-08-24 PARTE 1.xlsx: 20,000 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 1K CLIENTES 22-10-25 PARTE 10.xlsx: 1,054 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 3.7K CLIENTES 22-10-25 PARTE 8.xlsx: 3,770 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 4K CLIENTES 22-10-25 PARTE 11.xlsx: 4,331 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 4K CLIENTES 22-10-25 PARTE 4.xlsx: 3,993 registros
+  ✓ BASE GIOVANNY CUENTAS LIMA 25K 19-08-24 PARTE 1.xlsx: 24,999 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 4K CLIENTES 22-10-25 PARTE 5.xlsx: 4,000 registros
+  ✓ PODO Y ENGEL ENERGIA 22-10-25 5K SOLO CUPS 22-10-25 PARTE 12.xlsx: 5,653 registros
+  ✓ BASE GIOVANNY CUENTAS LIMA 25K 20-08-24 PARTE 3.xlsx: 24,999 registros
+  ✓ BASE GIOVANNY LIMA 20K 15-08-24 PARTE 1.xlsx: 20,000 registros
+  ✓ BASE GIOVANNY CUENTAS LIMA 25K 20-08-24 PARTE 4.xlsx: 24,999 registros
+  ✓ 10k iber nuevos 10042023 LIMPIA.xlsx: 10,220 registros
+  ✓ BASE GIOVANNY CUENTAS LIMA 33K 19-08-24 PARTE 2.xlsx: 33,177 registros
+  ✓ BASE 10K CUENTAS MARTA NATURGY 06-10-23 NETO.xlsx: 10,028 registros
+  ✓ BASE MARTA 18-10-23.xlsx: 246 registros
+  ✓ BASE MARTA 18-10-23 PARTE 2.xlsx: 4,219 registros
+  ✓ BASE 7K CUENTAS MARTA 06-10-23.xlsx: 7,182 registros
+  ✓ BASES NUEVAS R 4K.xlsx: 4,215 registros
+  ✓ 30kl jhon 010523 LIMPIA.xlsx: 24,850 registros
+  ✓ 20k marta BRUTO.xlsx: 19,997 registros
+  ✓ BBDD COLOMBI 30,7K PARTE 6 19-02-24.xlsx: 30,734 registros
+  ✓ BBDD MARTA MIXTO 4.xlsx: 2,948 registros
+  ✓ BBDD MIXTO MARTA 5.xlsx: 8,924 registros
+  ✓ BBDD PRUEBAS.xlsx: 20 registros
+  ✓ BBDD MARTA 14K CUENTAS 07-10-23.xlsx: 14,468 registros
+  ✓ BBDD CARLOS 20K.xlsx: 19,999 registros
+  ✓ BBDD ROBERTO PART 2 50K 14 06 23 MENOS CUPS.xlsx: 10,116 registros
+  ✓ BBDD MARTA 2 MIXTO.xlsx: 26,157 registros
+  ✓ BBDD ROBERTO PART 4 50K 14 06 23.xlsx: 10,008 registros
+  ✓ BBDD MIXTA  MARTA 6.xlsx: 20,744 registros
+  ✓ BBDD VALENCIA MARTA 3.xlsx: 3,458 registros
+  ✓ 50k-7Junio Completa (1) ROBERTO CARGADA.xlsx: 50,000 registros
+  ✓ BASE ENERGIA 50K IBAN CUPS MARTA NUEVO.xlsx: 50,000 registros
+  ✓ LISTA DE  CLIENTES 26.05.021.xlsx: 15,600 registros
+  ✓ BBDD ROBERTO PART GRANDE 20K  50K 14 06 23.xlsx: 22,852 registros
+  ✓ BASE MARTA MIXTO 25K 06-10-23 BRUTO.xlsx: 14,468 registros
+  ✓ Listado_20k_Barcelona_Ferintegral_Roberto.xlsx: 20,000 registros
+  ✓ FENINTEGRAL(plenitude).xlsx: 39,999 registros
+  ✓ BASE ALEX COLOMBI 20K 08-07-24 PARTE 1.xlsx: 19,999 registros
+  ✓ BASE ALEX COLOMBI 18K 06-07-24 PARTE 3.xlsx: 18,676 registros
+  ✓ BASE ALEX COLOMBI 20K 08-07-24 PARTE 2.xlsx: 19,999 registros
+  ✓ Listado_Carlos_Collantes_50000_SEGUNDOS_Jhon_Mila (1).xlsx: 50,000 registros
+  ✓ BASE ALEX COLOMBI 25K 05-07-24 PARTE 1.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBI 20K 08-07-24 PARTE 3.xlsx: 28,676 registros
+  ✓ BDREC0001 80K1.xlsx: 50,000 registros
+  ✓ BASE ALEX COLOMBI 25K 06-07-24 PARTE 1.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBI 25k 02-07-24 PARTE 1.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBI 25K 06-07-24 PARTE 2.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBI 25k 02-07-24 PARTE 2.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBI 25k 02-07-24 PARTE 3.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBI 8k 02-07-24 PARTE 5.xlsx: 8,401 registros
+  ✓ BASE ALEX COLOMBI 25k 02-07-24 PARTE 4.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBIA 18K 01-08-24 PARTE 3.xlsx: 6,611 registros
+  ✓ BASE ALEX COLOMBI 27K 05-07-24 PARTE 2.xlsx: 28,508 registros
+  ✓ BASE ALEX COLOMBI 30K 09-07-24 PARTE 2.xlsx: 29,999 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 11.xlsx: 16,202 registros
+  ✓ BASE ALEX COLOMBI 30K 09-07-24 PARTE 1.xlsx: 32,485 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 1.xlsx: 22,006 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 10.xlsx: 24,999 registros
+  ✓ BASE COLOMBI 1.7K 18-07-24 PARTE 1.xlsx: 1,736 registros
+  ✓ BASE ALEX COLOMBIA 7K 01-08-24 PARTE 4.xlsx: 6,911 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 5.xlsx: 25,000 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 2.xlsx: 25,000 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 6.xlsx: 25,000 registros
+  ✓ BASE COLOMBI 15K 25-04-24  EXCLIENTE NATURGY PARTE 4.xlsx: 14,925 registros
+  ✓ BASE COLOMBI 2K 25-04-24  EXCLIENTE NATURGY PARTE 1.xlsx: 2,000 registros
+  ✓ BASE COLOMBI 2K 25-04-24  EXCLIENTE NATURGY PARTE 2.xlsx: 2,000 registros
+  ✓ BASE COLOMBI 2K 25-04-24  EXCLIENTE NATURGY PARTE 3.xlsx: 2,000 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 8.xlsx: 25,000 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 7.xlsx: 24,999 registros
+  ✓ BASE ALEX COLOMBIA 25K 01-08-24 PARTE 9.xlsx: 25,000 registros
+  ✓ BASE COLOMBI EXCLIENTES NATURGY  2K PARTE 1 30-04-24.xlsx: 2,000 registros
+  ✓ BASE COLOMBI 25K 18-07-24 PARTE 3.xlsx: 24,999 registros
+  ✓ BASE COLOMBI EXCLIENTES NATURGY  2K PARTE 2 30-04-24.xlsx: 2,000 registros
+  ✓ BASE COLOMBI 25K 18-07-24 PARTE 4.xlsx: 24,999 registros
+  ✓ BASE COLOMBI EXCLIENTES NATURGY  2K PARTE 3 30-04-24.xlsx: 2,000 registros
+  ✓ BASE COLOMBI EXCLIENTES NATURGY  2K PARTE 4 30-04-24.xlsx: 2,000 registros
+  ✓ BBDD COLOMBI 1.8K 01-05-24 PARTE 4.xlsx: 1,843 registros
+  ✓ BBDD 4K COLOMBI 17-02-24.xlsx: 4,113 registros
+  ✓ BBDD COLOMBI 1.8K 01-05-24 PARTE 5.xlsx: 1,999 registros
+  ✓ BASE COLOMBI 27K 18-07-24 PARTE 2.xlsx: 27,933 registros
+  ✓ BASE COLOMBI 30K PARTE CUENTAS 1 31-01-24.xlsx: 29,999 registros
+  ✓ BBDD COLOMBI 11K PARTE 3  16-02-24.xlsx: 11,805 registros
+  ✓ BBDD COLOMBI 13K PARTE 3 19-02-24.xlsx: 13,760 registros
+  ✓ BBDD COLOMBI 13K PARTE 5  16-02-24.xlsx: 13,901 registros
+  ✓ BBDD COLOMBI 07-06-24 20K.xlsx: 20,000 registros
+  ✓ BBDD COLOMBI 1900K 19-02-24.xlsx: 1,960 registros
+  ✓ BASE COLOMBI 38K PARTE CUENTAS 2 03-02-24.xlsx: 38,405 registros
+  ✓ BBDD COLOMBI 1K 01-05-24 PARTE 6.xlsx: 1,000 registros
+  ✓ BBDD COLOMBI 1K 01-05-24 PARTE 7.xlsx: 1,000 registros
+  ✓ BBDD COLOMBI 1k clientes  01-05-24 PARTE 10.xlsx: 1,000 registros
+  ✓ BBDD COLOMBI 22-04-24 2000 CLIENTES NATURGY PARTE 4.xlsx: 2,000 registros
+  ✓ BBDD COLOMBI 22-04-24 2000 CLIENTES NATURGY PARTE 5.xlsx: 2,000 registros
+  ✓ BBDD COLOMBI 22-04-24 400 CLIENTES ENDESA PARTE 3.xlsx: 460 registros
+  ✓ BBDD COLOMBI 15K PARTE 2 19-02-24.xlsx: 14,925 registros
+  ✓ BBDD COLOMBI 22-04-24 500 CLIENTES PARTE 2.xlsx: 500 registros
+  ✓ BBDD COLOMBI 2K 01-05-24 PARTE 1.xlsx: 2,000 registros
+  ✓ BBDD COLOMBI 17K PARTE 2  16-02-24.xlsx: 17,199 registros
+  ✓ BBDD COLOMBI 2K 01-05-24 PARTE 2.xlsx: 2,000 registros
+  ✓ BBDD COLOMBI 22-04-24 10K CLIENTES CUENTA  NATURGY PARTE 7.xlsx: 10,000 registros
+  📊 1500/2059 archivos → 21,396,094 registros acumulados
+  ✓ BBDD COLOMBI 2K 01-05-24 PARTE 3.xlsx: 2,000 registros
+  ✓ BBDD COLOMBI 22-04-24 14K CLIENTES CUENTA  NATURGY PARTE 6.xlsx: 14,228 registros
+  ✓ BBDD COLOMBI 22-04-24 8K PARTE 1.xlsx: 8,441 registros
+  ✓ BASE COLOMBI 47K 25-04-24  EXCLIENTE NATURGY PARTE 5 CUENTAS.xlsx: 46,000 registros
+  ✓ BBDD COLOMBI 400 clientes  01-05-24 PARTE 8.xlsx: 460 registros
+  ✓ BBDD COLOMBI 20K 26-05-24.xlsx: 20,000 registros
+  ✓ BASE COLOMBI 47K CUENTAS PARTE 2 31-01-24.xlsx: 47,932 registros
+  ✓ BBDD COLOMBI 34,13K PARTE 5 19-02-24.xlsx: 34,128 registros
+  ✓ BBDD COLOMBI 34K PARTE 4 19-02-24.xlsx: 34,128 registros
+  ✓ BBDD COLOMBI 500 clientes  01-05-24 PARTE 9.xlsx: 500 registros
+  ✓ BBDD COLOMBI 38K PARTE 7 19-02-24.xlsx: 38,241 registros
+  ✓ BBDD COLOMBI 40K PARTE 2  17-04-24.xlsx: 39,999 registros
+  ✓ BBDD COLOMBI 40K CUENTAS 31-01-24.xlsx: 40,890 registros
+  ✓ BBDD COLOMBI 40K PARTE 1  17-04-24.xlsx: 40,647 registros
+  ✓ BBDD COLOMBI 40K PARTE 3  17-04-24.xlsx: 39,999 registros
+  ✓ BBDD COLOMBI 8K PARTE 4  16-02-24.xlsx: 7,839 registros
+  ✓ BBDD COLOMBI 40K PARTE 4  17-04-24.xlsx: 35,160 registros
+  ✓ bbdd 500 clientes colombi 22-02-24.xlsx: 499 registros
+  ✓ BBDD COLOMBI 50K PARTE 2 07-02-24.xlsx: 49,999 registros
+  ✓ BBDD COLOMBI 50K PARTE 1 07-02-24.xlsx: 49,999 registros
+  ✓ bbbd colombi 50K PARTE 1 12-02-24.xlsx: 49,999 registros
+  ✓ bbbd colombi 50K PARTE 4 12-02-24.xlsx: 42,029 registros
+  ✓ bbbd colombi 50K PARTE 3 12-02-24.xlsx: 49,999 registros
+  ✓ bbbd colombi 50K PARTE 2 12-02-24.xlsx: 49,999 registros
+  ✓ bbdd colombi 20k 30-05-24.xlsx: 20,000 registros
+  ✓ bbdd colombi 20k 11-06-24.xlsx: 20,000 registros
+  ✓ bbdd 50k colombi parte 1 16-02-24.xlsx: 49,099 registros
+  ✓ bbdd colombi 8k 17-01-24.xlsx: 7,998 registros
+  ✓ bbdd colombi 30k cuentas parte 1 9-02-24.xlsx: 30,000 registros
+  ✓ bbdd colombi 35K PARTE 1 03-02-24.xlsx: 34,999 registros
+  ✓ bbdd colombi limpia 12k 25-07-24.xlsx: 11,636 registros
+  ✓ bbdd colombi 30k 31-05-24 PARTE 1.xlsx: 29,999 registros
+  ✓ bbdd colombi 38k 21-02-24.xlsx: 38,241 registros
+  ✓ bbdd colombi 35k 31-05-24 PARTE 2.xlsx: 36,782 registros
+  ✓ bbdd colombi 48k cuentas parte 2 9-02-24.xlsx: 48,104 registros
+  ✓ BASE COLOMBI PART 1 27K.xlsx: 27,000 registros
+  ✓ BASE COLOMBI PART 3 27K.xlsx: 26,999 registros
+  ✓ BASE COLOMBI PART 2 27K.xlsx: 27,000 registros
+  ✓ BASE COLOMBI PARTE 6 5K 23-11-23.xlsx: 5,004 registros
+  ✓ BASE COLOMBI PARTE 2 20K 23-11-23.xlsx: 19,999 registros
+  ✓ BASE COLOMBI PART 4 30K.xlsx: 30,120 registros
+  ✓ BASE COLOMBI PARTE 1 35K 23-11-23.xlsx: 34,999 registros
+  ✓ BASE ROBERTO 22-11-23 10K PARTE 2.xlsx: 10,348 registros
+  ✓ BASE COLOMBI PARTE 3 20K 23-11-23.xlsx: 19,999 registros
+  ✓ BASE COLOMBI PARTE 4 20K 23-11-23.xlsx: 19,999 registros
+  ✓ BASE COLOMBI PARTE 5 20K 23-11-23.xlsx: 19,999 registros
+  ✓ BASE ROBERTO 22-11-23 10K PARTE 3.xlsx: 10,042 registros
+  ✓ BASE ROBERTO 22-11-23 5K PARTE 4.xlsx: 5,029 registros
+  ✓ BBDD COLOMBI 30,7K PARTE 6 19-02-24.xlsx: 30,734 registros
+  ✓ BASE ROBERTO 22-11-23 10K PARTE 5.xlsx: 10,336 registros
+  ✓ BASE ROBERTO 22-11-23 10K.xlsx: 10,244 registros
+  ✓ BBDD COLOMBI 15K 07-12-23.xlsx: 15,099 registros
+  ✓ BASE GIOVANNY 15K 10-07-24 PARTE 5.xlsx: 15,876 registros
+  ✓ BBDD COLOMBI PARTE 4 22-11-23 20K.xlsx: 20,612 registros
+  ✓ BBDD COLOMBI PARTE 3 22-11-23 150 clientes.xlsx: 24,999 registros
+  ✓ BBDD COLOMBI PARTE 2 22-11-23 25K.xlsx: 24,999 registros
+  ✓ BBDD COLOMBI PARTE 3 22-11-23 20K.xlsx: 24,999 registros
+  ✓ BASE GIOVANNY 17K 10-07-24 PARTE 3.xlsx: 16,800 registros
+  ✓ BBDD COLOMBI PARTE 1 22-11-23 30K.xlsx: 30,000 registros
+  ✓ BASE GIOVANNY 25K 10-07-24 PARTE 1.xlsx: 24,999 registros
+  ✓ BASE GIOVANNY 25K 10-07-24 PARTE 4.xlsx: 24,999 registros
+  ✓ BASE GIOVANNY 25K 10-07-24 PARTE 2.xlsx: 25,001 registros
+  ✓ BASE GIOVANNY CUENTAS LIMA 20K 15-08-24 PARTE 1.xlsx: 20,000 registros
+  ✓ BASE GIOVANNY CUENTAS LIMA 20K 15-08-24 PARTE 2.xlsx: 19,999 registros
+  ✓ base prueba brayan 200 clientes.xlsx: 199 registros
+  ✓ bbdd prueba 60 clientes cuentas BRAYAN.xlsx: 59 registros
+  ✓ bbdd prueba 60 clientes cuentas CAROLAY .xlsx: 59 registros
+  ✓ bbdd prueba 60 clientes cuentas DAVID .xlsx: 59 registros
+  ✓ bbdd prueba 60 clientes cuentas JUNIOR.xlsx: 59 registros
+  ✓ bbdd prueba 60 clientes cuentas IVAN .xlsx: 85 registros
+  ✓ bbdd prueba 60 clientes cuentas MARIA .xlsx: 59 registros
+  ✓ bbdd prueba 60 clientes cuentas NATALHY.xlsx: 59 registros
+  ✓ bbdd prueba 60 clientes cuentas SEBASTIAN .xlsx: 59 registros
+  ✓ BBDD COLOMBI 70K 07-12-23.xlsx: 50,000 registros
+  ✓ bbdd prueba junior.xlsx: 173 registros
+  ✓ bbdd prueba natalhy 2.xlsx: 199 registros
+  ✓ bbdd prueba natalhy.xlsx: 199 registros
+  ✓ BASE GIOVANNY CUENTAS LIMA 25K 19-08-24 PARTE 1.xlsx: 24,999 registros
+  ✓ BASE GIOVANNY CUENTAS LIMA 25K 20-08-24 PARTE 3.xlsx: 24,999 registros
+  ✓ 1800 ENGEL ENERGIA 27-02-26.xlsx: 1,866 registros
+  ✓ 20241015_ventasENGELCENTER04.xlsx: 2,163 registros
+  ✓ 20241015_ventasENGELCENTER05.xlsx: 733 registros
+  ✓ 20240913_ventasSILVANERGIA_SL_ENGEL.xlsx: 7,993 registros
+  ✓ 20241016_ventasENGELCENTER03.xlsx: 1,866 registros
+  ✓ BASE GIOVANNY LIMA 20K 15-08-24 PARTE 1.xlsx: 20,000 registros
+  ✓ 12k full.xlsx: 12,015 registros
+  ✓ BASE GIOVANNY CUENTAS LIMA 25K 20-08-24 PARTE 4.xlsx: 24,999 registros
+  ✓ BASE GIOVANNY CUENTAS LIMA 33K 19-08-24 PARTE 2.xlsx: 33,177 registros
+  ✓ 216098 MIL JHON (2).xlsx: 50,000 registros
+  ✓ 1.1million.xlsx: 50,000 registros
+  ✓ 307 CUPS.xlsx: 315 registros
+  ✓ 3200 ENGEL ENERGIA 27-02-26.xlsx: 3,206 registros
+  ✓ 2m_part1.xlsx: 50,000 registros
+  📊 1600/2059 archivos → 23,431,899 registros acumulados
+  ✓ 2m_part2.xlsx: 50,000 registros
+  ✓ 125k-1.xlsx: 50,000 registros
+  ✓ 700 ENGEL ENERGIA 27-02-26.xlsx: 733 registros
+  ✓ 220K PARA CARGAR END 18-02-26.xlsx: 50,000 registros
+  ✓ B WARFARE 5K PARTE 1 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 10 14-01-26.xlsx: 4,998 registros
+  ✓ 2m_part3.xlsx: 50,000 registros
+  ✓ 240K PARA CARGAR END 05-02-26.xlsx: 50,000 registros
+  ✓ B WARFARE 5K PARTE 11 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 12 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 13 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 14 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 15 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 16 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 17 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 18 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 19 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 2 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 20 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 3 14-01-26.xlsx: 4,998 registros
+  ✓ 50K (1) JHON.xlsx: 49,999 registros
+  ✓ B WARFARE 5K PARTE 4 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 5 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 7 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 6 14-01-26.xlsx: 4,998 registros
+  ✓ B WARFARE 5K PARTE 8 14-01-26.xlsx: 4,998 registros
+  ✓ BASE DAVID 30 CLIENTES 14-01-26.xlsx: 30 registros
+  ✓ B WARFARE 5K PARTE 9 14-01-26.xlsx: 4,998 registros
+  ✓ BASE PRUEBA LIZ 2K 26-11-25.xlsx: 2,004 registros
+  ✓ LIMPIO PARTE 30-04-26 PARTE 1.xlsx: 5,512 registros
+  ✓ LIMPIO PARTE 30-04-26 PARTE 10.xlsx: 5,512 registros
+  ✓ LIMPIO PARTE 30-04-26 PARTE 11.xlsx: 5,512 registros
+  ✓ LIMPIO PARTE 30-04-26 PARTE 12.xlsx: 5,512 registros
+  ✓ LIMPIO PARTE 30-04-26 PARTE 13.xlsx: 5,513 registros
+  ✓ BASE EXENDESA 44K LIMPIA POR CARGAR.xlsx: 44,847 registros
+  ✓ LIMPIO PARTE 30-04-26 PARTE 14.xlsx: 5,513 registros
+  ✓ LIMPIO PARTE 30-04-26 PARTE 15.xlsx: 5,513 registros
+  ✓ LIMPIO PARTE 30-04-26 PARTE 16.xlsx: 5,513 registros
+/Users/john/Library/Python/3.9/lib/python/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Data Validation extension is not supported and will be removed
+  warn(msg)

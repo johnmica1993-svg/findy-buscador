@@ -52,24 +52,23 @@ export default function Buscar() {
 
       if (!termino || termino.length < 2) { setBuscando(false); return }
 
-      // Single RPC call — SQL handles indexed fields + datos_extra fallback
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/buscar_clientes_admin`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
-        },
-        body: JSON.stringify({ termino }),
-      })
+      // Direct PostgREST query on indexed fields (fast with 7M+ records)
+      const t = encodeURIComponent(termino)
+      const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
 
       let lista = []
-      if (res.ok) {
-        lista = await res.json()
-        if (!Array.isArray(lista)) lista = []
-      } else {
-        console.error('Search error:', res.status, await res.text())
+
+      // Try exact match first (fastest)
+      let res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?or=(dni.eq.${t},cups.eq.${t})&limit=20`, { headers })
+      if (res.ok) lista = await res.json()
+
+      // If no exact match, try ILIKE on indexed fields
+      if (!lista.length) {
+        res = await fetch(`${SUPABASE_URL}/rest/v1/clientes?or=(dni.ilike.*${t}*,cups.ilike.*${t}*,nombre.ilike.*${t}*)&limit=20`, { headers })
+        if (res.ok) lista = await res.json()
       }
+
+      if (!Array.isArray(lista)) lista = []
 
       setResultados(lista)
 

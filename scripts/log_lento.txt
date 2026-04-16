@@ -1,0 +1,38 @@
+/Users/john/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+============================================================
+CARGA LENTA SEGURA: 1 worker × 100 reg × 5s pausa
+Saltando 290,000 | Restantes: 7,035,758
+Reintentos: infinitos con backoff exponencial
+============================================================
+
+  ⏳ Supabase 500, reintento 1 en 5s...
+
+  ⏳ Supabase 500, reintento 2 en 10s...
+
+  ⏳ Supabase 500, reintento 3 en 20s...
+
+  ⏳ Supabase 500, reintento 4 en 40s...
+
+  ⏳ Timeout, reintento 5 en 80s...
+
+  ⏳ Timeout, reintento 6 en 120s...
+
+  ⏳ Supabase 500, reintento 7 en 120s...
+
+  ⏳ Timeout, reintento 8 en 120s...
+
+  ⏳ Supabase 500, reintento 9 en 120s...
+
+  ⏳ Supabase 500, reintento 10 en 120s...
+
+  ⏳ Supabase 500, reintento 11 en 120s...
+  📤 1,000/7,035,758 (0%) — 0 nuevos, 0 act | 0/s | ETA: 253102m  📤 2,000/7,035,758 (0%) — 0 nuevos, 0 act | 1/s | ETA: 129606m  📤 3,000/7,035,758 (0%) — 0 nuevos, 0 act | 1/s | ETA: 90284m
+  ⏳ Supabase 500, reintento 1 en 5s...
+
+  ⏳ Supabase 500, reintento 2 en 10s...
+
+  ⏳ Supabase 500, reintento 3 en 20s...
+
+  ⏳ Supabase 500, reintento 4 en 40s...
+  📤 4,000/7,035,758 (0%) — 0 nuevos, 700 act | 1/s | ETA: 79750m  📤 5,000/7,035,758 (0%) — 0 nuevos, 1,700 act | 2/s | ETA: 65097m  📤 6,000/7,035,758 (0%) — 0 nuevos, 2,700 act | 2/s | ETA: 55310m  📤 7,000/7,035,758 (0%) — 0 nuevos, 3,700 act | 2/s | ETA: 48327m  📤 8,000/7,035,758 (0%) — 0 nuevos, 4,700 act | 3/s | ETA: 43079m  📤 9,000/7,035,758 (0%) — 0 nuevos, 5,400 act | 3/s | ETA: 39557m  📤 10,000/7,035,758 (0%) — 0 nuevos, 6,400 act | 3/s | ETA: 36261m  📤 11,000/7,035,758 (0%) — 0 nuevos, 7,400 act | 3/s | ETA: 33552m  📤 12,000/7,035,758 (0%) — 0 nuevos, 8,400 act | 4/s | ETA: 31287m  📤 13,000/7,035,758 (0%) — 0 nuevos, 9,400 act | 4/s | ETA: 29371m
