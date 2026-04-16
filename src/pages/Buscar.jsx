@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { Search, XCircle } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Button from '../components/UI/Button'
 import FichaTramitabilidad from '../components/Clientes/FichaTramitabilidad'
@@ -54,7 +55,9 @@ export default function Buscar() {
 
       // Direct PostgREST query on indexed fields (fast with 7M+ records)
       const t = encodeURIComponent(termino)
-      const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token || SUPABASE_KEY
+      const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}` }
 
       let lista = []
 
@@ -90,7 +93,7 @@ export default function Buscar() {
         headers: {
           'Content-Type': 'application/json',
           'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Authorization': `Bearer ${token}`,
           'Prefer': 'return=minimal',
         },
         body: JSON.stringify({

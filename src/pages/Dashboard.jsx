@@ -34,7 +34,9 @@ export default function Dashboard() {
     try {
       const SUPA_URL = import.meta.env.VITE_SUPABASE_URL
       const SUPA_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
-      const h = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Prefer': 'count=exact' }
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token || SUPA_KEY
+      const h = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${token}`, 'Prefer': 'count=exact' }
 
       // Count total (HEAD request with count)
       const totalRes = await fetch(`${SUPA_URL}/rest/v1/clientes?select=id&limit=0`, { headers: h })
