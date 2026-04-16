@@ -77,6 +77,13 @@ export default function Buscar() {
 
       if (lista.length === 0) {
         setSeleccionado(null)
+      } else if (!esAdmin && lista.some(c => c.estado_contratable === false)) {
+        setSeleccionado(null)
+        const bloqueado = lista.find(c => c.estado_contratable === false)
+        setAlerta({
+          tipo: 'no_disponible',
+          mensaje: `CLIENTE NO DISPONIBLE — ${bloqueado?.motivo_bloqueo || 'Este cliente está bloqueado temporalmente.'}`,
+        })
       } else if (!esAdmin && lista.some(c => esEstadoBloqueado(c.estado))) {
         setSeleccionado(null)
         setAlerta({
