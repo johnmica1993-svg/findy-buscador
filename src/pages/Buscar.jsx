@@ -157,32 +157,69 @@ export default function Buscar() {
         </div>
       )}
 
-      {resultados.length > 1 && !seleccionado && !alerta && (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
-          <div className="p-3 bg-gray-50 border-b border-gray-200">
-            <span className="text-sm text-gray-600">{resultados.length} resultados encontrados</span>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {resultados.map(c => (
-              <button
-                key={c.id}
-                onClick={() => setSeleccionado(c)}
-                className="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-50 transition-colors text-left"
-              >
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {c.nombre || c.datos_extra?.TITULAR || c.datos_extra?.Titular || 'Sin nombre'}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    DNI: {c.dni || '—'} · CUPS: {c.cups || '—'}
-                  </p>
+      {resultados.length > 1 && !seleccionado && !alerta && (() => {
+        // Group by DNI
+        const grupos = {}
+        resultados.forEach(c => {
+          const key = c.dni || `sin_dni_${c.id}`
+          if (!grupos[key]) grupos[key] = []
+          grupos[key].push(c)
+        })
+        const getTel = (c) => {
+          if (!c.datos_extra) return null
+          for (const [k, v] of Object.entries(c.datos_extra)) {
+            if (k.toLowerCase().replace(/\s/g, '').match(/tel|tlfn|mov|phone/) && v) return String(v).replace(/\.0$/, '')
+          }
+          return null
+        }
+        return (
+          <div className="space-y-4 mb-6">
+            <p className="text-sm text-gray-500">{resultados.length} registros encontrados{Object.keys(grupos).length < resultados.length ? ` (${Object.keys(grupos).length} clientes)` : ''}</p>
+            {Object.entries(grupos).map(([dni, regs]) => (
+              <div key={dni} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                {/* Group header */}
+                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-700">{regs[0].nombre || regs[0].datos_extra?.TITULAR || 'Sin nombre'}</span>
+                    {regs[0].dni && <span className="text-xs font-mono bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">DNI: {regs[0].dni}</span>}
+                  </div>
+                  {regs.length > 1 && <span className="text-xs text-gray-400">{regs.length} suministros</span>}
                 </div>
-                <span className="text-xs text-gray-400">{c.estado || c.campana || ''}</span>
-              </button>
+                {/* Each record */}
+                <div className="divide-y divide-gray-100">
+                  {regs.map(c => {
+                    const tel = getTel(c)
+                    const iban = c.datos_extra?.IBAN || c.datos_extra?.iban
+                    const dir = c.direccion || c.datos_extra?.['DIR SUMINISTRO']
+                    const origen = c.datos_extra?.Compañía || c.datos_extra?.['Compañia'] || c.campana || c.estado
+                    return (
+                      <button key={c.id} onClick={() => setSeleccionado(c)}
+                        className="w-full px-4 py-3 hover:bg-blue-50 transition-colors text-left">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            {c.cups && <p className="text-xs font-mono text-gray-800 truncate">{c.cups}</p>}
+                            {!c.cups && <p className="text-xs text-gray-400 italic">Sin CUPS</p>}
+                            {dir && <p className="text-xs text-gray-500 truncate mt-0.5">{dir}</p>}
+                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                              {tel && <span className="text-[10px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded">📞 {tel}</span>}
+                              {iban && <span className="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded">🏦 {iban.slice(-8)}</span>}
+                              {c.datos_extra?.EMAIL && <span className="text-[10px] bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded">📧</span>}
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            {origen && <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{origen}</span>}
+                            <p className="text-[10px] text-blue-500 mt-1">Ver →</p>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {seleccionado && (
         <div>
