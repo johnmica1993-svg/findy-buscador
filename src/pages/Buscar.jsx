@@ -30,6 +30,7 @@ export default function Buscar() {
   const [buscando, setBuscando] = useState(false)
   const [buscado, setBuscado] = useState(false)
   const [alerta, setAlerta] = useState(null)
+  const [expandedDirs, setExpandedDirs] = useState({})
   const inputRef = useRef(null)
 
   async function buscar() {
@@ -214,51 +215,66 @@ export default function Buscar() {
                     </div>
                   </div>
 
-                  {/* Address groups */}
+                  {/* Address groups — accordion */}
                   <div className="divide-y divide-gray-100">
                     {Object.entries(porDir).map(([dir, dirRegs]) => {
                       const cupsEnDir = [...new Set(dirRegs.map(c => c.cups).filter(Boolean))]
                       const isReal = !dir.startsWith('_')
                       const label = isReal ? dir : (dir === '_con_cups' ? 'Sin dirección' : 'Sin datos de suministro')
+                      const dirKey = `${dni}_${dir}`
+                      const isOpen = expandedDirs[dirKey]
 
                       return (
-                        <div key={dir} className="px-4 py-2">
-                          {/* Address header */}
-                          <div className="flex items-center justify-between mb-1">
-                            <p className={`text-xs font-medium ${isReal ? 'text-gray-700' : 'text-gray-400 italic'}`}>
-                              {isReal ? '📍 ' : ''}{label}
-                            </p>
-                            {dirRegs.length > 1 && <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{dirRegs.length} reg</span>}
-                          </div>
+                        <div key={dir}>
+                          {/* Accordion header — click to expand */}
+                          <button onClick={() => setExpandedDirs(p => ({ ...p, [dirKey]: !p[dirKey] }))}
+                            className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-gray-50 transition-colors text-left">
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400 text-xs">{isOpen ? '▼' : '▶'}</span>
+                              <p className={`text-xs font-medium ${isReal ? 'text-gray-700' : 'text-gray-400 italic'}`}>
+                                {isReal ? '📍 ' : ''}{label}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {cupsEnDir.length > 0 && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">⚡ {cupsEnDir.length} CUPS</span>}
+                              <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{dirRegs.length} reg</span>
+                            </div>
+                          </button>
 
-                          {/* Unique CUPS in this address */}
-                          {cupsEnDir.length > 0 ? (
-                            <div className="space-y-1 ml-4">
-                              {cupsEnDir.map(cups => {
-                                const reg = dirRegs.find(c => c.cups === cups) || dirRegs[0]
-                                const origen = reg.datos_extra?.Compañía || reg.datos_extra?.['Compañia'] || reg.campana
+                          {/* Expanded records */}
+                          {isOpen && (
+                            <div className="bg-gray-50 border-t border-gray-100 px-4 py-2 space-y-2">
+                              {dirRegs.map(c => {
+                                const tel = getTel(c)
+                                const iban = c.datos_extra?.IBAN || c.datos_extra?.iban
+                                const email = c.datos_extra?.EMAIL || c.datos_extra?.email || c.datos_extra?.CORREO
+                                const origen = c.datos_extra?.Compañía || c.datos_extra?.['Compañia'] || c.campana
                                 return (
-                                  <button key={cups} onClick={() => setSeleccionado(reg)}
-                                    className="w-full flex items-center justify-between py-1 hover:bg-blue-50 rounded px-2 -mx-2 transition-colors text-left">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-xs font-mono text-gray-700">⚡ {cups}</span>
-                                      {origen && <span className="text-[10px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">{origen}</span>}
+                                  <div key={c.id} className="bg-white rounded-lg border border-gray-200 p-3">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex-1 min-w-0 space-y-1">
+                                        {c.cups ? (
+                                          <p className="text-xs font-mono text-gray-800">⚡ {c.cups}</p>
+                                        ) : (
+                                          <p className="text-xs text-gray-400 italic">Sin CUPS</p>
+                                        )}
+                                        <div className="flex flex-wrap gap-1.5">
+                                          {tel && <span className="text-[10px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded">📞 {tel}</span>}
+                                          {iban && <span className="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded">🏦 ...{iban.slice(-6)}</span>}
+                                          {email && <span className="text-[10px] bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded">📧 {email}</span>}
+                                          {origen && <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{origen}</span>}
+                                          {c.estado && <span className="text-[10px] bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded">{c.estado}</span>}
+                                        </div>
+                                      </div>
+                                      <button onClick={() => setSeleccionado(c)}
+                                        className="text-[10px] text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap shrink-0 py-1 px-2 rounded hover:bg-blue-50">
+                                        Ver detalle →
+                                      </button>
                                     </div>
-                                    <span className="text-[10px] text-blue-500">Ver →</span>
-                                  </button>
+                                  </div>
                                 )
                               })}
                             </div>
-                          ) : (
-                            <button onClick={() => setSeleccionado(dirRegs[0])}
-                              className="w-full flex items-center justify-between py-1 ml-4 hover:bg-blue-50 rounded px-2 -mx-2 transition-colors text-left">
-                              <div className="flex flex-wrap gap-1.5">
-                                {(() => { const t = getTel(dirRegs[0]); return t ? <span className="text-[10px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded">📞 {t}</span> : null })()}
-                                {(dirRegs[0].datos_extra?.IBAN || dirRegs[0].datos_extra?.iban) && <span className="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded">🏦 IBAN</span>}
-                                {dirRegs[0].datos_extra?.EMAIL && <span className="text-[10px] bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded">📧 Email</span>}
-                              </div>
-                              <span className="text-[10px] text-blue-500">Ver →</span>
-                            </button>
                           )}
                         </div>
                       )
