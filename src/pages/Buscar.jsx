@@ -165,13 +165,6 @@ export default function Buscar() {
       )}
 
       {resultados.length > 1 && !seleccionado && !alerta && (() => {
-        // Group by DNI
-        const grupos = {}
-        resultados.forEach(c => {
-          const key = c.dni || `sin_dni_${c.id}`
-          if (!grupos[key]) grupos[key] = []
-          grupos[key].push(c)
-        })
         const getTel = (c) => {
           if (!c.datos_extra) return null
           for (const [k, v] of Object.entries(c.datos_extra)) {
@@ -179,51 +172,101 @@ export default function Buscar() {
           }
           return null
         }
+        const getDir = (c) => c.direccion || c.datos_extra?.['DIR SUMINISTRO'] || null
+
+        // Group by DNI
+        const porDni = {}
+        resultados.forEach(c => {
+          const key = c.dni || `sin_dni_${c.id}`
+          if (!porDni[key]) porDni[key] = []
+          porDni[key].push(c)
+        })
+
         return (
           <div className="space-y-4 mb-6">
-            <p className="text-sm text-gray-500">{resultados.length} registros encontrados{Object.keys(grupos).length < resultados.length ? ` (${Object.keys(grupos).length} clientes)` : ''}</p>
-            {Object.entries(grupos).map(([dni, regs]) => (
-              <div key={dni} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                {/* Group header */}
-                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-700">{regs[0].nombre || regs[0].datos_extra?.TITULAR || 'Sin nombre'}</span>
-                    {regs[0].dni && <span className="text-xs font-mono bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">DNI: {regs[0].dni}</span>}
+            {Object.entries(porDni).map(([dni, regs]) => {
+              // Sub-group by address
+              const porDir = {}
+              regs.forEach(c => {
+                const dir = getDir(c)?.trim() || (c.cups ? '_con_cups' : '_sin_datos')
+                if (!porDir[dir]) porDir[dir] = []
+                porDir[dir].push(c)
+              })
+
+              // Stats
+              const cupsUnicos = new Set(regs.map(c => c.cups).filter(Boolean))
+              const telsUnicos = new Set(regs.map(c => getTel(c)).filter(Boolean))
+              const dirsReales = Object.keys(porDir).filter(d => !d.startsWith('_'))
+
+              return (
+                <div key={dni} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  {/* Client header */}
+                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-bold text-gray-800">{regs[0].nombre || regs[0].datos_extra?.TITULAR || 'Sin nombre'}</span>
+                      {regs[0].dni && <span className="text-xs font-mono bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">DNI: {regs[0].dni}</span>}
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-[10px] text-gray-500">
+                      {dirsReales.length > 0 && <span>📍 {dirsReales.length} dirección{dirsReales.length > 1 ? 'es' : ''}</span>}
+                      {cupsUnicos.size > 0 && <span>⚡ {cupsUnicos.size} CUPS</span>}
+                      {telsUnicos.size > 0 && <span>📞 {[...telsUnicos].join(', ')}</span>}
+                      <span className="text-gray-400">{regs.length} registros</span>
+                    </div>
                   </div>
-                  {regs.length > 1 && <span className="text-xs text-gray-400">{regs.length} suministros</span>}
-                </div>
-                {/* Each record */}
-                <div className="divide-y divide-gray-100">
-                  {regs.map(c => {
-                    const tel = getTel(c)
-                    const iban = c.datos_extra?.IBAN || c.datos_extra?.iban
-                    const dir = c.direccion || c.datos_extra?.['DIR SUMINISTRO']
-                    const origen = c.datos_extra?.Compañía || c.datos_extra?.['Compañia'] || c.campana || c.estado
-                    return (
-                      <button key={c.id} onClick={() => setSeleccionado(c)}
-                        className="w-full px-4 py-3 hover:bg-blue-50 transition-colors text-left">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            {c.cups && <p className="text-xs font-mono text-gray-800 truncate">{c.cups}</p>}
-                            {!c.cups && <p className="text-xs text-gray-400 italic">Sin CUPS</p>}
-                            {dir && <p className="text-xs text-gray-500 truncate mt-0.5">{dir}</p>}
-                            <div className="flex flex-wrap gap-1.5 mt-1.5">
-                              {tel && <span className="text-[10px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded">📞 {tel}</span>}
-                              {iban && <span className="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded">🏦 {iban.slice(-8)}</span>}
-                              {c.datos_extra?.EMAIL && <span className="text-[10px] bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded">📧</span>}
+
+                  {/* Address groups */}
+                  <div className="divide-y divide-gray-100">
+                    {Object.entries(porDir).map(([dir, dirRegs]) => {
+                      const cupsEnDir = [...new Set(dirRegs.map(c => c.cups).filter(Boolean))]
+                      const isReal = !dir.startsWith('_')
+                      const label = isReal ? dir : (dir === '_con_cups' ? 'Sin dirección' : 'Sin datos de suministro')
+
+                      return (
+                        <div key={dir} className="px-4 py-2">
+                          {/* Address header */}
+                          <div className="flex items-center justify-between mb-1">
+                            <p className={`text-xs font-medium ${isReal ? 'text-gray-700' : 'text-gray-400 italic'}`}>
+                              {isReal ? '📍 ' : ''}{label}
+                            </p>
+                            {dirRegs.length > 1 && <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{dirRegs.length} reg</span>}
+                          </div>
+
+                          {/* Unique CUPS in this address */}
+                          {cupsEnDir.length > 0 ? (
+                            <div className="space-y-1 ml-4">
+                              {cupsEnDir.map(cups => {
+                                const reg = dirRegs.find(c => c.cups === cups) || dirRegs[0]
+                                const origen = reg.datos_extra?.Compañía || reg.datos_extra?.['Compañia'] || reg.campana
+                                return (
+                                  <button key={cups} onClick={() => setSeleccionado(reg)}
+                                    className="w-full flex items-center justify-between py-1 hover:bg-blue-50 rounded px-2 -mx-2 transition-colors text-left">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-mono text-gray-700">⚡ {cups}</span>
+                                      {origen && <span className="text-[10px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">{origen}</span>}
+                                    </div>
+                                    <span className="text-[10px] text-blue-500">Ver →</span>
+                                  </button>
+                                )
+                              })}
                             </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            {origen && <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{origen}</span>}
-                            <p className="text-[10px] text-blue-500 mt-1">Ver →</p>
-                          </div>
+                          ) : (
+                            <button onClick={() => setSeleccionado(dirRegs[0])}
+                              className="w-full flex items-center justify-between py-1 ml-4 hover:bg-blue-50 rounded px-2 -mx-2 transition-colors text-left">
+                              <div className="flex flex-wrap gap-1.5">
+                                {(() => { const t = getTel(dirRegs[0]); return t ? <span className="text-[10px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded">📞 {t}</span> : null })()}
+                                {(dirRegs[0].datos_extra?.IBAN || dirRegs[0].datos_extra?.iban) && <span className="text-[10px] bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded">🏦 IBAN</span>}
+                                {dirRegs[0].datos_extra?.EMAIL && <span className="text-[10px] bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded">📧 Email</span>}
+                              </div>
+                              <span className="text-[10px] text-blue-500">Ver →</span>
+                            </button>
+                          )}
                         </div>
-                      </button>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )
       })()}
