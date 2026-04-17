@@ -34,15 +34,31 @@ export function AuthProvider({ children }) {
 
   async function cargarUsuario(userId) {
     try {
-      // Simple select without join to avoid column errors
-      const { data, error } = await supabase
+      // Query own profile — RLS allows id = auth.uid()
+      let data = null
+      const { data: userData, error } = await supabase
         .from('usuarios')
         .select('*')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
 
-      if (error || !data) {
-        console.error('Error cargando usuario:', error)
+      if (error) {
+        console.error('Error cargando usuario (RLS?):', error.message)
+        // Fallback: try via REST with service-like approach
+        try {
+          const { data: { session } } = await supabase.auth.getSession()
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/usuarios?id=eq.${userId}&select=*`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${session?.access_token || SUPABASE_KEY}` },
+          })
+          const arr = await res.json()
+          data = arr?.[0] || null
+        } catch { data = null }
+      } else {
+        data = userData
+      }
+
+      if (!data) {
+        console.error('Usuario no encontrado en tabla usuarios')
         setLoading(false)
         return
       }
@@ -53,7 +69,7 @@ export function AuthProvider({ children }) {
         return
       }
 
-      // Load oficina separately to avoid join issues
+      // Load oficina separately — fallback if RLS blocks
       let oficina = null
       if (data.oficina_id) {
         try {
@@ -61,9 +77,20 @@ export function AuthProvider({ children }) {
             .from('oficinas')
             .select('id,nombre,activa,codigo,ips_autorizadas')
             .eq('id', data.oficina_id)
-            .single()
+            .maybeSingle()
           oficina = ofi
         } catch {}
+        // Fallback via REST if supabase client fails
+        if (!oficina) {
+          try {
+            const { data: { session } } = await supabase.auth.getSession()
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/oficinas?id=eq.${data.oficina_id}&select=id,nombre,ips_autorizadas`, {
+              headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${session?.access_token || SUPABASE_KEY}` },
+            })
+            const arr = await res.json()
+            oficina = arr?.[0] || null
+          } catch {}
+        }
       }
       data.oficina = oficina
 
